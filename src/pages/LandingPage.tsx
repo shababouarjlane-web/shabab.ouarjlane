@@ -220,14 +220,17 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-slate-800 font-sans selection:bg-amber-500 selection:text-white" dir="rtl">
+    <div className="min-h-screen bg-background relative overflow-hidden text-slate-800 font-sans selection:bg-amber-500 selection:text-white" dir="rtl">
       
-      {/* Glow overlays */}
-      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full filter blur-[100px] pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-amber-500/5 rounded-full filter blur-[120px] pointer-events-none" />
+      {/* Animated Background Blobs */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full mix-blend-multiply filter blur-[100px] animate-blob" />
+        <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-secondary/20 rounded-full mix-blend-multiply filter blur-[120px] animate-blob animation-delay-2000" />
+        <div className="absolute bottom-[-20%] left-[20%] w-[700px] h-[700px] bg-accent/20 rounded-full mix-blend-multiply filter blur-[150px] animate-blob animation-delay-4000" />
+      </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-md border-b border-amber-500/10 transition-all">
+      <header className="sticky top-4 z-40 mx-4 md:mx-auto max-w-7xl glass-panel rounded-2xl transition-all duration-300">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-700 flex items-center justify-center text-white font-black shadow-md shadow-emerald-600/20">
@@ -290,18 +293,28 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section id="hero" className="relative pt-12 pb-20 md:py-32 overflow-hidden">
+      <section id="hero" className="relative pt-16 pb-20 md:py-32 z-10">
         <div className="container mx-auto px-6 grid md:grid-cols-12 gap-12 items-center">
           
-          <div className="md:col-span-7 space-y-8 text-right">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-l from-emerald-50 to-amber-50 border border-amber-500/20 px-4 py-2 rounded-full shadow-sm text-emerald-800 animate-in fade-in slide-in-from-top-4 duration-700">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <span className="text-sm font-black text-emerald-800">بوابة مجتمع ورقلة وحوض سدراتة الرقمية</span>
-            </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="md:col-span-7 space-y-8 text-right"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 glass-card px-4 py-2 rounded-full text-primary shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 text-secondary" />
+              <span className="text-sm font-black text-primary">بوابة مجتمع ورقلة وحوض سدراتة الرقمية</span>
+            </motion.div>
             
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-tight">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 leading-tight">
               تواصل، تفاعل وارتقِ مع <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-700 via-emerald-600 to-amber-600">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-secondary">
                 مجتمعك وأصالتك التراثية
               </span>
             </h1>
@@ -310,9 +323,14 @@ export default function LandingPage() {
               منصة تواصل صحراء تربطك بجميع فعاليات، نشاطات وأخبار الجمعيات المحلية. شارك في الفعاليات، احصل على تذكرتك بهاتف الذكي، وتابع جديد التراث والذاكرة الجماعية لورقلة وحوض سدراتة.
             </p>
 
-            <div className="flex flex-wrap gap-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="flex flex-wrap gap-4"
+            >
               <a href="#events">
-                <Button className="bg-amber-600 hover:bg-amber-700 text-white font-black px-8 py-7 rounded-2xl text-lg shadow-xl shadow-amber-600/20 gap-2 transition-transform active:scale-95">
+                <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black px-8 py-7 rounded-2xl text-lg shadow-xl shadow-secondary/30 gap-2 transition-all hover:scale-105 hover:-translate-y-1 active:scale-95">
                   استكشف الفعاليات الجارية
                   <ChevronLeft className="w-5 h-5" />
                 </Button>
@@ -320,17 +338,22 @@ export default function LandingPage() {
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/heritage')} 
-                className="border-2 border-emerald-600 text-emerald-800 hover:bg-emerald-50 font-black px-8 py-7 rounded-2xl text-lg gap-2"
+                className="border-2 border-primary/50 text-primary hover:bg-primary/10 glass-card font-black px-8 py-7 rounded-2xl text-lg gap-2 transition-all hover:scale-105 hover:-translate-y-1"
               >
-                <BookOpen className="w-5 h-5 text-emerald-600" />
+                <BookOpen className="w-5 h-5 text-primary" />
                 تصفح السجل التراثي
               </Button>
-            </div>
+            </motion.div>
 
             {/* Quick notification teaser */}
-            <div className="bg-white/80 backdrop-blur border border-amber-500/10 p-5 rounded-2xl shadow-md max-w-lg flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
-                <Bell className="w-6 h-6 text-amber-600" />
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
+              className="glass-card p-5 rounded-2xl max-w-lg flex items-center gap-4 border-l-4 border-l-secondary"
+            >
+              <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center shrink-0">
+                <Bell className="w-6 h-6 text-secondary" />
               </div>
               <div className="flex-1">
                 <h4 className="font-black text-slate-800 text-sm">اشترك لتلقي التحديثات والفعاليات</h4>
@@ -339,25 +362,38 @@ export default function LandingPage() {
               <Button 
                 onClick={subscribe}
                 disabled={isSubscribed}
-                className={`text-xs font-black h-10 px-4 rounded-xl shadow ${
-                  isSubscribed ? 'bg-emerald-600 text-white' : 'bg-slate-900 hover:bg-black text-white'
+                className={`text-xs font-black h-10 px-4 rounded-xl shadow transition-all hover:scale-105 ${
+                  isSubscribed ? 'bg-primary text-white' : 'bg-slate-900 hover:bg-black text-white'
                 }`}
               >
                 {isSubscribed ? 'مشترك بالفعل ✓' : 'تفعيل الآن 🔔'}
               </Button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          <div className="md:col-span-5 relative flex items-center justify-center">
+          <div className="md:col-span-5 relative flex items-center justify-center perspective-[1000px]">
             {/* Visual element representing a phone screen simulating PWA Notification */}
-            <div className="w-full max-w-[340px] aspect-[9/18.5] bg-slate-950 rounded-[40px] p-3 shadow-2xl border-4 border-slate-800 relative overflow-hidden ring-8 ring-emerald-900/10">
+            <motion.div 
+              animate={{ 
+                y: [0, -15, 0],
+                rotateX: [2, 8, 2],
+                rotateY: [-10, -5, -10],
+                rotateZ: [-2, 0, -2]
+              }}
+              transition={{ 
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="w-full max-w-[340px] aspect-[9/18.5] bg-slate-950 rounded-[40px] p-3 shadow-[0_20px_50px_rgba(16,185,129,0.3)] border-4 border-slate-800 relative overflow-hidden ring-8 ring-primary/20 transform-style-3d"
+            >
               <div className="w-32 h-6 bg-slate-800 absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20" />
               
               {/* Internal simulated OS */}
-              <div className="w-full h-full bg-gradient-to-b from-emerald-900/80 to-[#101c18] rounded-[32px] p-4 flex flex-col justify-between relative text-right">
+              <div className="w-full h-full bg-gradient-to-b from-primary/80 to-slate-900 rounded-[32px] p-4 flex flex-col justify-between relative text-right overflow-hidden">
                 
                 {/* Status Bar */}
-                <div className="flex justify-between items-center text-[10px] text-white/50 px-2 pt-1 font-sans">
+                <div className="flex justify-between items-center text-[10px] text-white/50 px-2 pt-1 font-sans relative z-10">
                   <span>10:45 AM</span>
                   <div className="flex gap-1">
                     <span>📶</span>
@@ -366,16 +402,16 @@ export default function LandingPage() {
                 </div>
 
                 {/* Simulated Notification banner slide-in */}
-                <div className="mt-8 space-y-4">
+                <div className="mt-8 space-y-4 relative z-10">
                   <motion.div 
                     initial={{ y: -50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 1, duration: 0.6 }}
-                    className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-amber-500/20 text-slate-800 text-right"
+                    className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-secondary/20 text-slate-800 text-right"
                   >
                     <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-[10px] font-black text-emerald-800">تواصل صحراء • الآن</span>
-                      <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
+                      <span className="text-[10px] font-black text-primary">تواصل صحراء • الآن</span>
+                      <span className="w-2 h-2 bg-secondary rounded-full animate-ping" />
                     </div>
                     <h5 className="font-black text-xs text-slate-900">🔔 فعالية جديدة: مهرجان الواحات التراثي</h5>
                     <p className="text-[10px] text-slate-500 mt-1 font-medium leading-relaxed">تتشرف جمعية الأصالة بدعوتكم لحضور مهرجان الواحات السنوي بحوض سدراتة. سجل حضورك واحصل على التذكرة.</p>
@@ -383,14 +419,17 @@ export default function LandingPage() {
                 </div>
 
                 {/* App interface mock */}
-                <div className="bg-black/40 backdrop-blur rounded-2xl p-3 text-center border border-white/5 mb-8">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-600 mx-auto flex items-center justify-center text-white font-black text-xs shadow-md mb-2">ص</div>
+                <div className="bg-black/40 backdrop-blur rounded-2xl p-3 text-center border border-white/10 mb-8 relative z-10">
+                  <div className="w-10 h-10 rounded-lg bg-primary mx-auto flex items-center justify-center text-white font-black text-xs shadow-md mb-2">ص</div>
                   <h6 className="text-xs font-black text-white">تطبيق تواصل صحراء</h6>
                   <p className="text-[8px] text-white/50 mt-0.5">مثبت كـ تطبيق ويب تقدمي PWA</p>
                   <div className="w-16 h-1 bg-white/20 rounded-full mx-auto mt-4" />
                 </div>
+                
+                {/* Background glow in phone */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-secondary/30 rounded-full filter blur-[50px] opacity-50" />
               </div>
-            </div>
+            </motion.div>
 
             {/* Glowing backdrop dots */}
             <div className="absolute -z-10 w-80 h-80 rounded-full bg-emerald-500/10 filter blur-3xl" />
@@ -423,49 +462,84 @@ export default function LandingPage() {
       )}
 
       {/* Stats Section */}
-      <section id="stats" className="py-20 bg-white border-b border-amber-500/5">
+      <section id="stats" className="py-20 relative z-10">
         <div className="container mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-2xl mx-auto mb-16 space-y-4"
+          >
             <h2 className="text-3xl font-black text-slate-900">المجتمع في أرقام</h2>
             <p className="text-slate-500 font-medium">إحصائيات مباشرة تعكس حيوية وتفاعل مجتمع ورقلة وحوض سدراتة الرقمي عبر منصة تواصل صحراء</p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="p-8 rounded-[2rem] bg-emerald-50/40 border border-emerald-100/50 text-center space-y-3 relative group overflow-hidden hover:bg-emerald-50 transition-colors">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full translate-x-6 -translate-y-6 group-hover:scale-110 transition-transform" />
-              <Users className="w-8 h-8 text-emerald-600 mx-auto" />
-              <div className="text-4xl md:text-5xl font-black text-emerald-700">{stats.users}</div>
-              <div className="text-sm font-bold text-slate-500">مشارك مسجل</div>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="p-8 rounded-[2rem] glass-card text-center space-y-3 relative group overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full translate-x-6 -translate-y-6 group-hover:scale-150 transition-transform duration-500" />
+              <Users className="w-8 h-8 text-primary mx-auto relative z-10" />
+              <div className="text-4xl md:text-5xl font-black text-primary relative z-10">{stats.users}</div>
+              <div className="text-sm font-bold text-slate-500 relative z-10">مشارك مسجل</div>
+            </motion.div>
 
-            <div className="p-8 rounded-[2rem] bg-amber-50/40 border border-amber-100/50 text-center space-y-3 relative group overflow-hidden hover:bg-amber-50 transition-colors">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full translate-x-6 -translate-y-6 group-hover:scale-110 transition-transform" />
-              <Building2 className="w-8 h-8 text-amber-600 mx-auto" />
-              <div className="text-4xl md:text-5xl font-black text-amber-700">{stats.associations}</div>
-              <div className="text-sm font-bold text-slate-500">جمعية معتمدة</div>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="p-8 rounded-[2rem] glass-card text-center space-y-3 relative group overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/10 rounded-full translate-x-6 -translate-y-6 group-hover:scale-150 transition-transform duration-500" />
+              <Building2 className="w-8 h-8 text-secondary mx-auto relative z-10" />
+              <div className="text-4xl md:text-5xl font-black text-secondary relative z-10">{stats.associations}</div>
+              <div className="text-sm font-bold text-slate-500 relative z-10">جمعية معتمدة</div>
+            </motion.div>
 
-            <div className="p-8 rounded-[2rem] bg-emerald-50/40 border border-emerald-100/50 text-center space-y-3 relative group overflow-hidden hover:bg-emerald-50 transition-colors">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full translate-x-6 -translate-y-6 group-hover:scale-110 transition-transform" />
-              <Calendar className="w-8 h-8 text-emerald-600 mx-auto" />
-              <div className="text-4xl md:text-5xl font-black text-emerald-700">{stats.events}</div>
-              <div className="text-sm font-bold text-slate-500">فعالية منظمة</div>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="p-8 rounded-[2rem] glass-card text-center space-y-3 relative group overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-accent/10 rounded-full translate-x-6 -translate-y-6 group-hover:scale-150 transition-transform duration-500" />
+              <Calendar className="w-8 h-8 text-accent mx-auto relative z-10" />
+              <div className="text-4xl md:text-5xl font-black text-accent relative z-10">{stats.events}</div>
+              <div className="text-sm font-bold text-slate-500 relative z-10">فعالية منظمة</div>
+            </motion.div>
 
-            <div className="p-8 rounded-[2rem] bg-amber-50/40 border border-amber-100/50 text-center space-y-3 relative group overflow-hidden hover:bg-amber-50 transition-colors">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full translate-x-6 -translate-y-6 group-hover:scale-110 transition-transform" />
-              <TrendingUp className="w-8 h-8 text-amber-600 mx-auto" />
-              <div className="text-4xl md:text-5xl font-black text-amber-700">{stats.rsvps}</div>
-              <div className="text-sm font-bold text-slate-500">تأكيد حضور</div>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="p-8 rounded-[2rem] glass-card text-center space-y-3 relative group overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full translate-x-6 -translate-y-6 group-hover:scale-150 transition-transform duration-500" />
+              <TrendingUp className="w-8 h-8 text-primary mx-auto relative z-10" />
+              <div className="text-4xl md:text-5xl font-black text-primary relative z-10">{stats.rsvps}</div>
+              <div className="text-sm font-bold text-slate-500 relative z-10">تأكيد حضور</div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Events / News Section */}
-      <section id="events" className="py-20">
+      <section id="events" className="py-20 relative z-10 glass-panel mt-12 rounded-[3rem] mx-4 md:mx-auto max-w-7xl">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6"
+          >
             <div className="space-y-4 text-right">
               <h2 className="text-3xl font-black text-slate-900">الفعاليات والأخبار الجارية</h2>
               <p className="text-slate-500 font-medium">اكتشف آخر الفعاليات العامة التي تنظمها الجمعيات في مختلف المجالات</p>
@@ -473,58 +547,69 @@ export default function LandingPage() {
             
             {/* Search Box */}
             <div className="relative w-full md:w-80 group">
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
               <Input 
                 type="text" 
                 placeholder="ابحث عن فعالية أو موقع..." 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="h-12 pr-12 pl-4 rounded-xl border-amber-500/20 focus-visible:ring-emerald-600"
+                className="h-12 pr-12 pl-4 rounded-xl border-white/40 bg-white/50 backdrop-blur focus-visible:ring-primary focus-visible:bg-white transition-all shadow-sm"
               />
             </div>
-          </div>
+          </motion.div>
 
           {/* Category Filter Badges */}
-          <div className="flex flex-wrap gap-2.5 mb-10">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="flex flex-wrap gap-2.5 mb-10"
+          >
             {categories.map(cat => (
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
-                className={`px-5 py-2.5 rounded-full text-sm font-black border transition-all ${
+                className={`px-5 py-2.5 rounded-full text-sm font-black border transition-all hover:scale-105 ${
                   selectedCategory === cat.value
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/10'
-                    : 'bg-white text-slate-600 border-amber-500/10 hover:bg-emerald-50'
+                    ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                    : 'bg-white/60 text-slate-600 border-white/40 hover:bg-white shadow-sm'
                 }`}
               >
                 {cat.label}
               </button>
             ))}
-          </div>
+          </motion.div>
 
           {/* Events Grid */}
           {loadingEvents ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
               <p className="text-slate-500 font-bold mt-4 animate-pulse">جاري جلب الفعاليات النشطة...</p>
             </div>
           ) : filteredEvents.length === 0 ? (
-            <div className="bg-white rounded-[2rem] p-16 text-center border-2 border-dashed border-amber-500/20">
+            <div className="glass-card rounded-[2rem] p-16 text-center border-2 border-dashed border-secondary/20">
               <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-slate-800">لا توجد فعاليات نشطة تطابق بحثك</h3>
               <p className="text-slate-500 mt-2 font-medium">يرجى تجربة البحث بكلمات أخرى أو تصفح الأقسام الأخرى.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredEvents.map(ev => (
-                <Card 
-                  key={ev.id} 
-                  className="group overflow-hidden rounded-[2.5rem] border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-white flex flex-col h-[520px] cursor-pointer"
-                  onClick={() => navigate(`/event/${ev.id}`)}
+              {filteredEvents.map((ev, i) => (
+                <motion.div 
+                  key={ev.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
                 >
-                  <div className="h-56 overflow-hidden relative bg-emerald-50 flex items-center justify-center">
-                    {ev.cover_image_url ? (
-                      <img 
-                        src={ev.cover_image_url} 
+                  <Card 
+                    className="group overflow-hidden rounded-[2.5rem] border-0 glass-card flex flex-col h-[520px] cursor-pointer"
+                    onClick={() => navigate(`/event/${ev.id}`)}
+                  >
+                    <div className="h-56 overflow-hidden relative bg-primary/5 flex items-center justify-center">
+                      {ev.cover_image_url ? (
+                        <img 
+                          src={ev.cover_image_url} 
                         alt={ev.title} 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                         onError={(e) => {
@@ -572,24 +657,30 @@ export default function LandingPage() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              </motion.div>
+            ))}
             </div>
           )}
         </div>
       </section>
 
       {/* Quote / Footer decoration */}
-      <footer className="bg-slate-950 text-white py-24 text-center relative overflow-hidden">
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
-        <div className="container mx-auto px-6 relative z-10 space-y-8">
-          <BookOpen className="w-10 h-10 text-amber-500 mx-auto opacity-40" />
-          <p className="text-2xl md:text-4xl font-serif italic max-w-3xl mx-auto opacity-95 leading-relaxed">
+      <footer className="glass-panel text-slate-800 py-24 text-center relative overflow-hidden mt-20 border-t border-primary/20">
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="container mx-auto px-6 relative z-10 space-y-8"
+        >
+          <BookOpen className="w-10 h-10 text-primary mx-auto opacity-40" />
+          <p className="text-2xl md:text-4xl font-serif italic max-w-3xl mx-auto opacity-95 leading-relaxed text-slate-900">
             "من ليس له ماضٍ، ليس له حاضر ولا مستقبل"
           </p>
-          <div className="w-24 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent rounded-full mx-auto" />
-          <p className="text-amber-500/60 font-black text-xs uppercase tracking-widest">Sahara Gather Connect • تواصل صحراء</p>
-          <p className="text-[11px] text-white/30 font-medium">© {new Date().getFullYear()} جميع الحقوق محفوظة لمنصة تواصل صحراء لورقلة وحوض سدراتة.</p>
-        </div>
+          <div className="w-24 h-1 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full mx-auto" />
+          <p className="text-primary font-black text-xs uppercase tracking-widest">Sahara Gather Connect • تواصل صحراء</p>
+          <p className="text-[11px] text-slate-500 font-medium">© {new Date().getFullYear()} جميع الحقوق محفوظة لمنصة تواصل صحراء لورقلة وحوض سدراتة.</p>
+        </motion.div>
       </footer>
 
       {/* Dialog for Login */}
