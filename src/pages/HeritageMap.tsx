@@ -28,8 +28,8 @@ const LANDMARKS: Landmark[] = [
     nameTranslit: 'Tajmegida n Lalla Azza',
     badge: 'المسجد الإباضي الجامع',
     badgeColor: 'bg-[#b87a29] text-white',
-    lat: 31.9616,
-    lng: 5.3288,
+    lat: 31.966643,
+    lng: 5.326884,
     period: 'العهد الرستمي المتأخر — القصر العتيق',
     image: '/hero-bg.jpg',
     description:
