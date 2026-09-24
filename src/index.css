@@ -88,7 +88,11 @@
     margin: 0;
     background-color: #fdfbf7;
     color: var(--foreground);
-    font-family: "Thmanyah Serif Display", "IBM Plex Sans Arabic", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     direction: rtl;
+  }
+
+  h1, h2, h3, .font-thmanyah {
+    font-family: "Thmanyah Serif Display", "IBM Plex Sans Arabic", serif;
   }
 }

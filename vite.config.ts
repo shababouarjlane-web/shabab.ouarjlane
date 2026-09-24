@@ -13,7 +13,7 @@ export default defineConfig({
       manifest: {
         name: 'تواصل صحراء | Sahara Gather Connect',
         short_name: 'تواصل صحراء',
-        description: 'منصة التواصل الاجتماعي والفعاليات لمنطقة ورقلة وسدراتة',
+        description: 'منصة التواصل الاجتماعي والفعاليات لمنطقة وارجلان (ورقلة) وسدراتة',
         theme_color: '#059669', // Emerald-600
         background_color: '#ffffff',
         display: 'standalone',

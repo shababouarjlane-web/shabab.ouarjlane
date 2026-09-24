@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+﻿import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
@@ -109,7 +109,7 @@ export default function Heritage() {
             <span className="text-sm font-black tracking-wider uppercase">سجل الذاكرة الجماعية</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl tracking-tight">
-            الأرشيف التراثي لورقلة
+            الأرشيف التراثي لوارجلان (ورقلة)
           </h1>
           <p className="text-xl md:text-2xl text-[#fae1b7] font-medium leading-relaxed drop-shadow-md">
             نافذتكم على كنوز حوض سدراتة.. نحفظ التاريخ لنلهم المستقبل.
@@ -192,7 +192,7 @@ export default function Heritage() {
                 <CardContent className="p-8 flex-1 flex flex-col">
                   <div className="flex items-center gap-2 text-emerald-600 font-black text-xs uppercase tracking-widest mb-4">
                     <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    تراث ورقلة
+                    تراث وارجلان (ورقلة)
                   </div>
                   
                   <h3 className="text-2xl font-black text-slate-800 mb-4 group-hover:text-amber-700 transition-colors line-clamp-2 leading-tight">
@@ -265,7 +265,7 @@ export default function Heritage() {
                 <div className="max-w-3xl mx-auto">
                   <div className="flex items-center gap-3 text-emerald-700 font-black mb-10 bg-emerald-50 inline-flex px-6 py-3 rounded-2xl border border-emerald-100 shadow-sm">
                     <History className="w-5 h-5" />
-                    <span className="text-lg">سلسلة كنوز ورقلة وحوض سدراتة</span>
+                    <span className="text-lg">سلسلة كنوز وارجلان (ورقلة) وحوض سدراتة</span>
                   </div>
                   
                   <div className="text-slate-700 text-xl md:text-2xl leading-[1.8] whitespace-pre-wrap font-medium tracking-tight">
@@ -286,7 +286,7 @@ export default function Heritage() {
                     <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
                        <MapPin className="w-5 h-5" />
                     </div>
-                    <span className="font-black text-slate-700">منطقة الواحات، ورقلة</span>
+                    <span className="font-black text-slate-700">منطقة الواحات، وارجلان (ورقلة)</span>
                  </div>
                  <Button 
                    onClick={() => setIsDialogOpen(false)} 
