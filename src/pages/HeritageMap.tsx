@@ -18,6 +18,8 @@ interface Landmark {
   image: string;
   description: string;
   category: 'mosque' | 'ruins' | 'urban' | 'hydraulic';
+  /** إحداثيات مضلع لتمثيل المنطقة الكاملة (اختياري) */
+  polygon?: [number, number][];
 }
 
 const LANDMARKS: Landmark[] = [
@@ -58,13 +60,29 @@ const LANDMARKS: Landmark[] = [
     nameTranslit: 'Aghram Aqbur',
     badge: 'نسيج واحاتي عريق',
     badgeColor: 'bg-[#723c11] text-white',
-    lat: 31.9630,
-    lng: 5.3300,
+    lat: 31.9675,
+    lng: 5.3287,
     period: 'ما قبل الإسلام — القرون الوسطى وما بعدها',
     image: '/hero-bg.jpg',
     description:
       'أقدم نسيج عمراني واحاتي متصل في الصحراء الجزائرية، بناه الوارجلانيون بطراز بيئي عبقري يحمي من قيظ الصحراء عبر أزقة مغطاة (السقائف) ونظام دفاعي محكم ببواباته التاريخية. يعكس عبقرية العمارة الزناتية في التكيف مع المناخ الصحراوي القاسي.',
     category: 'urban',
+    // حدود القصر العتيق — مستخرجة من صورة الأقمار الصناعية
+    polygon: [
+      [31.9705, 5.3278],
+      [31.9703, 5.3295],
+      [31.9698, 5.3312],
+      [31.9685, 5.3325],
+      [31.9670, 5.3328],
+      [31.9658, 5.3318],
+      [31.9648, 5.3300],
+      [31.9645, 5.3278],
+      [31.9650, 5.3258],
+      [31.9660, 5.3248],
+      [31.9675, 5.3245],
+      [31.9690, 5.3252],
+      [31.9703, 5.3265],
+    ],
   },
   {
     id: 'foggara',
@@ -176,6 +194,45 @@ export default function HeritageMap() {
       markersRef.current[lm.id] = marker;
     });
 
+    // ── رسم مضلع القصر العتيق المُضاء ───────────────────────────────
+    const ksarLandmark = LANDMARKS.find((lm) => lm.id === 'ksar-atiq');
+    if (ksarLandmark?.polygon) {
+      // المضلع نفسه — حدود القصر
+      const ksarPolygon = L.polygon(ksarLandmark.polygon, {
+        color: '#efa83f',          // حدود عنبرية ذهبية
+        weight: 3,
+        opacity: 0.95,
+        fillColor: '#b87a29',
+        fillOpacity: 0.18,
+        dashArray: '6 4',          // خط متقطع للطابع التراثي
+        lineJoin: 'round',
+      }).addTo(map);
+
+      // تأثير وميض خارجي (glow) — طبقة ثانية أعرض وأفتح
+      L.polygon(ksarLandmark.polygon, {
+        color: '#efa83f',
+        weight: 10,
+        opacity: 0.12,
+        fillOpacity: 0,
+        lineJoin: 'round',
+        interactive: false,
+      }).addTo(map);
+
+      // Tooltip مميز عند الـ hover على المضلع
+      ksarPolygon.bindTooltip(
+        `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:800;font-size:13px;color:#301809;padding:6px 12px;border-radius:10px;border:2px solid #efa83f">
+          🏛️ القصر العتيق بوارجلان
+          <div style="font-size:10px;color:#723c11;font-weight:600;margin-top:2px">ⴰⵖⵔⴰⵎ ⴰⵇⴱⵓⵔ</div>
+        </div>`,
+        { direction: 'top', sticky: true, opacity: 0.97 }
+      );
+
+      ksarPolygon.on('click', () => {
+        setSelected(ksarLandmark);
+        setSidebarOpen(true);
+      });
+    }
+
     mapRef.current = map;
 
     return () => {
@@ -188,7 +245,13 @@ export default function HeritageMap() {
   const flyTo = (lm: Landmark) => {
     setSelected(lm);
     setSidebarOpen(true);
-    mapRef.current?.flyTo([lm.lat, lm.lng], 16, { duration: 1.4 });
+    if (lm.polygon && mapRef.current) {
+      // عرض المنطقة كاملة عند وجود مضلع
+      const bounds = L.latLngBounds(lm.polygon.map(([lat, lng]) => L.latLng(lat, lng)));
+      mapRef.current.fitBounds(bounds, { padding: [40, 40], animate: true, duration: 1.2 });
+    } else {
+      mapRef.current?.flyTo([lm.lat, lm.lng], 16, { duration: 1.4 });
+    }
   };
 
   return (
