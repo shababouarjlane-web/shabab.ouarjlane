@@ -142,14 +142,12 @@ export default function HeritageMap() {
       attributionControl: true,
     });
 
-    // طبقة خريطة دافئة — CartoDB Voyager
+    // طبقة أقمار صناعية — ESRI World Imagery (مجانية بدون مفتاح API)
     L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19,
+        attribution: 'Esri, Maxar, Earthstar Geographics | تواصل صحراء — وارجلان',
+        maxZoom: 18,
       }
     ).addTo(map);
 
