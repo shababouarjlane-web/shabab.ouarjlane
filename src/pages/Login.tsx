@@ -119,21 +119,24 @@ export default function Login() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center p-4 bg-gradient-to-br from-[#fdfbf6] to-[#eae5dd]">
-      <div className="grid md:grid-cols-2 w-full max-w-6xl rounded-[2rem] overflow-hidden shadow-2xl bg-white min-h-[600px]">
+    <div className="flex min-h-screen w-full items-center justify-center p-4 bg-gradient-to-br from-[#fdfbf7] via-[#f5efe4] to-[#e8decb]">
+      <div className="grid md:grid-cols-2 w-full max-w-6xl rounded-[2.5rem] overflow-hidden shadow-2xl bg-white min-h-[620px] border border-[#dbc397]/50">
 
-        {/* Right Side (Visual Right in RTL) - Admins & Associations - Green Palette */}
-        <div className="p-8 md:p-12 flex flex-col justify-center bg-emerald-800 text-white relative">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-600 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-900 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2" />
+        {/* Right Side (Visual Right in RTL) - Admins & Associations - Deep Espresso Palette */}
+        <div className="p-8 md:p-12 flex flex-col justify-center bg-gradient-to-br from-[#301809] via-[#4a2711] to-[#723c11] text-white relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#efa83f]/20 rounded-full mix-blend-screen filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#b87a29]/20 rounded-full mix-blend-screen filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2" />
 
           <div className="relative z-10 w-full max-w-sm mx-auto">
-            <h2 className="text-3xl font-bold mb-2">إدارة المنصـة</h2>
-            <p className="text-emerald-100 mb-8 opacity-80">تسجيل الدخول للمسؤولين والجمعيات</p>
+            <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] font-black text-xl mb-4">
+              ص
+            </div>
+            <h2 className="text-3xl font-black mb-2 text-[#fae1b7]">بوابة الإشراف</h2>
+            <p className="text-[#fae1b7]/70 mb-8 font-medium">تسجيل الدخول للمسؤولين وممثلي الجمعيات</p>
 
             <form onSubmit={handleAdminAuth} className="space-y-5">
               <div className="space-y-2 text-right">
-                <Label htmlFor="admin-email" className="text-emerald-50">البريد الإلكتروني</Label>
+                <Label htmlFor="admin-email" className="text-[#fae1b7] text-xs font-bold">البريد الإلكتروني</Label>
                 <div className="relative">
                   <Input
                     id="admin-email"
@@ -142,15 +145,15 @@ export default function Login() {
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     required
-                    className="bg-emerald-900/50 border-emerald-700 text-white placeholder:text-emerald-300 w-full pr-10"
+                    className="bg-black/30 border-[#d4b174]/40 text-white placeholder:text-white/40 w-full pr-10 rounded-xl focus-visible:ring-[#efa83f]"
                     dir="ltr"
                   />
-                  <Mail className="absolute right-3 top-3  h-4 w-4 text-emerald-400" />
+                  <Mail className="absolute right-3 top-3 h-4 w-4 text-[#efa83f]" />
                 </div>
               </div>
 
               <div className="space-y-2 text-right">
-                <Label htmlFor="admin-pass" className="text-emerald-50">كلمة المرور</Label>
+                <Label htmlFor="admin-pass" className="text-[#fae1b7] text-xs font-bold">كلمة المرور</Label>
                 <div className="relative">
                   <Input
                     id="admin-pass"
@@ -159,17 +162,17 @@ export default function Login() {
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
                     required
-                    className="bg-emerald-900/50 border-emerald-700 text-white placeholder:text-emerald-300 w-full pr-10"
+                    className="bg-black/30 border-[#d4b174]/40 text-white placeholder:text-white/40 w-full pr-10 rounded-xl focus-visible:ring-[#efa83f]"
                     dir="ltr"
                   />
-                  <Lock className="absolute right-3 top-3 h-4 w-4 text-emerald-400" />
+                  <Lock className="absolute right-3 top-3 h-4 w-4 text-[#efa83f]" />
                 </div>
               </div>
 
               <Button
                 type="submit"
                 disabled={adminLoading}
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl py-6 text-lg font-bold shadow-lg shadow-emerald-500/30 transition-all"
+                className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#c98730] hover:to-[#f0b24d] text-[#301809] rounded-xl py-6 text-lg font-black shadow-glow-amber transition-all"
               >
                 {adminLoading ? "جاري التحميل..." : "تسجيل الدخول"}
               </Button>
@@ -177,14 +180,14 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Left Side (Visual Left in RTL) - Attendees & Guests - Orange Palette */}
-        <div className="p-8 md:p-12 flex flex-col justify-center bg-white relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-72 h-72 bg-amber-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-72 h-72 bg-orange-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 translate-x-1/2 translate-y-1/2" />
+        {/* Left Side (Visual Left in RTL) - Attendees & Guests - Warm Sand & Pop Sunset Amber */}
+        <div className="p-8 md:p-12 flex flex-col justify-center bg-[#fdfbf7] relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-72 h-72 bg-[#efa83f]/15 rounded-full mix-blend-multiply filter blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-72 h-72 bg-[#fae1b7]/40 rounded-full mix-blend-multiply filter blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
           <div className="relative z-10 w-full max-w-sm mx-auto">
-            <h1 className="text-4xl font-extrabold text-amber-600 mb-2">تواصل صحراء</h1>
-            <p className="text-gray-500 mb-8">اكتشف الفعاليات، شارك وتواصل مع مجتمعك.</p>
+            <h1 className="text-4xl font-black text-[#301809] mb-2">تواصل صحراء</h1>
+            <p className="text-[#723c11]/80 mb-8 font-medium">اكتشف الفعاليات، شارك وتواصل مع مجتمعك.</p>
 
             <form onSubmit={handleAttendeeAuth} className="space-y-4">
               <AnimatePresence mode="wait">
@@ -198,7 +201,7 @@ export default function Login() {
                 >
                   {isSignUp && (
                     <div className="space-y-2 text-right">
-                      <Label htmlFor="full-name" className="text-gray-700 font-semibold">الاسم الكامل</Label>
+                      <Label htmlFor="full-name" className="text-[#301809] font-bold text-xs">الاسم الكامل</Label>
                       <div className="relative">
                         <Input
                           id="full-name"
@@ -207,15 +210,15 @@ export default function Login() {
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           required
-                          className="bg-gray-50 border-gray-200 text-gray-900 focus-visible:ring-amber-500 w-full pr-10 rounded-xl"
+                          className="bg-white border-[#dbc397] text-[#301809] focus-visible:ring-[#efa83f] w-full pr-10 rounded-xl"
                         />
-                        <User className="absolute right-3 top-3 h-4 w-4 text-amber-500" />
+                        <User className="absolute right-3 top-3 h-4 w-4 text-[#b87a29]" />
                       </div>
                     </div>
                   )}
 
                   <div className="space-y-2 text-right">
-                    <Label htmlFor="guest-email" className="text-gray-700 font-semibold">البريد الإلكتروني</Label>
+                    <Label htmlFor="guest-email" className="text-[#301809] font-bold text-xs">البريد الإلكتروني</Label>
                     <div className="relative">
                       <Input
                         id="guest-email"
@@ -224,15 +227,15 @@ export default function Login() {
                         value={attendeeEmail}
                         onChange={(e) => setAttendeeEmail(e.target.value)}
                         required
-                        className="bg-gray-50 border-gray-200 text-gray-900 focus-visible:ring-amber-500 w-full pr-10 rounded-xl"
+                        className="bg-white border-[#dbc397] text-[#301809] focus-visible:ring-[#efa83f] w-full pr-10 rounded-xl"
                         dir="ltr"
                       />
-                      <Mail className="absolute right-3 top-3 h-4 w-4 text-amber-500" />
+                      <Mail className="absolute right-3 top-3 h-4 w-4 text-[#b87a29]" />
                     </div>
                   </div>
 
                   <div className="space-y-2 text-right">
-                    <Label htmlFor="attendee-pass" className="text-gray-700 font-semibold">كلمة المرور</Label>
+                    <Label htmlFor="attendee-pass" className="text-[#301809] font-bold text-xs">كلمة المرور</Label>
                     <div className="relative">
                       <Input
                         id="attendee-pass"
@@ -241,10 +244,10 @@ export default function Login() {
                         value={attendeePassword}
                         onChange={(e) => setAttendeePassword(e.target.value)}
                         required
-                        className="bg-gray-50 border-gray-200 text-gray-900 focus-visible:ring-amber-500 w-full pr-10 rounded-xl"
+                        className="bg-white border-[#dbc397] text-[#301809] focus-visible:ring-[#efa83f] w-full pr-10 rounded-xl"
                         dir="ltr"
                       />
-                      <Lock className="absolute right-3 top-3 h-4 w-4 text-amber-500" />
+                      <Lock className="absolute right-3 top-3 h-4 w-4 text-[#b87a29]" />
                     </div>
                   </div>
                 </motion.div>
@@ -253,7 +256,7 @@ export default function Login() {
               <Button
                 type="submit"
                 disabled={attendeeLoading}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-xl py-6 text-lg font-bold shadow-lg shadow-amber-500/20 transition-all font-outfit"
+                className="w-full bg-gradient-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-white rounded-xl py-6 text-lg font-black shadow-glow-amber transition-all"
               >
                 {attendeeLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (isSignUp ? "إنشاء حساب" : "تسجيل الدخول")}
                 {!attendeeLoading && <LogIn className="mr-2 h-5 w-5" />}
@@ -262,23 +265,23 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="w-full text-center text-sm text-amber-600 font-bold hover:underline py-2"
+                className="w-full text-center text-sm text-[#b87a29] font-bold hover:underline py-2"
               >
                 {isSignUp ? "لديك حساب بالفعل؟ تسجيل الدخول" : "ليس لديك حساب؟ إنشاء حساب جديد"}
               </button>
             </form>
 
-            <div className="mt-8 flex items-center before:mt-0.5 before:flex-1 before:border-t before:border-gray-200 after:mt-0.5 after:flex-1 after:border-t after:border-gray-200">
-              <p className="mx-4 mb-0 text-center font-semibold text-gray-400 text-sm">أو</p>
+            <div className="mt-8 flex items-center before:mt-0.5 before:flex-1 before:border-t before:border-[#dbc397]/50 after:mt-0.5 after:flex-1 after:border-t after:border-[#dbc397]/50">
+              <p className="mx-4 mb-0 text-center font-bold text-[#723c11]/60 text-xs">أو</p>
             </div>
 
             <Button
               onClick={handleDemoLogin}
               variant="outline"
               disabled={demoLoading}
-              className="w-full mt-6 rounded-xl py-6 text-lg border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800 transition-all"
+              className="w-full mt-6 rounded-xl py-6 text-base font-bold border-[#d4b174] text-[#723c11] hover:bg-[#fae1b7]/40 transition-all"
             >
-              {demoLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "دخول تجريبي سريع"}
+              {demoLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "دخول تجريبي سريع كزائر ⚡"}
             </Button>
           </div>
         </div>

@@ -5,39 +5,51 @@
 
 @layer base {
   :root {
-    --background: 150 20% 98%;
-    --foreground: 160 30% 10%;
+    --background: 40 40% 98%; /* #fdfbf7 warm parchment */
+    --foreground: 23 70% 11%; /* #301809 deep espresso */
     --card: 0 0% 100%;
-    --card-foreground: 160 30% 10%;
+    --card-foreground: 23 70% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 160 30% 10%;
-    /* Vibrant Emerald */
-    --primary: 158 85% 42%;
+    --popover-foreground: 23 70% 11%;
+    /* Rich Golden Bronze */
+    --primary: 35 64% 44%; /* #b87a29 */
     --primary-foreground: 0 0% 100%;
-    /* Bright Warm Amber */
-    --secondary: 35 95% 52%;
-    --secondary-foreground: 35 95% 15%;
-    /* Soft Light Green */
-    --muted: 150 30% 92%;
-    --muted-foreground: 150 15% 40%;
-    /* Vibrant Teal/Cyan */
-    --accent: 180 80% 40%;
+    /* Vibrant Sunset Amber - Pop! */
+    --secondary: 36 86% 59%; /* #efa83f */
+    --secondary-foreground: 23 70% 11%;
+    /* Warm Sandstone Muted */
+    --muted: 38 35% 93%; /* #f6f1e8 */
+    --muted-foreground: 26 40% 35%; /* #723c11 */
+    /* Loch Water Slate Accent */
+    --accent: 201 11% 56%; /* #84939c */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 150 20% 88%;
-    --input: 150 20% 88%;
-    --ring: 158 85% 42%;
-    --radius: 1rem;
+    --border: 38 25% 85%; /* #e7dfd1 */
+    --input: 38 25% 85%;
+    --ring: 36 86% 59%; /* #efa83f */
+    --radius: 1.25rem;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+    @apply bg-white/75 backdrop-blur-xl border border-[#dbc397]/40 shadow-[0_8px_32px_0_rgba(48,24,9,0.06)];
   }
   .glass-card {
-    @apply bg-white/60 backdrop-blur-md border border-white/50 shadow-sm hover:shadow-lg transition-all duration-300;
+    @apply bg-white/80 backdrop-blur-md border border-[#dbc397]/30 shadow-[0_4px_20px_0_rgba(48,24,9,0.04)] hover:shadow-[0_12px_30px_0_rgba(184,122,41,0.12)] hover:border-[#efa83f]/50 transition-all duration-300;
+  }
+  .gold-gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#723c11] via-[#b87a29] to-[#efa83f];
+  }
+  .pop-gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#b87a29] via-[#efa83f] to-[#b87a29];
+  }
+  .pop-gradient-bg {
+    @apply bg-gradient-to-r from-[#b87a29] via-[#efa83f] to-[#b87a29] text-white shadow-glow-amber;
+  }
+  .espresso-gradient-bg {
+    @apply bg-gradient-to-br from-[#301809] via-[#4a2711] to-[#723c11] text-white shadow-glow-deep;
   }
   .animate-blob {
     animation: blob 10s infinite;
@@ -48,7 +60,6 @@
   .animation-delay-4000 {
     animation-delay: 4s;
   }
-
 }
 
 @layer base {
@@ -58,10 +69,9 @@
 
   body {
     margin: 0;
-    background-color: var(--background);
+    background-color: #fdfbf7;
     color: var(--foreground);
-    font-family: "Lina Round", "Tajawal", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Tajawal", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     direction: rtl;
-    /* لضمان دعم اللغة العربية في كل التطبيق */
   }
 }

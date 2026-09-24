@@ -51,6 +51,26 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        sahara: {
+          espresso: "#301809",
+          umber: "#723c11",
+          bronze: "#b87a29",
+          gold: "#d4b174",
+          amber: "#efa83f",
+          sandstone: "#dbc397",
+          champagne: "#fae1b7",
+          parchment: "#fdfbf7",
+          slate: "#84939c",
+          slateLight: "#a3a8ac",
+          silver: "#b8b7b5",
+          stone: "#d2cfca",
+          taupe: "#b8ab9c",
+        },
+      },
+      boxShadow: {
+        'glow-amber': '0 10px 30px -5px rgba(239, 168, 63, 0.4)',
+        'glow-gold': '0 12px 35px -8px rgba(184, 122, 41, 0.3)',
+        'glow-deep': '0 20px 40px -15px rgba(48, 24, 9, 0.25)',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -63,10 +83,19 @@ module.exports = {
           "33%": { transform: "translate(30px, -50px) scale(1.1)" },
           "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
           "100%": { transform: "translate(0px, 0px) scale(1)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
         }
       },
       animation: {
         blob: "blob 10s infinite",
+        float: "float 6s ease-in-out infinite",
+        shimmer: "shimmer 2.5s infinite",
       }
     },
   },

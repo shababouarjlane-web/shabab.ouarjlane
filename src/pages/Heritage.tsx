@@ -93,22 +93,25 @@ export default function Heritage() {
       <div className="relative h-[450px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&q=80&w=2000" 
+            src="/hero-bg.jpg" 
             alt="Sahara Heritage" 
-            className="w-full h-full object-cover brightness-[0.4]"
+            className="w-full h-full object-cover brightness-[0.35]"
+            onError={(e) => {
+              e.currentTarget.src = "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&q=80&w=2000";
+            }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-amber-900/60 via-transparent to-[#faf9f6]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#301809]/80 via-transparent to-[#faf9f6]" />
         </div>
         
         <div className="relative z-10 text-center px-4 max-w-4xl">
-          <div className="inline-flex items-center gap-2 bg-amber-500/20 backdrop-blur-md px-4 py-2 rounded-full border border-amber-500/30 text-amber-400 mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+          <div className="inline-flex items-center gap-2 bg-[#efa83f]/20 backdrop-blur-md px-4 py-2 rounded-full border border-[#efa83f]/40 text-[#efa83f] mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
             <BookOpen className="w-4 h-4" />
             <span className="text-sm font-black tracking-wider uppercase">سجل الذاكرة الجماعية</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl tracking-tight">
             الأرشيف التراثي لورقلة
           </h1>
-          <p className="text-xl md:text-2xl text-amber-100/90 font-medium leading-relaxed drop-shadow-md">
+          <p className="text-xl md:text-2xl text-[#fae1b7] font-medium leading-relaxed drop-shadow-md">
             نافذتكم على كنوز حوض سدراتة.. نحفظ التاريخ لنلهم المستقبل.
           </p>
         </div>
@@ -120,18 +123,18 @@ export default function Heritage() {
           <Button 
             variant="ghost" 
             onClick={() => navigate(-1)} 
-            className="bg-white/90 backdrop-blur-md shadow-lg hover:bg-white text-amber-900 font-black rounded-2xl px-8 h-14 border border-amber-100 shrink-0"
+            className="bg-white/90 backdrop-blur-md shadow-lg hover:bg-white text-[#301809] font-black rounded-2xl px-8 h-14 border border-[#dbc397]/50 shrink-0"
           >
-            <ArrowRight className="ml-2 h-5 w-5" /> عودة
+            <ArrowRight className="ml-2 h-5 w-5 text-[#b87a29]" /> عودة
           </Button>
 
           <div className="relative flex-1 group">
-            <Search className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-600 transition-colors group-focus-within:text-emerald-600" />
+            <Search className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-[#b87a29] transition-colors group-focus-within:text-[#efa83f]" />
             <Input 
-              placeholder="ابحث في سجلات التراث... (مثال: تقاليد، مقتنيات)" 
+              placeholder="ابحث في سجلات التراث... (مثال: تقاليد، مقتنيات، سدراتة)" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-white/90 backdrop-blur-md shadow-lg border-amber-100 focus-visible:ring-emerald-500 h-14 pr-14 pl-12 rounded-2xl text-lg font-bold placeholder:text-amber-900/30"
+              className="bg-white/90 backdrop-blur-md shadow-lg border-[#dbc397]/50 focus-visible:ring-[#efa83f] focus-visible:border-[#efa83f] h-14 pr-14 pl-12 rounded-2xl text-lg font-bold placeholder:text-[#301809]/40"
             />
             {searchQuery && (
               <button 
