@@ -18,8 +18,10 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sans: ['"IBM Plex Sans Arabic"', 'system-ui', '-apple-system', 'sans-serif'],
-        arabic: ['"IBM Plex Sans Arabic"', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Thmanyah Serif Display"', '"IBM Plex Sans Arabic"', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['"Thmanyah Serif Display"', 'serif'],
+        thmanyah: ['"Thmanyah Serif Display"', 'serif'],
+        arabic: ['"Thmanyah Serif Display"', '"IBM Plex Sans Arabic"', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
