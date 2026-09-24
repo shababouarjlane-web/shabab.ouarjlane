@@ -256,6 +256,13 @@ export default function LandingPage() {
               <BookOpen className="w-4 h-4 text-[#b87a29]" />
               الأرشيف التراثي
             </button>
+            <button
+              onClick={() => navigate('/map')}
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11]"
+            >
+              <MapPin className="w-4 h-4 text-[#b87a29]" />
+              خريطة التراث
+            </button>
           </nav>
 
           {/* Header Action Buttons */}

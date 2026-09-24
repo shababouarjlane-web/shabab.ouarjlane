@@ -16,6 +16,7 @@ import EditEvent from './pages/association/EditEvent';
 import AttendeeDashboard from './pages/attendee/AttendeeDashboard';
 import EventDetails from './pages/EventDetails';
 import Heritage from './pages/Heritage';
+import HeritageMap from './pages/HeritageMap';
 import { useNotifications } from './hooks/useNotifications';
 
 function AppRoutes({ session, profile, loading }: { session: any, profile: Profile | null, loading: boolean }) {
@@ -45,6 +46,7 @@ function AppRoutes({ session, profile, loading }: { session: any, profile: Profi
         } />
 
         <Route path="/heritage" element={<PageTransition><Heritage /></PageTransition>} />
+        <Route path="/map" element={<PageTransition><HeritageMap /></PageTransition>} />
         <Route path="/event/:id" element={<PageTransition><EventDetails userRole={profile?.role || null} /></PageTransition>} />
 
         <Route path="/admin" element={session && profile?.role === 'super_admin' ? <PageTransition><AdminDashboard /></PageTransition> : (loading ? <div className="h-screen flex items-center justify-center font-bold text-emerald-600">جاري التحميل...</div> : <Navigate to="/" replace />)} />
