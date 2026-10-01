@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import L from 'leaflet';
+import { supabase } from '@/lib/supabase';
 import { 
   ArrowRight, 
   MapPin, 
@@ -186,6 +187,30 @@ export default function HeritageMap() {
 
   const [selected, setSelected] = useState<Landmark>(LANDMARKS[0]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // ─── التحقق من صلاحيات الأدمن (حساب super_admin أو معامل الرابط ?admin=true) ───
+  const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('admin') === 'true' || localStorage.getItem('is_heritage_admin') === 'true';
+  });
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.role === 'super_admin') {
+            setIsAdmin(true);
+            localStorage.setItem('is_heritage_admin', 'true');
+          }
+        });
+    });
+  }, []);
 
   // ─── حالات التحكم بمحيط القصر (تموضع + حجم + دوران) ───────────────────
   const [showControls, setShowControls] = useState(false);
@@ -420,27 +445,30 @@ export default function HeritageMap() {
         </div>
 
         <div className="mr-auto flex items-center gap-2">
-          {/* زر فتح/إغلاق أداة ضبط المحيط */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              const next = !showControls;
-              setShowControls(next);
-              if (next) {
-                const ksar = LANDMARKS.find((l) => l.id === 'ksar-atiq');
-                if (ksar) flyTo(ksar);
-              }
-            }}
-            className={`rounded-xl text-xs h-8 px-3 flex items-center gap-1.5 transition-all ${
-              showControls
-                ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
-                : 'text-[#fae1b7]/90 bg-[#4a2510]/80 hover:bg-[#4a2510] hover:text-white border border-[#efa83f]/30'
-            }`}
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            <span>{showControls ? 'إخفاء أداة المحيط' : 'ضبط محيط القصر'}</span>
-          </Button>
+          {/* زر فتح/إغلاق أداة ضبط المحيط (محصورة للأدمن فقط) */}
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const next = !showControls;
+                setShowControls(next);
+                if (next) {
+                  const ksar = LANDMARKS.find((l) => l.id === 'ksar-atiq');
+                  if (ksar) flyTo(ksar);
+                }
+              }}
+              className={`rounded-xl text-xs h-8 px-3 flex items-center gap-1.5 transition-all ${
+                showControls
+                  ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
+                  : 'text-[#fae1b7]/90 bg-[#4a2510]/80 hover:bg-[#4a2510] hover:text-white border border-[#efa83f]/30'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>{showControls ? 'إخفاء أداة المحيط' : 'ضبط محيط القصر'}</span>
+              <span className="text-[9px] bg-red-500/30 text-red-200 px-1.5 py-0.5 rounded font-mono">أدمن</span>
+            </Button>
+          )}
 
           {/* زر عرض/إخفاء الشريط الجانبي */}
           <Button
@@ -460,8 +488,8 @@ export default function HeritageMap() {
         {/* ── الخريطة ───────────────────────────── */}
         <div ref={mapContainerRef} className="flex-1 z-10" />
 
-        {/* ── لوحة التحكم التفاعلية في المحيط والتموضع ─────────────────── */}
-        {showControls && (
+        {/* ── لوحة التحكم التفاعلية في المحيط والتموضع (محصورة للأدمن فقط) ── */}
+        {showControls && isAdmin && (
           <div className="absolute top-4 left-4 z-40 w-80 bg-[#301809]/95 backdrop-blur-xl border border-[#efa83f]/40 rounded-2xl shadow-2xl p-4 text-white animate-in fade-in duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-[#fae1b7]/15 mb-3">
               <div className="flex items-center gap-2">
