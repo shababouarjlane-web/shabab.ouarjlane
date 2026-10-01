@@ -571,30 +571,56 @@ export default function LandingPage() {
                   استكشف الأرشيف التراثي
                   <ArrowUpRight className="w-4 h-4 mr-1" />
                 </Button>
-                <a href="#events">
-                  <Button 
-                    variant="outline" 
-                    className="border-white/30 text-white hover:bg-white/10 font-medium px-5 py-5 rounded-xl text-sm"
-                  >
-                    فعاليات التراث القادمة
-                  </Button>
-                </a>
+                <Button 
+                  onClick={() => navigate('/map')}
+                  className="bg-white/10 hover:bg-white/20 border border-[#efa83f]/40 text-white font-bold px-5 py-5 rounded-xl text-sm flex items-center gap-2 transition-all shadow-sm"
+                >
+                  <MapPin className="w-4 h-4 text-[#efa83f]" />
+                  خريطة المعالم التفاعلية
+                </Button>
               </div>
             </div>
 
             <div className="lg:col-span-5 relative">
-              <div className="relative rounded-2xl overflow-hidden border border-[#d4b174]/40 shadow-lg">
+              <div 
+                onClick={() => navigate('/map')}
+                className="cursor-pointer group relative rounded-2xl overflow-hidden border border-[#d4b174]/40 shadow-xl transition-all duration-300 hover:border-[#efa83f] hover:shadow-glow-amber"
+              >
                 <img 
                   src="/hero-bg.jpg" 
-                  alt="قصر سدراتة وتراث ورقلة" 
-                  className="w-full h-72 object-cover"
+                  alt="خريطة تراث وارجلان وسدراتة" 
+                  className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                <div className="absolute bottom-4 right-4 left-4 text-right">
-                  <span className="text-[#efa83f] text-xs font-bold">حوض سدراتة الأثري</span>
-                  <p className="text-white text-xs mt-0.5 font-normal">
-                    شاهد على حضارة عريقة تلتقي فيها العمارة الصحراوية بجمال الواحة.
-                  </p>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#301809]/95 via-[#301809]/40 to-black/30" />
+                
+                {/* شارة الأقمار الصناعية */}
+                <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-md">
+                  <span className="w-2 h-2 rounded-full bg-[#efa83f] animate-ping" />
+                  <span>🛰️ خريطة الأقمار الصناعية الحية</span>
+                </div>
+
+                <div className="absolute top-3 left-3 bg-[#efa83f] text-[#301809] px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow">
+                  3 معالم موثقة
+                </div>
+
+                {/* المعالم المميزة في البطاقة */}
+                <div className="absolute bottom-4 right-4 left-4 text-right space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#fae1b7]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    <span>القصر العتيق</span>
+                    <span className="text-white/40">•</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#b87a29]" />
+                    <span>مسجد لالة عزة</span>
+                    <span className="text-white/40">•</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#efa83f]" />
+                    <span>سدراتة</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-white text-xs font-medium">
+                      انقر للتحليق واستكشاف المعالم جغرافياً 🗺️
+                    </p>
+                    <ArrowUpRight className="w-4 h-4 text-[#efa83f] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </div>
                 </div>
               </div>
             </div>

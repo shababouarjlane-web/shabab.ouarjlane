@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
@@ -119,13 +119,21 @@ export default function Heritage() {
 
       <div className="container mx-auto px-4 md:px-8 -mt-24 relative z-20 pb-20">
         {/* Search & Navigation Bar */}
-        <div className="flex flex-col md:flex-row gap-4 mb-12 items-stretch md:items-center">
+        <div className="flex flex-col md:flex-row gap-4 mb-8 items-stretch md:items-center">
           <Button 
             variant="ghost" 
             onClick={() => navigate(-1)} 
-            className="bg-white/90 backdrop-blur-md shadow-lg hover:bg-white text-[#301809] font-black rounded-2xl px-8 h-14 border border-[#dbc397]/50 shrink-0"
+            className="bg-white/90 backdrop-blur-md shadow-lg hover:bg-white text-[#301809] font-black rounded-2xl px-6 h-14 border border-[#dbc397]/50 shrink-0"
           >
             <ArrowRight className="ml-2 h-5 w-5 text-[#b87a29]" /> عودة
+          </Button>
+
+          <Button 
+            onClick={() => navigate('/map')} 
+            className="bg-gradient-to-r from-[#301809] via-[#4a2711] to-[#723c11] hover:from-[#4a2510] hover:to-[#8c4e18] text-[#fae1b7] font-bold rounded-2xl px-6 h-14 border border-[#efa83f]/40 shadow-lg shrink-0 flex items-center gap-2 group transition-all"
+          >
+            <MapPin className="w-5 h-5 text-[#efa83f] group-hover:scale-110 transition-transform" />
+            <span>خريطة التراث بالأقمار الصناعية</span>
           </Button>
 
           <div className="relative flex-1 group">
@@ -144,6 +152,37 @@ export default function Heritage() {
                 <X className="w-5 h-5" />
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Interactive Satellite Heritage Map Banner */}
+        <div 
+          onClick={() => navigate('/map')}
+          className="cursor-pointer mb-12 rounded-3xl bg-gradient-to-r from-[#301809] via-[#4a2711] to-[#723c11] p-6 md:p-8 border border-[#efa83f]/40 shadow-xl relative overflow-hidden group hover:border-[#efa83f]/80 hover:shadow-glow-amber transition-all duration-300"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#efa83f]/15 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2.5 text-right">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efa83f]/20 border border-[#efa83f]/40 text-[#efa83f] text-xs font-semibold">
+                <span className="w-2 h-2 rounded-full bg-[#efa83f] animate-ping" />
+                <span>خريطة تفاعلية حية • ⵜⴰⵡⵉⵍⴰ ⵏ ⵡⴰⵔⴵⵍⴰⵏ</span>
+              </div>
+              <h3 className="text-xl md:text-3xl font-bold text-white font-thmanyah leading-snug">
+                استكشف المعالم الأثرية لـ وارجلان وسدراتة من الفضاء
+              </h3>
+              <p className="text-sm md:text-base text-[#fae1b7]/80 max-w-2xl leading-relaxed">
+                تجوّل عبر صور الأقمار الصناعية العالية الدقة: طالع المحيط التاريخي للقصر العتيق، موقع مسجد لالة عزة الإباضي، وعاصمة الدولة الرستمية الثانية (إيسدراتن).
+              </p>
+            </div>
+
+            <Button
+              className="bg-gradient-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-[#301809] font-bold px-7 py-6 rounded-2xl text-base shadow-glow-amber group-hover:scale-105 transition-all shrink-0 flex items-center gap-2.5 self-stretch lg:self-auto justify-center"
+            >
+              <MapPin className="w-5 h-5 text-[#301809]" />
+              <span>فتح خريطة المعالم</span>
+              <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
+            </Button>
           </div>
         </div>
 

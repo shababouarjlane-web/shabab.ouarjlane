@@ -470,6 +470,17 @@ export default function HeritageMap() {
             </Button>
           )}
 
+          {/* زر الانتقال المباشر للأرشيف التراثي */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/heritage')}
+            className="text-[#fae1b7]/80 hover:text-white hover:bg-[#4a2510] rounded-xl text-xs h-8 px-3 flex items-center gap-1.5"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-[#efa83f]" />
+            <span className="hidden sm:inline">الأرشيف التراثي</span>
+          </Button>
+
           {/* زر عرض/إخفاء الشريط الجانبي */}
           <Button
             variant="ghost"
@@ -738,6 +749,20 @@ export default function HeritageMap() {
               <p className="text-sm text-[#301809]/80 leading-relaxed">
                 {selected.description}
               </p>
+            </div>
+
+            {/* زر تصفح وثائق ومقالات المعلم في الأرشيف */}
+            <div className="pt-1">
+              <button
+                onClick={() => navigate('/heritage')}
+                className="w-full bg-[#fae1b7]/40 hover:bg-[#fae1b7]/80 border border-[#dbc397] text-[#301809] font-bold rounded-2xl text-xs py-3.5 px-4 flex items-center justify-between transition-all shadow-sm group"
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-[#b87a29]" />
+                  <span>تصفح وثائق وسجلات هذا المعلم في الأرشيف</span>
+                </div>
+                <ArrowRight className="w-4 h-4 rotate-180 text-[#b87a29] group-hover:-translate-x-1 transition-transform" />
+              </button>
             </div>
 
             {/* ─ قائمة المعالم مرتبة بدقة ─ */}
