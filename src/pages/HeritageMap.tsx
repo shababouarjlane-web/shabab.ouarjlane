@@ -58,30 +58,34 @@ const LANDMARKS: Landmark[] = [
     nameAr: 'القصر العتيق بوارجلان',
     nameTifinagh: 'ⴰⵖⵔⴰⵎ ⴰⵇⴱⵓⵔ',
     nameTranslit: 'Aghram Aqbur',
-    badge: 'نسيج واحاتي عريق',
-    badgeColor: 'bg-[#723c11] text-white',
-    lat: 31.9675,
-    lng: 5.3287,
+    badge: 'المحيط التاريخي للقصر',
+    badgeColor: 'bg-red-600 text-white',
+    lat: 31.9655,
+    lng: 5.3284,
     period: 'ما قبل الإسلام — القرون الوسطى وما بعدها',
     image: '/hero-bg.jpg',
     description:
       'أقدم نسيج عمراني واحاتي متصل في الصحراء الجزائرية، بناه الوارجلانيون بطراز بيئي عبقري يحمي من قيظ الصحراء عبر أزقة مغطاة (السقائف) ونظام دفاعي محكم ببواباته التاريخية. يعكس عبقرية العمارة الزناتية في التكيف مع المناخ الصحراوي القاسي.',
     category: 'urban',
-    // حدود القصر العتيق — مستخرجة من صورة الأقمار الصناعية
+    // حدود ومحيط القصر العتيق الكامل — مطابقة للدائرة الحمراء المحيطة بالنسيج العمراني
     polygon: [
-      [31.9705, 5.3278],
-      [31.9703, 5.3295],
-      [31.9698, 5.3312],
-      [31.9685, 5.3325],
-      [31.9670, 5.3328],
-      [31.9658, 5.3318],
-      [31.9648, 5.3300],
-      [31.9645, 5.3278],
-      [31.9650, 5.3258],
-      [31.9660, 5.3248],
-      [31.9675, 5.3245],
-      [31.9690, 5.3252],
-      [31.9703, 5.3265],
+      [31.9712, 5.3280], // شمال القصر
+      [31.9708, 5.3300],
+      [31.9700, 5.3318],
+      [31.9688, 5.3333],
+      [31.9670, 5.3340], // شرق القصر
+      [31.9650, 5.3340],
+      [31.9632, 5.3332],
+      [31.9616, 5.3315],
+      [31.9604, 5.3294], // جنوب-شرق
+      [31.9596, 5.3270], // أقصى جنوب القصر
+      [31.9602, 5.3248],
+      [31.9616, 5.3234], // جنوب-غرب
+      [31.9636, 5.3226],
+      [31.9658, 5.3225], // غرب القصر
+      [31.9680, 5.3232],
+      [31.9698, 5.3248], // شمال-غرب
+      [31.9708, 5.3265],
     ],
   },
   {
@@ -105,7 +109,7 @@ const LANDMARKS: Landmark[] = [
 const CATEGORY_COLORS: Record<Landmark['category'], string> = {
   mosque: '#b87a29',
   ruins: '#efa83f',
-  urban: '#723c11',
+  urban: '#ef4444',
   hydraulic: '#4a9b8e',
 };
 
@@ -198,21 +202,21 @@ export default function HeritageMap() {
     const ksarLandmark = LANDMARKS.find((lm) => lm.id === 'ksar-atiq');
     if (ksarLandmark?.polygon) {
       // المضلع نفسه — حدود القصر
+      // المضلع نفسه — الدائرة الحمراء المحيطة بالقصر بالكامل
       const ksarPolygon = L.polygon(ksarLandmark.polygon, {
-        color: '#efa83f',          // حدود عنبرية ذهبية
-        weight: 3,
+        color: '#ef4444',          // أحمر صريح مطابق للدائرة الحمراء
+        weight: 3.5,
         opacity: 0.95,
-        fillColor: '#b87a29',
-        fillOpacity: 0.18,
-        dashArray: '6 4',          // خط متقطع للطابع التراثي
+        fillColor: '#ef4444',
+        fillOpacity: 0.16,
         lineJoin: 'round',
       }).addTo(map);
 
-      // تأثير وميض خارجي (glow) — طبقة ثانية أعرض وأفتح
+      // تأثير وهج أحمر خارجي (glow)
       L.polygon(ksarLandmark.polygon, {
-        color: '#efa83f',
-        weight: 10,
-        opacity: 0.12,
+        color: '#ef4444',
+        weight: 12,
+        opacity: 0.25,
         fillOpacity: 0,
         lineJoin: 'round',
         interactive: false,
@@ -220,8 +224,8 @@ export default function HeritageMap() {
 
       // Tooltip مميز عند الـ hover على المضلع
       ksarPolygon.bindTooltip(
-        `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:800;font-size:13px;color:#301809;padding:6px 12px;border-radius:10px;border:2px solid #efa83f">
-          🏛️ القصر العتيق بوارجلان
+        `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:800;font-size:13px;color:#301809;padding:6px 12px;border-radius:10px;border:2px solid #ef4444">
+          🏛️ محيط القصر العتيق بوارجلان
           <div style="font-size:10px;color:#723c11;font-weight:600;margin-top:2px">ⴰⵖⵔⴰⵎ ⴰⵇⴱⵓⵔ</div>
         </div>`,
         { direction: 'top', sticky: true, opacity: 0.97 }
