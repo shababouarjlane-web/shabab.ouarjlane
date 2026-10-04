@@ -89,6 +89,67 @@ export default function Heritage() {
       {/* Dynamic Background Pattern */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/sandpaper.png")' }} />
 
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-40 bg-[#fdfbf7]/95 backdrop-blur-md border-b border-[#dbc397]/50 shadow-xs">
+        <div className="container mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
+          
+          {/* Back to Home Button */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 p-2 px-3 rounded-xl text-[#723c11] hover:bg-[#fae1b7]/40 transition-colors group"
+              title="العودة للصفحة الرئيسية"
+            >
+              <ArrowRight className="w-5 h-5 text-[#b87a29] group-hover:-translate-x-0.5 transition-transform" />
+              <span className="text-sm font-bold text-[#301809]">الرئيسية</span>
+            </button>
+            <div className="h-5 w-px bg-[#dbc397]" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#301809] to-[#723c11] flex items-center justify-center text-[#efa83f] font-black text-base shadow-sm">
+                ت
+              </div>
+              <div className="hidden sm:block">
+                <h2 className="text-sm font-thmanyah font-bold leading-tight text-[#301809]">
+                  الأرشيف التراثي لوارجلان
+                </h2>
+                <p className="text-[10px] text-[#723c11]/80 font-semibold tracking-wider">
+                  سجل ذاكرة الواحات وسدراتة
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Page Links */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/events')}
+              className="hidden md:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-9 px-3.5 text-xs font-bold"
+            >
+              <Calendar className="w-3.5 h-3.5 text-[#b87a29]" />
+              <span>دليل الفعاليات</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/map')}
+              className="hidden md:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-9 px-3.5 text-xs font-bold"
+            >
+              <MapPin className="w-3.5 h-3.5 text-[#b87a29]" />
+              <span>خريطة التراث</span>
+            </Button>
+            <Button
+              onClick={() => navigate('/')}
+              className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] rounded-xl h-9 px-4 text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+            >
+              <ArrowRight className="w-4 h-4 text-[#efa83f]" />
+              <span>الرئيسية</span>
+            </Button>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <div className="relative h-[450px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -122,10 +183,11 @@ export default function Heritage() {
         <div className="flex flex-col md:flex-row gap-4 mb-8 items-stretch md:items-center">
           <Button 
             variant="ghost" 
-            onClick={() => navigate(-1)} 
-            className="bg-white/90 backdrop-blur-md shadow-lg hover:bg-white text-[#301809] font-black rounded-2xl px-6 h-14 border border-[#dbc397]/50 shrink-0"
+            onClick={() => navigate('/')} 
+            className="bg-white/90 backdrop-blur-md shadow-lg hover:bg-white text-[#301809] font-black rounded-2xl px-6 h-14 border border-[#dbc397]/50 shrink-0 flex items-center gap-2"
           >
-            <ArrowRight className="ml-2 h-5 w-5 text-[#b87a29]" /> عودة
+            <ArrowRight className="h-5 w-5 text-[#b87a29]" />
+            <span>الرئيسية</span>
           </Button>
 
           <Button 
