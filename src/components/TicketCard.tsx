@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useReactToPrint } from 'react-to-print';
-import { Button } from './ui/button';
 import { Calendar, Clock, MapPin, Printer, X } from 'lucide-react';
 
 interface TicketCardProps {
@@ -19,7 +18,6 @@ interface TicketCardProps {
   onClose?: () => void;
 }
 
-/** Builds a canonical ticket ID encoded in the QR code */
 function buildTicketId(eventId: string, userId: string, rsvpId?: string) {
   return rsvpId
     ? `OUARJLANE::${eventId}::${rsvpId}`
@@ -38,121 +36,114 @@ export default function TicketCard({ event, userId, rsvpId, userName, onClose }:
   const shortId = ticketId.slice(-8).toUpperCase();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" dir="rtl">
-      <div className="w-full max-w-sm relative">
-        {/* Close button */}
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="absolute -top-4 -right-4 z-10 bg-white rounded-full p-1.5 shadow-lg text-gray-600 hover:text-red-500 transition-colors"
-          >
-            <X size={18} />
-          </button>
-        )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" dir="rtl">
+      <div className="w-full max-w-xs relative">
 
-        {/* Print button */}
-        <div className="flex justify-end mb-3">
-          <Button
+        {/* Action buttons above ticket */}
+        <div className="flex justify-between items-center mb-3">
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          )}
+          <button
             onClick={() => handlePrint()}
-            variant="outline"
-            size="sm"
-            className="bg-white/90 border-[#b87a29] text-[#723c11] hover:bg-[#fae1b7] gap-2"
+            className="mr-auto flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors"
           >
             <Printer size={15} />
-            طباعة التذكرة
-          </Button>
+            طباعة
+          </button>
         </div>
 
-        {/* Ticket body — this gets printed */}
-        <div ref={printRef} className="bg-white rounded-3xl overflow-hidden shadow-2xl border border-[#dbc397]">
+        {/* Ticket */}
+        <div ref={printRef} className="rounded-[28px] overflow-hidden shadow-2xl">
 
-          {/* Header stripe */}
-          <div className="bg-[#301809] px-6 pt-6 pb-8 text-center relative overflow-hidden">
-            {/* Decorative circles */}
-            <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-[#723c11]/40" />
-            <div className="absolute -bottom-4 -right-4 w-20 h-20 rounded-full bg-[#b87a29]/30" />
+          {/* Top — dark header */}
+          <div className="bg-[#1e0f04] px-6 pt-6 pb-5 relative overflow-hidden">
+            {/* Subtle pattern circles */}
+            <div className="absolute -top-8 -left-8 w-32 h-32 rounded-full bg-[#b87a29]/15 blur-xl" />
+            <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-[#efa83f]/10 blur-xl" />
 
-            {/* Tifinagh watermark */}
-            <div className="text-[#d4b174]/20 text-5xl font-bold tracking-widest select-none absolute inset-0 flex items-center justify-center pointer-events-none">
+            {/* Association */}
+            {event.associations?.name && (
+              <p className="text-[#b87a29] text-xs font-bold tracking-widest uppercase mb-2 relative z-10">
+                {event.associations.name}
+              </p>
+            )}
+
+            {/* Event title */}
+            <h2 className="text-white text-2xl font-extrabold leading-snug relative z-10">
+              {event.title}
+            </h2>
+
+            {/* Tifinagh — subtle, decorative only */}
+            <div className="text-[#ffffff]/5 text-6xl font-black select-none absolute inset-0 flex items-center justify-center tracking-wider pointer-events-none overflow-hidden">
               ⵡⴰⵔⴵⵍⴰⵏ
-            </div>
-
-            <div className="relative z-10">
-              <div className="text-[#efa83f] text-xs font-bold tracking-[0.3em] uppercase mb-2">
-                ⵜⴰⴼⵓⴽⵜ ⵏ ⵡⴰⵔⴵⵍⴰⵏ
-              </div>
-              <h2 className="text-white text-xl font-extrabold leading-tight line-clamp-2">
-                {event.title}
-              </h2>
-              {event.associations?.name && (
-                <p className="text-[#d4b174] text-sm mt-1">{event.associations.name}</p>
-              )}
             </div>
           </div>
 
-          {/* Tear line */}
-          <div className="relative h-0">
-            <div className="absolute -right-3 -top-4 w-8 h-8 rounded-full bg-[#f9fafb] border border-[#dbc397]" />
-            <div className="absolute -left-3 -top-4 w-8 h-8 rounded-full bg-[#f9fafb] border border-[#dbc397]" />
-            <div className="border-t-2 border-dashed border-[#dbc397] mx-6" />
+          {/* Ticket punch holes + divider */}
+          <div className="bg-[#f5efe6] relative flex items-center">
+            <div className="absolute -right-3 w-6 h-6 rounded-full bg-black/70 shadow-inner" />
+            <div className="absolute -left-3 w-6 h-6 rounded-full bg-black/70 shadow-inner" />
+            <div className="flex-1 mx-6 border-t-2 border-dashed border-[#d4b174]/40" />
           </div>
 
           {/* Body */}
-          <div className="px-6 py-5 bg-[#fdfbf7]">
+          <div className="bg-[#fdfbf7] px-6 py-5">
 
-            {/* Event meta */}
-            <div className="space-y-2.5 mb-5 text-sm">
-              <div className="flex items-center gap-2 text-[#723c11]">
-                <Calendar size={15} className="text-[#b87a29] shrink-0" />
-                <span className="font-medium">{event.date}</span>
+            {/* Event meta — compact row */}
+            <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm mb-5">
+              <div className="flex items-center gap-1.5 text-[#723c11]">
+                <Calendar size={13} className="text-[#b87a29]" />
+                <span className="font-semibold">{event.date}</span>
               </div>
-              <div className="flex items-center gap-2 text-[#723c11]">
-                <Clock size={15} className="text-[#b87a29] shrink-0" />
-                <span className="font-medium">{event.start_time?.substring(0, 5)}</span>
+              <div className="flex items-center gap-1.5 text-[#723c11]">
+                <Clock size={13} className="text-[#b87a29]" />
+                <span className="font-semibold">{event.start_time?.substring(0, 5)}</span>
               </div>
-              <div className="flex items-center gap-2 text-[#723c11]">
-                <MapPin size={15} className="text-[#b87a29] shrink-0" />
-                <span className="font-medium line-clamp-1">{event.location}</span>
+              <div className="flex items-center gap-1.5 text-[#723c11] w-full">
+                <MapPin size={13} className="text-[#b87a29] shrink-0" />
+                <span className="font-semibold line-clamp-1">{event.location}</span>
               </div>
-              {userName && (
-                <div className="flex items-center gap-2 text-[#723c11]">
-                  <span className="text-[#b87a29] text-base shrink-0">🎟</span>
-                  <span className="font-semibold">{userName}</span>
-                </div>
-              )}
             </div>
 
-            {/* QR Code */}
-            <div className="flex flex-col items-center gap-3 bg-white rounded-2xl p-4 shadow-inner border border-[#dbc397]/60">
-              <QRCodeSVG
-                value={ticketId}
-                size={140}
-                level="H"
-                imageSettings={{
-                  src: '/favicon.ico',
-                  height: 22,
-                  width: 22,
-                  excavate: true,
-                }}
-                fgColor="#301809"
-                bgColor="#ffffff"
-              />
-              <div className="text-center">
-                <div className="font-mono text-[#723c11] font-bold tracking-widest text-xs bg-[#fae1b7] px-3 py-1 rounded-full">
-                  #{shortId}
-                </div>
-                <p className="text-[10px] text-gray-400 mt-1.5">
-                  وارجلان (ورقلة) · منصة تواصل شباب وارجلان
-                </p>
+            {/* QR Code — centrepiece */}
+            <div className="flex flex-col items-center">
+              <div className="bg-white p-4 rounded-2xl shadow-md border border-[#e8d9c0]">
+                <QRCodeSVG
+                  value={ticketId}
+                  size={160}
+                  level="H"
+                  fgColor="#1e0f04"
+                  bgColor="#ffffff"
+                  imageSettings={{
+                    src: '/favicon.ico',
+                    height: 24,
+                    width: 24,
+                    excavate: true,
+                  }}
+                />
               </div>
+
+              {/* Ticket ID badge */}
+              <div className="mt-3 bg-[#1e0f04] text-[#efa83f] font-mono font-bold text-xs tracking-[0.25em] px-4 py-1.5 rounded-full">
+                #{shortId}
+              </div>
+
+              {/* Holder name */}
+              {userName && (
+                <p className="mt-2 text-[#301809]/50 text-xs font-medium">{userName}</p>
+              )}
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="bg-[#301809] px-6 py-3 text-center">
-            <p className="text-[#d4b174] text-[10px] tracking-wide">
-              أبرز هذه التذكرة عند المدخل · هذا الرمز خاص بك فقط
-            </p>
+          {/* Footer strip */}
+          <div className="bg-[#1e0f04] px-6 py-3 text-center">
+            <p className="text-[#d4b174]/70 text-[11px] tracking-wide">أبرز هذه التذكرة عند المدخل</p>
           </div>
         </div>
       </div>
