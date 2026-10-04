@@ -6,11 +6,12 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
-import { CalendarPlus, Calendar as CalendarIcon, MapPin, Users, Archive, ArchiveRestore, Trash2, Edit, FileDown, History as HistoryIcon, MoreVertical, Megaphone, Send, Smartphone, Bell, Loader2 } from 'lucide-react';
+import { CalendarPlus, Calendar as CalendarIcon, MapPin, Users, Archive, ArchiveRestore, Trash2, Edit, FileDown, History as HistoryIcon, MoreVertical, Megaphone, Send, Smartphone, Bell, Loader2, QrCode, X, CheckCircle2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import { useReactToPrint } from 'react-to-print';
 import { PrintableEventReport } from '../../components/PrintableEventReport';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,10 @@ export default function AssociationDashboard() {
   // Printing State
   const [reportData, setReportData] = useState<{ event: any, rsvps: any[] } | null>(null);
   const reportRef = React.useRef<HTMLDivElement>(null);
+
+  // QR Check-in State
+  const [checkinData, setCheckinData] = useState<{ event: any, rsvps: any[] } | null>(null);
+  const [checkedIn, setCheckedIn] = useState<Set<string>>(new Set());
   
   // Broadcast Notification States
   const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -248,6 +253,27 @@ export default function AssociationDashboard() {
                 >
                   <span>تقرير</span>
                   <FileDown className="w-4 h-4" />
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  className="flex justify-end gap-2 cursor-pointer text-purple-600 focus:text-purple-700 focus:bg-purple-50"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    try {
+                      const { data } = await supabase
+                        .from('rsvps')
+                        .select('id, user_id, users(email)')
+                        .eq('event_id', event.id)
+                        .eq('status', 'attending');
+                      setCheckedIn(new Set());
+                      setCheckinData({ event, rsvps: data || [] });
+                    } catch (err) {
+                      toast.error('خطأ في تحميل قائمة الحضور');
+                    }
+                  }}
+                >
+                  <span>تسجيل الحضور QR</span>
+                  <QrCode className="w-4 h-4" />
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem 
@@ -513,6 +539,105 @@ export default function AssociationDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* QR Check-in Modal */}
+      {checkinData && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" dir="rtl">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl my-4">
+            {/* Header */}
+            <div className="bg-[#301809] text-white px-6 py-5 rounded-t-3xl flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-extrabold text-[#efa83f]">تسجيل الحضور برمز QR</h2>
+                <p className="text-[#d4b174] text-sm mt-0.5 line-clamp-1">{checkinData.event.title}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="bg-[#723c11] px-3 py-1.5 rounded-full text-sm font-bold">
+                  ✓ {checkedIn.size} / {checkinData.rsvps.length}
+                </div>
+                <button onClick={() => setCheckinData(null)} className="text-white/60 hover:text-white">
+                  <X size={22} />
+                </button>
+              </div>
+            </div>
+
+            {/* Attendee list with QR codes */}
+            <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+              {checkinData.rsvps.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">لا يوجد مسجلون في هذه الفعالية بعد</div>
+              ) : (
+                checkinData.rsvps.map((rsvp: any) => {
+                  const ticketId = `OUARJLANE::${checkinData.event.id}::${rsvp.id || rsvp.user_id}`;
+                  const isChecked = checkedIn.has(rsvp.user_id);
+                  return (
+                    <div
+                      key={rsvp.user_id}
+                      className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
+                        isChecked
+                          ? 'border-emerald-400 bg-emerald-50'
+                          : 'border-gray-200 bg-white hover:border-[#b87a29]/40'
+                      }`}
+                    >
+                      {/* QR Code */}
+                      <div className="shrink-0 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
+                        <QRCodeSVG
+                          value={ticketId}
+                          size={72}
+                          fgColor={isChecked ? '#16a34a' : '#301809'}
+                          bgColor="#ffffff"
+                          level="M"
+                        />
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-[#301809] truncate">
+                          {rsvp.users?.email?.split('@')[0] || 'مشارك'}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">{rsvp.users?.email}</p>
+                        <p className="font-mono text-[10px] text-gray-300 mt-1">
+                          #{ticketId.slice(-8).toUpperCase()}
+                        </p>
+                      </div>
+
+                      {/* Check-in toggle */}
+                      <button
+                        onClick={() => {
+                          setCheckedIn(prev => {
+                            const next = new Set(prev);
+                            if (next.has(rsvp.user_id)) next.delete(rsvp.user_id);
+                            else next.add(rsvp.user_id);
+                            return next;
+                          });
+                        }}
+                        className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                          isChecked
+                            ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'
+                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                        }`}
+                      >
+                        <CheckCircle2 size={22} />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t bg-gray-50 rounded-b-3xl flex justify-between items-center">
+              <p className="text-sm text-gray-500">
+                اضغط على ✓ لتأكيد حضور كل مشارك يدوياً
+              </p>
+              <Button
+                onClick={() => setCheckinData(null)}
+                className="bg-[#301809] hover:bg-[#723c11] text-[#efa83f] rounded-xl"
+              >
+                إغلاق
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

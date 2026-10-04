@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useToast } from '../hooks/use-toast';
-import { QRCodeCanvas } from 'qrcode.react';
 import { CSVLink } from 'react-csv';
 import { MapPin, Calendar as CalendarIcon, Clock, Share2, Ticket, Users, Mail } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
+import TicketCard from '../components/TicketCard';
 
 export default function EventDetails({ userRole: externalUserRole }: { userRole?: 'super_admin' | 'association' | 'attendee' | null }) {
   const { id } = useParams();
@@ -22,6 +22,9 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
   );
   const [rsvps, setRsvps] = useState<any[]>([]);
   const [hasRsvpd, setHasRsvpd] = useState(false);
+  const [showTicket, setShowTicket] = useState(false);
+  const [myRsvpId, setMyRsvpId] = useState<string | undefined>(undefined);
+
   
   const [guestEmail, setGuestEmail] = useState('');
   const [guestLoading, setGuestLoading] = useState(false);
@@ -73,7 +76,10 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
             .eq('user_id', currentUser.id)
             .single();
           
-          if (myRsvp) setHasRsvpd(true);
+          if (myRsvp) {
+            setHasRsvpd(true);
+            setMyRsvpId(myRsvp.id);
+          }
         }
       } else {
         setUserRole('guest');
@@ -89,18 +95,22 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
   const handleRsvp = async () => {
     setRsvpLoading(true);
     try {
-      const { error } = await supabase
+      const { data: insertedRsvp, error } = await supabase
         .from('rsvps')
         .insert({
           event_id: event.id,
           user_id: user.id,
           status: 'attending'
-        });
+        })
+        .select('id')
+        .single();
       
       if (error) throw error;
       
       setHasRsvpd(true);
-      toast({ title: "تم تأكيد الحضور!", description: "مبروك! حصلت على 10 نقاط جديدة."});
+      if (insertedRsvp?.id) setMyRsvpId(insertedRsvp.id);
+      setShowTicket(true);
+      toast({ title: "🎟 تذكرتك جاهزة!", description: "تم تأكيد حضورك وحصلت على 10 نقاط جديدة."});
     } catch (error: any) {
       toast({ variant: "destructive", title: "خطأ", description: "لم نتمكن من تأكيد حجزك، قد تكون حجزت مسبقاً."});
     } finally {
@@ -147,6 +157,7 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
   }));
 
   return (
+    <>
     <div className="min-h-screen bg-[#f9fafb] p-4 md:p-8" dir="rtl">
       
       {/* Back Nav */}
@@ -218,7 +229,13 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                     <h3 className="text-lg font-bold text-emerald-800 border-b border-emerald-200 pb-3">إدارة الفعالية</h3>
                     
                     <div className="bg-white p-4 rounded-xl shadow-sm inline-block mx-auto border">
-                      <QRCodeCanvas value={window.location.href} size={150} />
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.href)}`}
+                        alt="QR Code"
+                        width={150}
+                        height={150}
+                        className="rounded"
+                      />
                     </div>
                     <p className="text-xs text-gray-500">امسح الكود ضوئياً أو شارك الرابط</p>
                     
@@ -253,15 +270,18 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                 {userRole === 'attendee' && (
                   <div className="text-center space-y-5">
                     {hasRsvpd ? (
-                      <div className="bg-emerald-600 text-white p-6 rounded-2xl shadow-xl relative overflow-hidden">
+                      <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 rounded-2xl shadow-xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8" />
-                        <Ticket className="w-12 h-12 mx-auto mb-3 opacity-90" />
+                        <Ticket className="w-12 h-12 mx-auto mb-3 opacity-90 text-[#efa83f]" />
                         <h3 className="text-xl font-bold mb-1">تذكرتك جاهزة!</h3>
-                        <p className="text-emerald-100 text-sm mb-4">تم تأكيد حضورك</p>
-                        
-                        <div className="bg-white p-3 rounded-xl inline-block shadow-inner mt-2">
-                          <QRCodeCanvas value={`valid_rsvp:${user.id}`} size={120} />
-                        </div>
+                        <p className="text-[#d4b174] text-sm mb-5">تم تأكيد حضورك بنجاح</p>
+                        <Button
+                          onClick={() => setShowTicket(true)}
+                          className="w-full h-12 bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] font-bold rounded-xl gap-2 shadow-lg"
+                        >
+                          <Ticket className="h-5 w-5" />
+                          عرض التذكرة برمز QR
+                        </Button>
                       </div>
                     ) : (
                       <>
@@ -318,5 +338,17 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
         </div>
       </div>
     </div>
+
+    {/* QR Ticket Modal */}
+    {showTicket && event && user && (
+      <TicketCard
+        event={event}
+        userId={user.id}
+        rsvpId={myRsvpId}
+        userName={user.email?.split('@')[0]}
+        onClose={() => setShowTicket(false)}
+      />
+    )}
+    </>
   );
 }

@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/input';
 import PartnerAdsBanner from '../../components/PartnerAdsBanner';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import TicketCard from '../../components/TicketCard';
 
 const CATEGORIES = [
   { id: 'Heritage', label: 'تراثي', icon: '🏺' },
@@ -29,6 +30,10 @@ export default function AttendeeDashboard() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showAll, setShowAll] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
+
+  // QR Ticket modal state
+  const [activeTicketEvent, setActiveTicketEvent] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Use a ref to always have the latest myEvents for the real-time listener
   const myEventsRef = useRef(myEvents);
@@ -155,6 +160,7 @@ export default function AttendeeDashboard() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setCurrentUser(user);
 
       // Fetch User Profile (Interests/Points/Badge)
       const { data: profileData } = await supabase
@@ -220,7 +226,7 @@ export default function AttendeeDashboard() {
     }
   };
 
-  const EventCardList = ({ events, emptyMsg }: { events: any[], emptyMsg: string }) => {
+  const EventCardList = ({ events, emptyMsg, showTicketButton }: { events: any[], emptyMsg: string, showTicketButton?: boolean }) => {
     const filteredEvents = events.filter(e => 
       e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       e.location.toLowerCase().includes(searchQuery.toLowerCase())
@@ -238,8 +244,8 @@ export default function AttendeeDashboard() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEvents.map((event) => (
-          <Card key={event.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md group cursor-pointer" onClick={() => navigate(`/event/${event.id}`)}>
-            <div className="h-48 overflow-hidden relative bg-emerald-50 flex items-center justify-center">
+          <Card key={event.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md group">
+            <div className="h-48 overflow-hidden relative bg-emerald-50 flex items-center justify-center cursor-pointer" onClick={() => navigate(`/event/${event.id}`)}>
               {event.cover_image_url ? (
                 <img 
                   src={event.cover_image_url} 
@@ -259,7 +265,7 @@ export default function AttendeeDashboard() {
             </div>
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-xl line-clamp-1">{event.title}</h3>
+                <h3 className="font-bold text-xl line-clamp-1 cursor-pointer" onClick={() => navigate(`/event/${event.id}`)}>{event.title}</h3>
               </div>
               <p className="text-sm text-gray-400 mb-4">{event.associations?.name}</p>
               
@@ -273,12 +279,22 @@ export default function AttendeeDashboard() {
                   <span className="truncate">{event.location}</span>
                 </div>
               </div>
+
+              {showTicketButton && (
+                <Button
+                  onClick={(e) => { e.stopPropagation(); setActiveTicketEvent(event); }}
+                  className="w-full mt-4 h-10 bg-[#301809] hover:bg-[#723c11] text-[#efa83f] font-bold rounded-xl gap-2 text-sm"
+                >
+                  🎟 عرض تذكرتي
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
     );
   };
+
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
@@ -379,7 +395,7 @@ export default function AttendeeDashboard() {
           
           <TabsContent value="calendar" key="calendar" className="mt-0 outline-none">
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <EventCardList events={myEvents} emptyMsg="لم تقم بالتسجيل في أي فعالية بعد." />
+              <EventCardList events={myEvents} emptyMsg="لم تقم بالتسجيل في أي فعالية بعد." showTicketButton={true} />
             </motion.div>
           </TabsContent>
 
@@ -528,6 +544,16 @@ export default function AttendeeDashboard() {
           </TabsContent>
         </AnimatePresence>
       </Tabs>
+
+      {/* QR Ticket Modal */}
+      {activeTicketEvent && currentUser && (
+        <TicketCard
+          event={activeTicketEvent}
+          userId={currentUser.id}
+          userName={currentUser.email?.split('@')[0]}
+          onClose={() => setActiveTicketEvent(null)}
+        />
+      )}
     </div>
   );
 }
