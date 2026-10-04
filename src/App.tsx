@@ -18,6 +18,7 @@ import EventDetails from './pages/EventDetails';
 import Heritage from './pages/Heritage';
 import HeritageMap from './pages/HeritageMap';
 import EventsExplorer from './pages/EventsExplorer';
+import PWAInstallBanner from './components/PWAInstallBanner';
 import { useNotifications } from './hooks/useNotifications';
 
 function AppRoutes({ session, profile, loading }: { session: any, profile: Profile | null, loading: boolean }) {
@@ -145,6 +146,7 @@ export default function App() {
     <div dir="rtl">
       <Toaster />
       <SonnerToaster position="top-center" dir="rtl" richColors closeButton duration={15000} />
+      <PWAInstallBanner />
       <Router>
         <AppRoutes session={session} profile={profile} loading={loading} />
       </Router>

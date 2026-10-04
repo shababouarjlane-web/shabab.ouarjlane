@@ -1,7 +1,8 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useReactToPrint } from 'react-to-print';
 import { Calendar, Clock, MapPin, Printer, X } from 'lucide-react';
+import { saveTicketOffline } from '../hooks/usePWA';
 
 interface TicketCardProps {
   event: {
@@ -34,6 +35,21 @@ export default function TicketCard({ event, userId, rsvpId, userName, onClose }:
 
   const ticketId = buildTicketId(event.id, userId, rsvpId);
   const shortId = ticketId.slice(-8).toUpperCase();
+
+  // Auto-save ticket to offline storage
+  useEffect(() => {
+    saveTicketOffline({
+      ticketId,
+      eventId: event.id,
+      eventTitle: event.title,
+      eventDate: event.date,
+      eventTime: event.start_time,
+      eventLocation: event.location,
+      associationName: event.associations?.name,
+      userName,
+      savedAt: new Date().toISOString()
+    });
+  }, [ticketId, event, userName]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" dir="rtl">
