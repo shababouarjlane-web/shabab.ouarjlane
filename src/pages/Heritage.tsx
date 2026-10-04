@@ -125,7 +125,7 @@ export default function Heritage() {
               variant="outline"
               size="sm"
               onClick={() => navigate('/events')}
-              className="hidden md:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-9 px-3.5 text-xs font-bold"
+              className="flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-9 px-3.5 text-xs font-bold"
             >
               <Calendar className="w-3.5 h-3.5 text-[#b87a29]" />
               <span>دليل الفعاليات</span>
@@ -134,17 +134,10 @@ export default function Heritage() {
               variant="outline"
               size="sm"
               onClick={() => navigate('/map')}
-              className="hidden md:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-9 px-3.5 text-xs font-bold"
+              className="flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-9 px-3.5 text-xs font-bold"
             >
               <MapPin className="w-3.5 h-3.5 text-[#b87a29]" />
               <span>خريطة التراث</span>
-            </Button>
-            <Button
-              onClick={() => navigate('/')}
-              className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] rounded-xl h-9 px-4 text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
-            >
-              <ArrowRight className="w-4 h-4 text-[#efa83f]" />
-              <span>الرئيسية</span>
             </Button>
           </div>
         </div>
@@ -179,37 +172,21 @@ export default function Heritage() {
       </div>
 
       <div className="container mx-auto px-4 md:px-8 -mt-24 relative z-20 pb-20">
-        {/* Search & Navigation Bar */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8 items-stretch md:items-center">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')} 
-            className="bg-white/90 backdrop-blur-md shadow-lg hover:bg-white text-[#301809] font-black rounded-2xl px-6 h-14 border border-[#dbc397]/50 shrink-0 flex items-center gap-2"
-          >
-            <ArrowRight className="h-5 w-5 text-[#b87a29]" />
-            <span>الرئيسية</span>
-          </Button>
-
-          <Button 
-            onClick={() => navigate('/map')} 
-            className="bg-gradient-to-r from-[#301809] via-[#4a2711] to-[#723c11] hover:from-[#4a2510] hover:to-[#8c4e18] text-[#fae1b7] font-bold rounded-2xl px-6 h-14 border border-[#efa83f]/40 shadow-lg shrink-0 flex items-center gap-2 group transition-all"
-          >
-            <MapPin className="w-5 h-5 text-[#efa83f] group-hover:scale-110 transition-transform" />
-            <span>خريطة التراث بالأقمار الصناعية</span>
-          </Button>
-
-          <div className="relative flex-1 group">
-            <Search className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-[#b87a29] transition-colors group-focus-within:text-[#efa83f]" />
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative group max-w-4xl mx-auto">
+            <Search className="absolute right-5 top-1/2 -translate-y-1/2 h-6 w-6 text-[#b87a29] transition-colors group-focus-within:text-[#efa83f]" />
             <Input 
-              placeholder="ابحث في سجلات التراث... (مثال: تقاليد، مقتنيات، سدراتة)" 
+              placeholder="ابحث في سجلات التراث... (مثال: تقاليد، مقتنيات، سدراتة، لالة عزة)" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-white/90 backdrop-blur-md shadow-lg border-[#dbc397]/50 focus-visible:ring-[#efa83f] focus-visible:border-[#efa83f] h-14 pr-14 pl-12 rounded-2xl text-lg font-bold placeholder:text-[#301809]/40"
+              className="bg-white/95 backdrop-blur-md shadow-xl border-2 border-[#dbc397]/70 focus-visible:ring-[#efa83f] focus-visible:border-[#b87a29] h-16 pr-16 pl-14 rounded-2xl text-base md:text-lg font-bold placeholder:text-[#301809]/40"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="absolute left-5 top-1/2 -translate-y-1/2 hover:text-red-500 text-gray-400 transition-colors"
+                className="absolute left-5 top-1/2 -translate-y-1/2 hover:text-red-500 text-gray-400 transition-colors p-1"
+                title="مسح البحث"
               >
                 <X className="w-5 h-5" />
               </button>
