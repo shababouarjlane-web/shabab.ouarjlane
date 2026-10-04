@@ -28,7 +28,8 @@ import {
   Loader2,
   Ticket,
   ArrowUpRight,
-  CheckCircle2
+  CheckCircle2,
+  ArrowUp
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -57,9 +58,22 @@ export default function LandingPage() {
   // Partner Ads State
   const [ads, setAds] = useState<any[]>([]);
 
+  // Scroll to Top State
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
   useEffect(() => {
     fetchPublicData();
+
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 350);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const fetchPublicData = async () => {
     try {
@@ -1002,6 +1016,20 @@ export default function LandingPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Floating Back to Top Button */}
+      {showScrollTop && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.8, y: 20 }}
+          onClick={scrollToTop}
+          className="fixed bottom-6 left-6 z-50 w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#301809] to-[#723c11] text-[#efa83f] border-2 border-[#efa83f]/40 shadow-2xl flex items-center justify-center hover:scale-110 hover:border-[#efa83f] transition-all group cursor-pointer"
+          title="العودة إلى أعلى الصفحة"
+        >
+          <ArrowUp className="w-5 h-5 text-[#efa83f] group-hover:-translate-y-1 transition-transform" />
+        </motion.button>
+      )}
 
     </div>
   );
