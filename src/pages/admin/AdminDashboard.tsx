@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
-import { Users, Building2, Calendar, Ticket, ChevronDown, ChevronUp, History, Plus, Trash2, Megaphone, Link as LinkIcon, Edit, Smartphone, Send, Loader2, Bell } from 'lucide-react';
+import { Users, Building2, Calendar, Ticket, ChevronDown, ChevronUp, History, Plus, Trash2, Megaphone, Link as LinkIcon, Edit, Smartphone, Send, Loader2, Bell, ShieldCheck, UserX, Search, RefreshCw } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Textarea } from '../../components/ui/textarea';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -38,6 +38,13 @@ export default function AdminDashboard() {
   const [associationsDetails, setAssociationsDetails] = useState<any[]>([]);
   const [expandedAssocId, setExpandedAssocId] = useState<string | null>(null);
   const [monthlyStats, setMonthlyStats] = useState<any[]>([]);
+
+  // Users Management State
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<'all' | 'super_admin' | 'association' | 'attendee'>('all');
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   // Heritage & Ads State
   const [heritageItems, setHeritageItems] = useState<any[]>([]);
@@ -133,12 +140,14 @@ export default function AdminDashboard() {
     fetchStats();
     fetchHeritageAndAds();
     fetchNotificationHistory();
+    fetchUsers();
 
     const sub = supabase.channel('public-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public' }, () => {
         fetchStats();
         fetchHeritageAndAds();
         fetchNotificationHistory();
+        fetchUsers();
       })
       .subscribe();
 
@@ -146,6 +155,64 @@ export default function AdminDashboard() {
       supabase.removeChannel(sub);
     };
   }, []);
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUsersList(data || []);
+    } catch (err: any) {
+      console.error('Error fetching users:', err);
+      toast.error('حدث خطأ أثناء تحميل بيانات المستخدمين');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleUpdateUserRole = async (userId: string, newRole: 'super_admin' | 'association' | 'attendee') => {
+    setUpdatingUserId(userId);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      const roleLabels: Record<string, string> = {
+        super_admin: 'مدير عام',
+        association: 'ممثل جمعية',
+        attendee: 'مشارك / زائر'
+      };
+
+      toast.success(`تم تحديث الرتبة بنجاح إلى "${roleLabels[newRole]}"`);
+      setUsersList(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      fetchStats();
+    } catch (err: any) {
+      toast.error('فشل تعديل الرتبة: ' + (err.message || ''));
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userEmail: string) => {
+    if (!confirm(`هل أنت متأكد من رغبتك في حذف المستخدم (${userEmail || userId}) نهائياً؟`)) return;
+    try {
+      const { error } = await supabase.from('users').delete().eq('id', userId);
+      if (error) throw error;
+
+      toast.success('تم حذف المستخدم بنجاح');
+      setUsersList(prev => prev.filter(u => u.id !== userId));
+      fetchStats();
+    } catch (err: any) {
+      toast.error('فشل حذف المستخدم: ' + (err.message || ''));
+    }
+  };
 
   const fetchHeritageAndAds = async () => {
     const { data: hData } = await supabase.from('heritage_archive').select('*').order('created_at', { ascending: false });
@@ -375,7 +442,14 @@ export default function AdminDashboard() {
     }
   };
 
-
+  const filteredUsers = usersList.filter(user => {
+    const query = userSearchQuery.trim().toLowerCase();
+    const matchesSearch = !query ||
+      (user.email && user.email.toLowerCase().includes(query)) ||
+      (user.id && user.id.toLowerCase().includes(query));
+    const matchesRole = userRoleFilter === 'all' || user.role === userRoleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8 font-sans" dir="rtl">
@@ -465,11 +539,12 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-8">
-        <TabsList className="bg-slate-100 p-1 rounded-2xl h-14 w-full max-w-3xl border">
-          <TabsTrigger value="overview" className="flex-1 text-lg font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm">إحصائيات ومنظمات</TabsTrigger>
-          <TabsTrigger value="heritage" className="flex-1 text-lg font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=active]:shadow-sm">الأرشيف التراثي</TabsTrigger>
-          <TabsTrigger value="ads" className="flex-1 text-lg font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm">إدارة الإعلانات</TabsTrigger>
-          <TabsTrigger value="broadcast" className="flex-1 text-lg font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-red-700 data-[state=active]:shadow-sm">بث إشعار عام 📣</TabsTrigger>
+        <TabsList className="bg-slate-100 p-1.5 rounded-2xl h-auto min-h-14 w-full max-w-4xl border grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
+          <TabsTrigger value="overview" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm py-2.5">إحصائيات ومنظمات</TabsTrigger>
+          <TabsTrigger value="users" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-sm py-2.5">المستخدمون والأدوار</TabsTrigger>
+          <TabsTrigger value="heritage" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=active]:shadow-sm py-2.5">الأرشيف التراثي</TabsTrigger>
+          <TabsTrigger value="ads" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm py-2.5">إدارة الإعلانات</TabsTrigger>
+          <TabsTrigger value="broadcast" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-red-700 data-[state=active]:shadow-sm py-2.5">بث إشعار عام 📣</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -599,6 +674,292 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Header & Stats Banner */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-400">إجمالي الحسابات</p>
+                  <p className="text-3xl font-black text-slate-800 mt-1">{usersList.length}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+                  <Users className="w-6 h-6" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-400">الزوار والمشاركون</p>
+                  <p className="text-3xl font-black text-blue-600 mt-1">
+                    {usersList.filter(u => u.role === 'attendee').length}
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                  <Users className="w-6 h-6" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-400">مسؤولو الجمعيات</p>
+                  <p className="text-3xl font-black text-amber-600 mt-1">
+                    {usersList.filter(u => u.role === 'association').length}
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                  <Building2 className="w-6 h-6" />
+                </div>
+              </div>
+            </Card>
+
+            <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-400">المدراء العامون</p>
+                  <p className="text-3xl font-black text-purple-600 mt-1">
+                    {usersList.filter(u => u.role === 'super_admin').length}
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Search, Filter & Actions Toolbar */}
+          <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+              {/* Search input */}
+              <div className="relative flex-1">
+                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  type="text"
+                  placeholder="ابحث بالبريد الإلكتروني أو المعرّف..."
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  className="pr-10 h-11 bg-slate-50 border-slate-200 rounded-xl font-medium"
+                />
+              </div>
+
+              {/* Role filter buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant={userRoleFilter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setUserRoleFilter('all')}
+                  className={`rounded-xl text-xs font-bold h-10 px-4 ${userRoleFilter === 'all' ? 'bg-slate-800 text-white' : 'text-slate-600'}`}
+                >
+                  الكل ({usersList.length})
+                </Button>
+                <Button
+                  type="button"
+                  variant={userRoleFilter === 'attendee' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setUserRoleFilter('attendee')}
+                  className={`rounded-xl text-xs font-bold h-10 px-4 ${userRoleFilter === 'attendee' ? 'bg-blue-600 text-white' : 'text-slate-600'}`}
+                >
+                  زوار / مشاركون
+                </Button>
+                <Button
+                  type="button"
+                  variant={userRoleFilter === 'association' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setUserRoleFilter('association')}
+                  className={`rounded-xl text-xs font-bold h-10 px-4 ${userRoleFilter === 'association' ? 'bg-amber-600 text-white' : 'text-slate-600'}`}
+                >
+                  جمعيات
+                </Button>
+                <Button
+                  type="button"
+                  variant={userRoleFilter === 'super_admin' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setUserRoleFilter('super_admin')}
+                  className={`rounded-xl text-xs font-bold h-10 px-4 ${userRoleFilter === 'super_admin' ? 'bg-purple-600 text-white' : 'text-slate-600'}`}
+                >
+                  مدراء
+                </Button>
+
+                {/* Refresh */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchUsers}
+                  disabled={usersLoading}
+                  className="rounded-xl h-10 w-10 p-0 text-slate-500 hover:text-slate-700"
+                  title="تحديث القائمة"
+                >
+                  <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin text-emerald-600' : ''}`} />
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Users Table / List */}
+          <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            {usersLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+                <p className="font-bold text-sm">جاري تحميل بيانات المستخدمين...</p>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-16 px-4">
+                <UserX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-base font-bold text-slate-700">لم يتم العثور على أي مستخدمين</h3>
+                <p className="text-xs text-slate-400 mt-1">جرب تغيير كلمات البحث أو الفلتر أعلاه</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-right border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 text-xs font-bold">
+                      <th className="p-4">المستخدم</th>
+                      <th className="p-4">تاريخ التسجيل</th>
+                      <th className="p-4">النقاط والشارة</th>
+                      <th className="p-4">الرتبة الحالية</th>
+                      <th className="p-4 text-center">تغيير الرتبة</th>
+                      <th className="p-4 text-center">إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-sm font-medium">
+                    {filteredUsers.map((user) => {
+                      const isCurrentUserUpdating = updatingUserId === user.id;
+                      return (
+                        <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                          {/* User info */}
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center font-bold text-slate-700 uppercase shrink-0">
+                                {user.email ? user.email.charAt(0) : 'U'}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-slate-800 truncate" dir="ltr">
+                                  {user.email || 'بدون بريد'}
+                                </p>
+                                <p className="text-[11px] text-slate-400 font-mono truncate" dir="ltr">
+                                  ID: {user.id.substring(0, 8)}...
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Created date */}
+                          <td className="p-4 text-slate-500 text-xs">
+                            {user.created_at ? new Date(user.created_at).toLocaleDateString('ar-DZ', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            }) : '—'}
+                          </td>
+
+                          {/* Points & badge */}
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <span className="bg-amber-50 text-amber-700 border border-amber-200/60 px-2 py-0.5 rounded-lg text-xs font-bold">
+                                {user.points ?? 0} نقطة
+                              </span>
+                              {user.badge && (
+                                <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md font-semibold">
+                                  {user.badge}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Role Badge */}
+                          <td className="p-4">
+                            {user.role === 'super_admin' ? (
+                              <span className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1 rounded-full text-xs font-black shadow-sm">
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                مدير عام (Super Admin)
+                              </span>
+                            ) : user.role === 'association' ? (
+                              <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-black shadow-sm">
+                                <Building2 className="w-3.5 h-3.5" />
+                                ممثل جمعية (Association)
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full text-xs font-black shadow-sm">
+                                <Users className="w-3.5 h-3.5" />
+                                مشارك / زائر (Attendee)
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Quick Role Changer */}
+                          <td className="p-4 text-center">
+                            <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                              <button
+                                type="button"
+                                disabled={isCurrentUserUpdating || user.role === 'attendee'}
+                                onClick={() => handleUpdateUserRole(user.id, 'attendee')}
+                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                                  user.role === 'attendee'
+                                    ? 'bg-blue-600 text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-blue-700 hover:bg-white'
+                                } disabled:opacity-60`}
+                                title="تحويل لمشارك"
+                              >
+                                زائر
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isCurrentUserUpdating || user.role === 'association'}
+                                onClick={() => handleUpdateUserRole(user.id, 'association')}
+                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                                  user.role === 'association'
+                                    ? 'bg-amber-600 text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-amber-700 hover:bg-white'
+                                } disabled:opacity-60`}
+                                title="ترقية لممثل جمعية"
+                              >
+                                جمعية
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isCurrentUserUpdating || user.role === 'super_admin'}
+                                onClick={() => handleUpdateUserRole(user.id, 'super_admin')}
+                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                                  user.role === 'super_admin'
+                                    ? 'bg-purple-600 text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-purple-700 hover:bg-white'
+                                } disabled:opacity-60`}
+                                title="ترقية لمدير عام"
+                              >
+                                مدير
+                              </button>
+                            </div>
+                          </td>
+
+                          {/* Delete action */}
+                          <td className="p-4 text-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteUser(user.id, user.email)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0 rounded-xl"
+                              title="حذف المستخدم نهائياً"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
         </TabsContent>
 
         <TabsContent value="heritage" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
