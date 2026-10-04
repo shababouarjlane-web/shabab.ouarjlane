@@ -17,6 +17,7 @@ import AttendeeDashboard from './pages/attendee/AttendeeDashboard';
 import EventDetails from './pages/EventDetails';
 import Heritage from './pages/Heritage';
 import HeritageMap from './pages/HeritageMap';
+import EventsExplorer from './pages/EventsExplorer';
 import { useNotifications } from './hooks/useNotifications';
 
 function AppRoutes({ session, profile, loading }: { session: any, profile: Profile | null, loading: boolean }) {
@@ -45,6 +46,7 @@ function AppRoutes({ session, profile, loading }: { session: any, profile: Profi
           </PageTransition>
         } />
 
+        <Route path="/events" element={<PageTransition><EventsExplorer /></PageTransition>} />
         <Route path="/heritage" element={<PageTransition><Heritage /></PageTransition>} />
         <Route path="/map" element={<PageTransition><HeritageMap /></PageTransition>} />
         <Route path="/event/:id" element={<PageTransition><EventDetails userRole={profile?.role || null} /></PageTransition>} />

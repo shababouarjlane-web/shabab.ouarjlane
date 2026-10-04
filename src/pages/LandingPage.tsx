@@ -244,11 +244,16 @@ export default function LandingPage() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-[#301809]/80">
+          <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-[#301809]/80">
             <a href="#hero" className="hover:text-[#b87a29] transition-colors">الرئيسية</a>
-            <a href="#events" className="hover:text-[#b87a29] transition-colors">الفعاليات والأخبار</a>
+            <button 
+              onClick={() => navigate('/events')} 
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11]"
+            >
+              <Calendar className="w-4 h-4 text-[#b87a29]" />
+              دليل الفعاليات
+            </button>
             <a href="#heritage-spotlight" className="hover:text-[#b87a29] transition-colors">أصالة سدراتة</a>
-            <a href="#stats" className="hover:text-[#b87a29] transition-colors">المجتمع بالأرقام</a>
             <button 
               onClick={() => navigate('/heritage')} 
               className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11]"
@@ -759,6 +764,18 @@ export default function LandingPage() {
               ))}
             </div>
           )}
+
+          {/* View All Events Directory CTA */}
+          <div className="text-center pt-10">
+            <Button
+              onClick={() => navigate('/events')}
+              className="h-13 px-8 rounded-2xl bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#c98730] hover:to-[#f0b24d] text-white font-bold text-sm md:text-base shadow-glow-amber transition-all inline-flex items-center gap-2.5"
+            >
+              <Calendar className="w-5 h-5 text-white" />
+              <span>استكشف دليل الفعاليات والبحث المتقدم بالكامل</span>
+              <ChevronLeft className="w-4 h-4 text-white" />
+            </Button>
+          </div>
         </div>
       </section>
 
