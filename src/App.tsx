@@ -65,9 +65,28 @@ export default function App() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Initialize notifications globally
   useNotifications();
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) return;
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setShowPasswordReset(false);
+      setNewPassword('');
+    } catch (err: any) {
+      alert('خطأ: ' + (err.message || 'فشل تحديث كلمة المرور'));
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async (userId: string, attempts = 3) => {
@@ -87,7 +106,7 @@ export default function App() {
 
           if (i < attempts - 1) {
             console.log(`محاولة جلب البروفايل (${i + 1}/${attempts})...`);
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5s
+            await new Promise(resolve => setTimeout(resolve, 1500));
           }
         }
         console.warn("لم يتم العثور على البروفايل بعد عدة محاولات.");
@@ -104,10 +123,14 @@ export default function App() {
       else setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-      if (session) fetchProfile(session.user.id);
-      else {
+      if (event === 'PASSWORD_RECOVERY') {
+        setShowPasswordReset(true);
+        if (session) fetchProfile(session.user.id);
+      } else if (session) {
+        fetchProfile(session.user.id);
+      } else {
         setProfile(null);
         setLoading(false);
       }
@@ -123,6 +146,55 @@ export default function App() {
       <Router>
         <AppRoutes session={session} profile={profile} loading={loading} />
       </Router>
+
+      {/* Password Recovery Modal */}
+      {showPasswordReset && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-br from-[#301809] to-[#723c11] px-8 py-7 text-center">
+              <div className="text-4xl mb-2">🔑</div>
+              <h2 className="text-xl font-extrabold text-[#fae1b7]">تعيين كلمة مرور جديدة</h2>
+              <p className="text-[#d4b174]/70 text-sm mt-1">اختر كلمة مرور قوية لحسابك</p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleUpdatePassword} className="p-8 space-y-5">
+              <div>
+                <label className="block text-[#301809] font-bold text-sm mb-2">
+                  كلمة المرور الجديدة
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder="6 أحرف على الأقل"
+                  minLength={6}
+                  required
+                  dir="ltr"
+                  className="w-full border-2 border-[#dbc397] rounded-xl px-4 py-3 text-[#301809] focus:outline-none focus:border-[#b87a29] transition-colors"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={resetLoading || newPassword.length < 6}
+                className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] text-white font-extrabold py-3.5 rounded-xl disabled:opacity-50 transition-all hover:shadow-lg"
+              >
+                {resetLoading ? 'جاري الحفظ...' : 'حفظ كلمة المرور'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPasswordReset(false)}
+                className="w-full text-center text-sm text-gray-400 hover:text-gray-600 py-1"
+              >
+                تخطي الآن
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
