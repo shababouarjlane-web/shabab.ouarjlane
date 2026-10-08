@@ -191,59 +191,73 @@ export default function CreateEvent() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-3xl py-12 text-right text-gray-900" dir="rtl">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate('/association')} className="text-gray-500 mb-4">
-          ← العودة للوحة التحكم
-        </Button>
-      </div>
-
-      <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white">
-        <div className="bg-gradient-to-l from-emerald-600 to-emerald-400 p-8 text-white relative overflow-hidden">
-          <CalendarPlus className="absolute left-6 top-1/2 -translate-y-1/2 w-24 h-24 opacity-20" />
-          <CardTitle className="text-3xl font-extrabold pb-2">إنشاء فعالية جديدة</CardTitle>
-          <CardDescription className="text-emerald-50 text-lg">أدخل تفاصيل الفعالية لجدولتها وإتاحتها للجمهور</CardDescription>
+    <div className="min-h-screen bg-[#fdfbf7] py-10 px-4 text-right" dir="rtl">
+      <div className="container mx-auto max-w-3xl">
+        <div className="mb-6 flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/association')} 
+            className="text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40 font-bold rounded-xl gap-2"
+          >
+            ← العودة للوحة الجمعية
+          </Button>
+          <span className="text-xs font-bold text-[#b87a29] bg-[#fae1b7]/50 px-3 py-1 rounded-full border border-[#dbc397]">
+            لوحة الجمعيات • ورقلة
+          </span>
         </div>
 
-        <CardContent className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-
-            {conflictWarning && (
-              <Alert variant="destructive" className="bg-red-50 text-red-900 border border-red-200">
-                <AlertCircle className="h-5 w-5 text-red-600" />
-                <AlertTitle className="text-lg font-bold mr-2 text-red-700">تنبيه التعارض!</AlertTitle>
-                <AlertDescription className="text-red-800 text-base mt-2 font-medium">
-                  {conflictWarning}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-base text-gray-700 font-bold">عنوان الفعالية</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className="bg-gray-50 border-gray-200 h-12"
-                placeholder="مثال: ندوة التوعية الصحية"
-              />
+        <Card className="border-2 border-[#dbc397]/70 shadow-xl rounded-3xl overflow-hidden bg-white">
+          <div className="bg-gradient-to-l from-[#301809] via-[#723c11] to-[#301809] p-7 md:p-8 text-white relative overflow-hidden border-b-4 border-[#efa83f]">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#efa83f_1px,transparent_1px)] [background-size:16px_16px]" />
+            <CalendarPlus className="absolute left-6 top-1/2 -translate-y-1/2 w-24 h-24 text-[#efa83f] opacity-20 pointer-events-none" />
+            <div className="relative z-10">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#efa83f] bg-[#efa83f]/15 px-3 py-1 rounded-full mb-2 border border-[#efa83f]/30">
+                ✨ فعالية جديدة
+              </span>
+              <CardTitle className="text-2xl md:text-3xl font-black text-[#fae1b7] tracking-tight">إنشاء فعالية جديدة</CardTitle>
+              <CardDescription className="text-[#dbc397] text-sm md:text-base mt-1 font-medium">أدخل تفاصيل الفعالية لجدولتها وإتاحتها لجمهور ورقلة</CardDescription>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-base text-gray-700 font-bold">وصف مفصل</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="bg-gray-50 border-gray-200 min-h-[120px]"
-                placeholder="تفاصيل و أهداف الفعالية..."
-              />
-            </div>
+          <CardContent className="p-6 md:p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+
+              {conflictWarning && (
+                <Alert variant="destructive" className="bg-red-50 text-red-900 border-2 border-red-300 rounded-2xl">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <AlertTitle className="text-base font-bold mr-2 text-red-700">تنبيه التعارض الزمني!</AlertTitle>
+                  <AlertDescription className="text-red-800 text-sm mt-1 font-medium">
+                    {conflictWarning}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-black text-[#301809]">عنوان الفعالية <span className="text-red-500">*</span></Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  className="bg-[#fdfbf7] border-2 border-[#dbc397] focus-visible:border-[#b87a29] rounded-xl h-12 font-medium"
+                  placeholder="مثال: ندوة التراث الصحراوي وتاريخ قصر ورقلة"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-sm font-black text-[#301809]">وصف مفصل</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="bg-[#fdfbf7] border-2 border-[#dbc397] focus-visible:border-[#b87a29] rounded-xl min-h-[120px] font-medium"
+                  placeholder="تفاصيل وأهداف الفعالية وبرنامج الأنشطة..."
+                />
+              </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="date" className="text-base text-gray-700 font-bold">التاريخ</Label>
+                <Label htmlFor="date" className="text-sm font-black text-[#301809]">التاريخ <span className="text-red-500">*</span></Label>
                 <Input
                   id="date"
                   type="date"
@@ -254,12 +268,12 @@ export default function CreateEvent() {
                     setConflictWarning(null);
                   }}
                   required
-                  className="bg-gray-50 border-gray-200 h-12"
+                  className="bg-[#fdfbf7] border-2 border-[#dbc397] focus-visible:border-[#b87a29] rounded-xl h-12 font-medium"
                   dir="ltr"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="start" className="text-base text-gray-700 font-bold">وقت البداية</Label>
+                <Label htmlFor="start" className="text-sm font-black text-[#301809]">وقت البداية <span className="text-red-500">*</span></Label>
                 <Input
                   id="start"
                   type="time"
@@ -270,12 +284,12 @@ export default function CreateEvent() {
                     setConflictWarning(null);
                   }}
                   required
-                  className="bg-gray-50 border-gray-200 h-12"
+                  className="bg-[#fdfbf7] border-2 border-[#dbc397] focus-visible:border-[#b87a29] rounded-xl h-12 font-medium"
                   dir="ltr"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end" className="text-base text-gray-700 font-bold">وقت النهاية</Label>
+                <Label htmlFor="end" className="text-sm font-black text-[#301809]">وقت النهاية <span className="text-red-500">*</span></Label>
                 <Input
                   id="end"
                   type="time"
@@ -286,82 +300,82 @@ export default function CreateEvent() {
                     setConflictWarning(null);
                   }}
                   required
-                  className="bg-gray-50 border-gray-200 h-12"
+                  className="bg-[#fdfbf7] border-2 border-[#dbc397] focus-visible:border-[#b87a29] rounded-xl h-12 font-medium"
                   dir="ltr"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category" className="text-base text-gray-700 font-bold">تصنيف الفعالية</Label>
+              <Label htmlFor="category" className="text-sm font-black text-[#301809]">تصنيف الفعالية <span className="text-red-500">*</span></Label>
               <select 
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full h-12 bg-gray-50 border border-gray-200 rounded-xl px-4 font-bold focus:ring-2 focus:ring-emerald-500 outline-none"
+                className="w-full h-12 bg-[#fdfbf7] border-2 border-[#dbc397] rounded-xl px-4 font-bold text-[#301809] focus:border-[#b87a29] outline-none transition-colors"
               >
-                <option value="Heritage">تراثي</option>
-                <option value="Religious">ديني</option>
-                <option value="Educational">تعليمي</option>
-                <option value="Cultural">ثقافي</option>
-                <option value="Sports">رياضي</option>
+                <option value="Heritage">تراثي وتقليدي</option>
+                <option value="Religious">ديني وروحي</option>
+                <option value="Educational">تعليمي وتدريبي</option>
+                <option value="Cultural">ثقافي وفني</option>
+                <option value="Sports">رياضي وترفيهي</option>
                 <option value="Other">أخرى</option>
               </select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="location" className="text-base text-gray-700 font-bold">وصف الموقع / الرابط</Label>
+                <Label htmlFor="location" className="text-sm font-black text-[#301809]">وصف الموقع / الرابط <span className="text-red-500">*</span></Label>
                 <Input
                   id="location"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   required
-                  className="bg-gray-50 border-gray-200 h-12"
-                  placeholder="مثال: القاعة الكبرى، جامعة ورقلة"
+                  className="bg-[#fdfbf7] border-2 border-[#dbc397] focus-visible:border-[#b87a29] rounded-xl h-12 font-medium"
+                  placeholder="مثال: قصر ورقلة العتيق، أو مدرج ابن رشد"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="maxCapacity" className="text-base text-gray-700 font-bold">السعة القصوى (اختياري)</Label>
+                <Label htmlFor="maxCapacity" className="text-sm font-black text-[#301809]">السعة القصوى للمشاركين (اختياري)</Label>
                 <Input
                   id="maxCapacity"
                   type="number"
                   min="1"
                   value={maxCapacity}
                   onChange={(e) => setMaxCapacity(e.target.value)}
-                  className="bg-gray-50 border-gray-200 h-12"
+                  className="bg-[#fdfbf7] border-2 border-[#dbc397] focus-visible:border-[#b87a29] rounded-xl h-12 font-medium"
                   placeholder="مثال: 150"
                   dir="ltr"
                 />
               </div>
             </div>
 
-            <div className="space-y-4 pt-2 border-t mt-2">
-              <Label htmlFor="cover" className="text-base text-gray-700 font-bold">صورة الغلاف الرئيسية</Label>
+            <div className="space-y-4 pt-4 border-t-2 border-[#fae1b7]">
+              <Label htmlFor="cover" className="text-sm font-black text-[#301809] block">صورة الغلاف الرئيسية</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-500">رابط خارجي (اختياري)</Label>
+                  <Label className="text-xs text-[#723c11] font-bold">رابط خارجي (اختياري)</Label>
                   <Input 
                     id="cover" 
                     type="url"
                     value={coverUrl} 
                     onChange={(e) => setCoverUrl(e.target.value)} 
-                    placeholder="https://..."
-                    className="bg-gray-50 border-gray-200 h-12"
+                    placeholder="https://images.unsplash.com/..."
+                    className="bg-[#fdfbf7] border-2 border-[#dbc397] focus-visible:border-[#b87a29] rounded-xl h-12 font-medium"
                     dir="ltr"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-slate-500">أو ارفع صورة من جهازك</Label>
+                  <Label className="text-xs text-[#723c11] font-bold">أو ارفع صورة من جهازك</Label>
                   <div className="flex items-center gap-2">
                     <Input 
                       type="file" 
                       accept="image/*" 
                       onChange={e => setCoverFile(e.target.files?.[0] || null)}
-                      className="bg-gray-50 border-gray-200 h-12 pt-2 cursor-pointer"
+                      className="bg-[#fdfbf7] border-2 border-[#dbc397] rounded-xl h-12 pt-2 cursor-pointer font-medium"
                     />
                     {coverFile && (
-                      <Button type="button" variant="ghost" onClick={() => setCoverFile(null)} className="text-red-500 h-12">
+                      <Button type="button" variant="ghost" onClick={() => setCoverFile(null)} className="text-red-500 hover:bg-red-50 h-12 rounded-xl">
                         <X size={20} />
                       </Button>
                     )}
@@ -369,19 +383,20 @@ export default function CreateEvent() {
                 </div>
               </div>
               {(coverFile || coverUrl) && (
-                <div className="mt-2 text-xs font-bold text-emerald-600 bg-emerald-50 p-2 rounded-lg inline-block border border-emerald-100">
-                  {coverFile ? `تم اختيار: ${coverFile.name}` : "رابط الصورة نشط حالياً"}
+                <div className="mt-2 text-xs font-bold text-[#723c11] bg-[#fae1b7]/60 p-2.5 rounded-xl inline-flex items-center gap-2 border border-[#dbc397]">
+                  <CheckCircle2 className="w-4 h-4 text-[#b87a29]" />
+                  {coverFile ? `تم اختيار: ${coverFile.name}` : "رابط الصورة نشط وجاهز للعرض"}
                 </div>
               )}
             </div>
 
-            <div className="space-y-3">
-              <Label className="text-base text-gray-700 font-bold">معرض الصور (3 صور كحد أقصى)</Label>
-              <p className="text-xs text-gray-500 font-medium">سيتم ضغط الصور تلقائياً لتسريع العرض. الأبعاد المفضلة: عرضية.</p>
+            <div className="space-y-3 pt-2">
+              <Label className="text-sm font-black text-[#301809] block">معرض الصور الإضافية (3 صور كحد أقصى)</Label>
+              <p className="text-xs text-[#723c11]/80 font-medium">سيتم ضغط الصور تلقائياً لتسريع التصفح في الهواتف. الأبعاد المفضلة: عرضية (16:9).</p>
 
               <div className="flex items-center gap-4 flex-wrap">
                 {galleryFiles.map((f, i) => (
-                  <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 shadow-sm group">
+                  <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-[#dbc397] shadow-sm group">
                     <img src={URL.createObjectURL(f)} alt="Preview" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => removeFile(i)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <X className="w-4 h-4" />
@@ -390,25 +405,31 @@ export default function CreateEvent() {
                 ))}
 
                 {galleryFiles.length < 3 && (
-                  <Label htmlFor="gallery" className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-50 hover:border-emerald-400 transition-colors">
-                    <UploadCloud className="w-6 h-6 text-gray-400" />
-                    <span className="text-xs font-bold text-gray-500 mt-1">رفع صورة</span>
+                  <Label htmlFor="gallery" className="w-24 h-24 rounded-2xl border-2 border-dashed border-[#dbc397] bg-[#fdfbf7] hover:bg-[#fae1b7]/30 hover:border-[#b87a29] flex flex-col items-center justify-center cursor-pointer transition-colors">
+                    <UploadCloud className="w-6 h-6 text-[#b87a29]" />
+                    <span className="text-[11px] font-bold text-[#723c11] mt-1">رفع صورة</span>
                     <input id="gallery" type="file" multiple accept="image/*" onChange={handleFileSelect} className="hidden" />
                   </Label>
                 )}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-base text-gray-700 font-bold">نوع الفعالية (الخصوصية)</Label>
+            <div className="space-y-2 pt-2 border-t-2 border-[#fae1b7]">
+              <Label className="text-sm font-black text-[#301809]">نوع الفعالية (الخصوصية)</Label>
               <div className="flex gap-4 items-center mt-2">
-                <Label className={`flex items-center gap-3 cursor-pointer p-4 rounded-xl border flex-1 transition-all ${isPublic ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:border-emerald-300'}`}>
-                  <input type="radio" checked={isPublic} onChange={() => setIsPublic(true)} className="accent-emerald-600 w-5 h-5" />
-                  <span className="font-bold text-gray-800 text-lg">عامة (تظهر للجميع)</span>
+                <Label className={`flex items-center gap-3 cursor-pointer p-4 rounded-2xl border-2 flex-1 transition-all ${isPublic ? 'border-[#b87a29] bg-[#fae1b7]/40 shadow-xs' : 'border-[#dbc397] bg-[#fdfbf7] hover:border-[#b87a29]'}`}>
+                  <input type="radio" checked={isPublic} onChange={() => setIsPublic(true)} className="accent-[#b87a29] w-5 h-5" />
+                  <div>
+                    <span className="font-black text-[#301809] text-base block">عامة (متاحة للجميع)</span>
+                    <span className="text-[11px] text-[#723c11]/80 font-medium">تظهر في المستكشف واستكشاف ورقلة</span>
+                  </div>
                 </Label>
-                <Label className={`flex items-center gap-3 cursor-pointer p-4 rounded-xl border flex-1 transition-all ${!isPublic ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:border-amber-300'}`}>
-                  <input type="radio" checked={!isPublic} onChange={() => setIsPublic(false)} className="accent-amber-600 w-5 h-5" />
-                  <span className="font-bold text-gray-800 text-lg">خاصة (برابط فقط)</span>
+                <Label className={`flex items-center gap-3 cursor-pointer p-4 rounded-2xl border-2 flex-1 transition-all ${!isPublic ? 'border-[#301809] bg-[#fae1b7]/40 shadow-xs' : 'border-[#dbc397] bg-[#fdfbf7] hover:border-[#301809]'}`}>
+                  <input type="radio" checked={!isPublic} onChange={() => setIsPublic(false)} className="accent-[#301809] w-5 h-5" />
+                  <div>
+                    <span className="font-black text-[#301809] text-base block">خاصة (برابط مباشر فقط)</span>
+                    <span className="text-[11px] text-[#723c11]/80 font-medium">للمدعوين وأعضاء الجمعية حصراً</span>
+                  </div>
                 </Label>
               </div>
             </div>
@@ -416,9 +437,9 @@ export default function CreateEvent() {
             <Button
               type="submit"
               disabled={loading || uploadingCover || uploadingImages}
-              className={`w-full h-14 text-lg font-bold rounded-xl transition-all shadow-lg ${forceSave
-                ? 'bg-red-600 hover:bg-red-700 shadow-red-600/30'
-                : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30'
+              className={`w-full h-14 text-lg font-black rounded-2xl transition-all shadow-md ${forceSave
+                ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/30'
+                : 'bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-[#301809] hover:text-[#fae1b7] shadow-[#b87a29]/30'
                 }`}
             >
               {loading ? (uploadingCover ? "جاري رفع صورة الغلاف..." : uploadingImages ? "جاري ضغط ورفع الصور..." : "جاري المعالجة...") : forceSave ? (
@@ -431,5 +452,6 @@ export default function CreateEvent() {
         </CardContent>
       </Card>
     </div>
+  </div>
   );
 }
