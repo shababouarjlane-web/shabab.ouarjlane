@@ -375,9 +375,9 @@ export default function LandingPage() {
             </div>
             
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-thmanyah font-bold text-[#301809] leading-[1.25] tracking-normal">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-thmanyah font-bold text-[#301809] leading-[1.55] sm:leading-[1.5] tracking-normal">
               تواصل، تفاعل وارتقِ مع <br />
-              <span className="text-[#b87a29]">مجتمعك وأصالتك التراثية</span>
+              <span className="text-[#b87a29] block mt-1 sm:mt-2">مجتمعك وأصالتك التراثية</span>
             </h1>
             
             {/* Subtitle Description */}
@@ -607,9 +607,9 @@ export default function LandingPage() {
                 ذاكرة الواحات وأصالة سدراتة
               </div>
 
-              <h2 className="text-3xl sm:text-4xl font-thmanyah font-bold leading-tight">
+              <h2 className="text-3xl sm:text-4xl font-thmanyah font-bold leading-[1.55] sm:leading-[1.5]">
                 روح التاريخ تلهم الحاضر، <br />
-                <span className="text-[#efa83f]">وجسور التراث تمتد للأجيال</span>
+                <span className="text-[#efa83f] block mt-1 sm:mt-1.5">وجسور التراث تمتد للأجيال</span>
               </h2>
 
               <p className="text-[#fae1b7]/80 text-sm md:text-base leading-relaxed font-normal">
