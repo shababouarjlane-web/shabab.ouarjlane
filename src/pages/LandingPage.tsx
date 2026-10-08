@@ -516,24 +516,47 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Partner Ads Banner (If Available) */}
+      {/* Partner Sponsors & Supporters Showcase */}
       {ads.length > 0 && (
-        <section className="bg-[#fae1b7]/20 py-6 border-y border-[#d4b174]/30">
+        <section className="bg-gradient-to-b from-[#fae1b7]/25 via-white to-[#fae1b7]/15 py-8 md:py-10 border-y-2 border-[#dbc397]/50 relative overflow-hidden">
           <div className="container mx-auto px-6 text-center">
-            <span className="text-xs font-semibold text-[#723c11] tracking-wider uppercase mb-3 block">
-              شركاء النجاح والرعاية
-            </span>
-            <div className="flex flex-wrap justify-center items-center gap-6">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#fae1b7]/60 border border-[#dbc397] mb-3">
+              <span className="w-2 h-2 rounded-full bg-[#efa83f]" />
+              <span className="text-xs font-black text-[#723c11] tracking-wide">
+                شركاء النجاح والرعاية الداعمون
+              </span>
+            </div>
+            <p className="text-xs md:text-sm text-[#723c11]/80 font-medium mb-6 max-w-xl mx-auto">
+              نعتز بشراكتنا مع المؤسسات والمبادرات الرائدة المساهمة في تنشيط مجتمع وارجلان وتراثه
+            </p>
+
+            <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6">
               {ads.map(ad => (
                 <a 
                   key={ad.id} 
                   href={ad.link || '#'} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex items-center gap-2.5 bg-white px-5 py-2.5 rounded-xl shadow-sm hover:shadow transition-shadow border border-[#dbc397]/40 group"
+                  target={ad.link ? "_blank" : undefined}
+                  rel={ad.link ? "noopener noreferrer" : undefined}
+                  className="flex items-center justify-center gap-3.5 bg-white px-6 py-3.5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#b87a29] transition-all border-2 border-[#dbc397]/60 group min-w-[190px] max-w-[280px]"
                 >
-                  <img src={ad.image_url} alt={ad.partner_name} className="h-7 object-contain" />
-                  <span className="font-semibold text-xs text-[#301809] group-hover:text-[#b87a29] transition-colors">{ad.partner_name}</span>
+                  <div className="h-9 w-20 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={ad.image_url} 
+                      alt={ad.partner_name} 
+                      className="max-h-full max-w-full object-contain filter group-hover:scale-105 transition-transform" 
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.parentElement?.querySelector('.partner-logo-fallback');
+                        if (fallback) fallback.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="partner-logo-fallback hidden font-black text-xs text-[#b87a29] tracking-wider uppercase">
+                      {ad.partner_name}
+                    </div>
+                  </div>
+                  <span className="font-bold text-xs md:text-sm text-[#301809] group-hover:text-[#b87a29] transition-colors truncate">
+                    {ad.partner_name}
+                  </span>
                 </a>
               ))}
             </div>

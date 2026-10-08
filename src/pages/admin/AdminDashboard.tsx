@@ -1353,70 +1353,74 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                   <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">الرابط الموجه (URL)</Label>
-                     <Input 
-                        value={newAd.link} 
-                        onChange={e => setNewAd({...newAd, link: e.target.value})} 
-                        placeholder="https://..." 
-                        dir="ltr" 
-                        className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]"
-                     />
-                   </div>
-                   <Button 
-                      type="submit" 
-                      disabled={adUploading} 
-                      className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white mt-4 shadow-lg rounded-xl cursor-pointer transition-all"
-                   >
-                     {adUploading ? "جاري الرفع والنشر..." : "نشر الإعلان والشراكة"}
-                   </Button>
-                 </form>
-               </CardContent>
-            </Card>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">الرابط الموجه للشريك (URL)</Label>
+                      <Input 
+                         value={newAd.link} 
+                         onChange={e => setNewAd({...newAd, link: e.target.value})} 
+                         placeholder="https://ignatex.com أو صفحة فيسبوك/إنستغرام" 
+                         dir="ltr" 
+                         className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]"
+                      />
+                      <p className="text-[11px] text-[#723c11]/80 font-medium">
+                        💡 نصيحة: يفضل رفع شعار بخلفية شفافة (PNG) أو صورة عالية الجودة ليظهر الشريك بأعلى درجات الاحترافية في شريط الرعاة والبنر الترويجي.
+                      </p>
+                    </div>
+                    <Button 
+                       type="submit" 
+                       disabled={adUploading} 
+                       className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white mt-4 shadow-lg rounded-xl cursor-pointer transition-all"
+                    >
+                      {adUploading ? "جاري الرفع والنشر..." : "نشر الإعلان والشراكة"}
+                    </Button>
+                  </form>
+                </CardContent>
+             </Card>
 
-            <div className="lg:col-span-2 space-y-4">
-               <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-3 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
-                 <Megaphone className="text-[#b87a29]" /> الإعلانات الحالية ({ads.length})
-               </h3>
-               {ads.length === 0 ? (
-                 <div className="text-center text-[#723c11] py-12 bg-white rounded-3xl border-2 border-dashed border-[#dbc397] font-bold">
-                   لا توجد إعلانات شركاء نشطة حالياً.
-                 </div>
-               ) : (
-                 ads.map(ad => (
-                   <Card key={ad.id} className="p-4 flex gap-4 items-center bg-white shadow-sm hover:shadow-md border-2 border-[#dbc397]/60 rounded-3xl relative overflow-hidden transition-all">
-                     <div className="w-32 h-20 rounded-2xl bg-[#fdfbf7] border border-[#dbc397] flex items-center justify-center overflow-hidden shrink-0 relative">
-                       <img 
-                         src={ad.image_url} 
-                         className="object-cover h-full w-full" 
-                         onError={(e) => {
-                           e.currentTarget.style.display = 'none';
-                           const fallback = e.currentTarget.parentElement?.querySelector('.admin-thumb-fallback');
-                           if (fallback) fallback.classList.remove('hidden');
-                         }}
-                       />
-                       <div className="admin-thumb-fallback hidden absolute inset-0 bg-[#fae1b7]/40 flex items-center justify-center">
-                         <Megaphone size={24} className="text-[#b87a29]" />
-                       </div>
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <h4 className="font-bold text-[#301809] text-base">{ad.partner_name}</h4>
-                       {ad.link && (
-                         <a href={ad.link} target="_blank" rel="noreferrer" className="text-xs text-[#b87a29] hover:underline flex items-center gap-1 mt-1 truncate" dir="ltr">
-                           <LinkIcon size={12} className="inline shrink-0" />
-                           {ad.link}
-                         </a>
-                       )}
-                       <span className="text-xs text-[#723c11] font-bold bg-[#fae1b7]/70 border border-[#dbc397] px-2.5 py-0.5 rounded-full inline-block mt-2">
-                         نشط على الصفحة الرئيسية
-                       </span>
-                     </div>
-                     <Button variant="ghost" onClick={() => handleDeleteItem('partner_ads', ad.id)} className="text-red-500 hover:bg-red-50 p-2 h-10 w-10 rounded-xl cursor-pointer shrink-0">
-                       <Trash2 size={18} />
-                     </Button>
-                   </Card>
-                 ))
-               )}
+             <div className="lg:col-span-2 space-y-4">
+                <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-3 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
+                  <Megaphone className="text-[#b87a29]" /> الشركاء والرعاة الحاليون ({ads.length})
+                </h3>
+                {ads.length === 0 ? (
+                  <div className="text-center text-[#723c11] py-12 bg-white rounded-3xl border-2 border-dashed border-[#dbc397] font-bold">
+                    لا توجد إعلانات شركاء نشطة حالياً.
+                  </div>
+                ) : (
+                  ads.map(ad => (
+                    <Card key={ad.id} className="p-4 flex gap-4 items-center bg-white shadow-sm hover:shadow-md border-2 border-[#dbc397]/60 rounded-3xl relative overflow-hidden transition-all">
+                      <div className="w-32 h-20 rounded-2xl bg-[#fdfbf7] border border-[#dbc397] flex items-center justify-center p-2 overflow-hidden shrink-0 relative">
+                        <img 
+                          src={ad.image_url} 
+                          alt={ad.partner_name}
+                          className="object-contain max-h-full max-w-full" 
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.parentElement?.querySelector('.admin-thumb-fallback');
+                            if (fallback) fallback.classList.remove('hidden');
+                          }}
+                        />
+                        <div className="admin-thumb-fallback hidden absolute inset-0 bg-[#fae1b7]/40 flex items-center justify-center">
+                          <Megaphone size={24} className="text-[#b87a29]" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-[#301809] text-base">{ad.partner_name}</h4>
+                        {ad.link && (
+                          <a href={ad.link} target="_blank" rel="noreferrer" className="text-xs text-[#b87a29] hover:underline flex items-center gap-1 mt-1 truncate" dir="ltr">
+                            <LinkIcon size={12} className="inline shrink-0" />
+                            {ad.link}
+                          </a>
+                        )}
+                        <span className="text-xs font-bold text-[#723c11] bg-[#fae1b7]/70 border border-[#dbc397] px-2.5 py-0.5 rounded-full inline-block mt-2">
+                          نشط في شريط الرعاة والبنر
+                        </span>
+                      </div>
+                      <Button variant="ghost" onClick={() => handleDeleteItem('partner_ads', ad.id)} className="text-red-500 hover:bg-red-50 p-2 h-10 w-10 rounded-xl cursor-pointer shrink-0">
+                        <Trash2 size={18} />
+                      </Button>
+                    </Card>
+                  ))
+                )}
             </div>
           </div>
         </TabsContent>
