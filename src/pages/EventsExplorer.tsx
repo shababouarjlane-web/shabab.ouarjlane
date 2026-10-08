@@ -161,11 +161,23 @@ export default function EventsExplorer() {
       });
   }, [events, searchQuery, selectedCategory, selectedAssociation, dateFilter, sortBy]);
 
-  const copyEventShareLink = (e: React.MouseEvent, eventId: string, title: string) => {
+  const copyEventShareLink = async (e: React.MouseEvent, eventId: string, title: string) => {
     e.stopPropagation();
     const url = `${window.location.origin}/event/${eventId}`;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: `فعالية: ${title}`,
+          text: `ندعوكم لحضور فعالية "${title}" في ورقلة عبر منصة تواصل صحراء:`,
+          url,
+        });
+        return;
+      } catch {
+        /* user cancelled or fallback */
+      }
+    }
     navigator.clipboard.writeText(url);
-    toast.success(`تم نسخ رابط فعالية "${title}" للمشاركة`);
+    toast.success(`تم نسخ رابط فعالية "${title}" للمشاركة بنجاح!`);
   };
 
   const resetAllFilters = () => {

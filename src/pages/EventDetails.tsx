@@ -93,26 +93,103 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
   };
 
   const handleRsvp = async () => {
+    if (!user) {
+      toast({ variant: "destructive", title: "تنبيه", description: "يرجى تسجيل الدخول أولاً لتأكيد الحجز." });
+      return;
+    }
+
     setRsvpLoading(true);
     try {
-      const { data: insertedRsvp, error } = await supabase
+      // 1. Verify capacity before booking
+      if (event.capacity && event.capacity > 0) {
+        const { count, error: countErr } = await supabase
+          .from('rsvps')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_id', event.id)
+          .eq('status', 'attending');
+
+        if (!countErr && typeof count === 'number' && count >= event.capacity) {
+          toast({
+            variant: "destructive",
+            title: "عذراً، اكتمل العدد!",
+            description: "وصلت الفعالية للحد الأقصى من المقاعد المتاحة."
+          });
+          setRsvpLoading(false);
+          return;
+        }
+      }
+
+      // 2. Check if already registered
+      const { data: existing } = await supabase
         .from('rsvps')
-        .insert({
-          event_id: event.id,
-          user_id: user.id,
-          status: 'attending'
-        })
-        .select('id')
-        .single();
-      
-      if (error) throw error;
-      
+        .select('id, status')
+        .eq('event_id', event.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let insertedId = existing?.id;
+
+      if (existing) {
+        if (existing.status === 'attending') {
+          setHasRsvpd(true);
+          setMyRsvpId(existing.id);
+          setShowTicket(true);
+          toast({ title: "أنت مسجل بالفعل! 🎟", description: "تذكرتك جاهزة للعرض." });
+          setRsvpLoading(false);
+          return;
+        } else {
+          // Re-activate previously cancelled RSVP
+          const { error: updateErr } = await supabase
+            .from('rsvps')
+            .update({ status: 'attending' })
+            .eq('id', existing.id);
+          if (updateErr) throw updateErr;
+        }
+      } else {
+        const { data: insertedRsvp, error } = await supabase
+          .from('rsvps')
+          .insert({
+            event_id: event.id,
+            user_id: user.id,
+            status: 'attending'
+          })
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        insertedId = insertedRsvp?.id;
+      }
+
       setHasRsvpd(true);
-      if (insertedRsvp?.id) setMyRsvpId(insertedRsvp.id);
+      if (insertedId) setMyRsvpId(insertedId);
       setShowTicket(true);
-      toast({ title: "🎟 تذكرتك جاهزة!", description: "تم تأكيد حضورك وحصلت على 10 نقاط جديدة."});
+      toast({ title: "🎟 تذكرتك جاهزة!", description: "تم تأكيد حضورك وحصلت على 10 نقاط جديدة." });
     } catch (error: any) {
-      toast({ variant: "destructive", title: "خطأ", description: "لم نتمكن من تأكيد حجزك، قد تكون حجزت مسبقاً."});
+      toast({ variant: "destructive", title: "خطأ", description: error?.message || "لم نتمكن من تأكيد حجزك، يرجى المحاولة لاحقاً." });
+    } finally {
+      setRsvpLoading(false);
+    }
+  };
+
+  const handleCancelRsvp = async () => {
+    if (!window.confirm('هل أنت متأكد من رغبتك في إلغاء حجز هذه التذكرة؟')) return;
+
+    setRsvpLoading(true);
+    try {
+      const { error } = await supabase
+        .from('rsvps')
+        .update({ status: 'cancelled' })
+        .eq('event_id', event.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setHasRsvpd(false);
+      setMyRsvpId(undefined);
+      setShowTicket(false);
+      toast({ title: "تم إلغاء الحجز بنجاح", description: "تم إخلاء مقعدك وإتاحته لراغبين آخرين." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "خطأ", description: "تعذر إلغاء الحجز حالياً." });
     } finally {
       setRsvpLoading(false);
     }
@@ -275,13 +352,23 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                         <Ticket className="w-12 h-12 mx-auto mb-3 opacity-90 text-[#efa83f]" />
                         <h3 className="text-xl font-bold mb-1">تذكرتك جاهزة!</h3>
                         <p className="text-[#d4b174] text-sm mb-5">تم تأكيد حضورك بنجاح</p>
-                        <Button
-                          onClick={() => setShowTicket(true)}
-                          className="w-full h-12 bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] font-bold rounded-xl gap-2 shadow-lg"
-                        >
-                          <Ticket className="h-5 w-5" />
-                          عرض التذكرة برمز QR
-                        </Button>
+                        <div className="space-y-2">
+                          <Button
+                            onClick={() => setShowTicket(true)}
+                            className="w-full h-12 bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] font-bold rounded-xl gap-2 shadow-lg cursor-pointer"
+                          >
+                            <Ticket className="h-5 w-5" />
+                            عرض التذكرة برمز QR
+                          </Button>
+                          <Button
+                            onClick={handleCancelRsvp}
+                            disabled={rsvpLoading}
+                            variant="ghost"
+                            className="w-full h-9 text-xs text-red-200 hover:text-white hover:bg-red-500/20 rounded-xl cursor-pointer"
+                          >
+                            إلغاء حجز هذه التذكرة
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <>

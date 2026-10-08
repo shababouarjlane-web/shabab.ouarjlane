@@ -281,12 +281,39 @@ export default function AttendeeDashboard() {
               </div>
 
               {showTicketButton && (
-                <Button
-                  onClick={(e) => { e.stopPropagation(); setActiveTicketEvent(event); }}
-                  className="w-full mt-4 h-10 bg-[#301809] hover:bg-[#723c11] text-[#efa83f] font-bold rounded-xl gap-2 text-sm"
-                >
-                  🎟 عرض تذكرتي
-                </Button>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    onClick={(e) => { e.stopPropagation(); setActiveTicketEvent(event); }}
+                    className="flex-1 h-10 bg-[#301809] hover:bg-[#723c11] text-[#efa83f] font-bold rounded-xl gap-1 text-xs cursor-pointer"
+                  >
+                    🎟 تذكرتي
+                  </Button>
+                  <Button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!window.confirm('هل أنت متأكد من رغبتك في إلغاء حجز تذكرة هذه الفعالية؟')) return;
+                      try {
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (!user) return;
+                        const { error } = await supabase
+                          .from('rsvps')
+                          .update({ status: 'cancelled' })
+                          .eq('event_id', event.id)
+                          .eq('user_id', user.id);
+                        if (error) throw error;
+                        toast.success('تم إلغاء الحجز بنجاح وإخلاء المقعد.');
+                        fetchEvents();
+                      } catch {
+                        toast.error('فشل إلغاء الحجز.');
+                      }
+                    }}
+                    variant="outline"
+                    className="h-10 text-xs text-red-600 border-red-200 hover:bg-red-50 rounded-xl px-3 cursor-pointer"
+                    title="إلغاء الحجز"
+                  >
+                    إلغاء
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>

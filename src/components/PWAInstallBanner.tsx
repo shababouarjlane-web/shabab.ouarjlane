@@ -1,18 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePWA, getOfflineTickets, type OfflineTicket } from '../hooks/usePWA';
 import { Download, WifiOff, X, Ticket, Calendar, MapPin, QrCode } from 'lucide-react';
 import { Button } from './ui/button';
 import { QRCodeSVG } from 'qrcode.react';
 
+const DISMISS_KEY = 'ouarjlane_install_dismissed_at';
+const DISMISS_DAYS = 7;
+const SHOW_DELAY_MS = 4000;
+
+function wasRecentlyDismissed(): boolean {
+  try {
+    const ts = Number(localStorage.getItem(DISMISS_KEY) || 0);
+    return ts > 0 && Date.now() - ts < DISMISS_DAYS * 24 * 60 * 60 * 1000;
+  } catch {
+    return false;
+  }
+}
+
 export default function PWAInstallBanner() {
   const { isStandalone, isOnline, hasNativePrompt, installApp } = usePWA();
-  const [dismissedInstall, setDismissedInstall] = useState(false);
+  const [dismissedInstall, setDismissedInstall] = useState(wasRecentlyDismissed);
+  const [delayPassed, setDelayPassed] = useState(false);
   const [showVault, setShowVault] = useState(false);
   const [showManualGuide, setShowManualGuide] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<OfflineTicket | null>(null);
 
-  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isAndroid = typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent);
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  // iPadOS 13+ reports itself as "Macintosh" — detect via touch points
+  const isIPadOS = typeof navigator !== 'undefined' && /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || isIPadOS;
+  const isAndroid = /Android/.test(ua);
+  const isMobile = isIOS || isAndroid;
+
+  // Wait a few seconds before showing the banner so it doesn't interrupt first impression
+  useEffect(() => {
+    const t = setTimeout(() => setDelayPassed(true), SHOW_DELAY_MS);
+    return () => clearTimeout(t);
+  }, []);
+
+  const dismissInstall = () => {
+    setDismissedInstall(true);
+    try {
+      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // Mobile: always offer (native prompt or manual guide).
+  // Desktop: only when the browser actually supports one-click install.
+  const shouldShowInstall =
+    !isStandalone && !dismissedInstall && delayPassed && (isMobile || hasNativePrompt);
 
   const handleInstallClick = async () => {
     if (hasNativePrompt) {
@@ -53,8 +91,8 @@ export default function PWAInstallBanner() {
         </aside>
       )}
 
-      {/* ── 2. Install App Prompt Banner (Always Visible on Mobile/Browser if not installed) ── */}
-      {!isStandalone && !dismissedInstall && (
+      {/* ── 2. Install App Prompt Banner (mobile always; desktop only with native prompt) ── */}
+      {shouldShowInstall && (
         <aside aria-label="تثبيت التطبيق" className="fixed bottom-4 left-4 right-4 md:left-6 md:right-auto md:max-w-md z-[90] bg-[#301809]/95 backdrop-blur-md text-white border-2 border-[#efa83f]/60 rounded-3xl p-4 shadow-2xl animate-in slide-in-from-bottom-5 duration-500" dir="rtl">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#efa83f] to-[#b87a29] flex items-center justify-center text-white shrink-0 shadow-md">
@@ -67,7 +105,7 @@ export default function PWAInstallBanner() {
                   تثبيت تطبيق تواصل صحراء
                 </h4>
                 <button
-                  onClick={() => setDismissedInstall(true)}
+                  onClick={dismissInstall}
                   className="text-white/40 hover:text-white transition-colors p-1"
                   title="إغلاق"
                 >
@@ -76,7 +114,9 @@ export default function PWAInstallBanner() {
               </div>
 
               <p className="text-[11px] text-[#fae1b7]/80 mt-1 leading-relaxed">
-                ثبّت المنصة كتطبيق على هاتفك لتصفح الفعاليات وحفظ تذاكر QR لتعمل بدون إنترنت.
+                {isMobile
+                  ? 'ثبّت المنصة كتطبيق على هاتفك لتصفح الفعاليات وحفظ تذاكر QR لتعمل بدون إنترنت.'
+                  : 'ثبّت المنصة على حاسوبك لفتحها بنقرة واحدة في نافذة مستقلة.'}
               </p>
 
               <div className="flex items-center gap-2 mt-3">
@@ -88,7 +128,7 @@ export default function PWAInstallBanner() {
                   تثبيت الآن 📲
                 </Button>
                 <button
-                  onClick={() => setDismissedInstall(true)}
+                  onClick={dismissInstall}
                   className="text-[11px] text-[#fae1b7]/60 hover:text-white font-semibold px-2 py-1 cursor-pointer"
                 >
                   لاحقاً

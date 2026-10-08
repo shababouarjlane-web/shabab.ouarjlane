@@ -60,18 +60,34 @@ export default function TicketCard({ event, userId, rsvpId, userName, onClose }:
           {onClose && (
             <button
               onClick={onClose}
-              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-colors"
+              className="bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-colors cursor-pointer"
+              title="إغلاق"
             >
               <X size={18} />
             </button>
           )}
-          <button
-            onClick={() => handlePrint()}
-            className="mr-auto flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors"
-          >
-            <Printer size={15} />
-            طباعة
-          </button>
+          <div className="mr-auto flex items-center gap-2">
+            <button
+              onClick={() => {
+                // Generate Google Calendar Link
+                const startDateTime = event.date ? `${event.date.replace(/-/g, '')}T${(event.start_time || '10:00:00').replace(/:/g, '').slice(0, 6)}` : '';
+                const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${startDateTime}/${startDateTime}&details=${encodeURIComponent('حجز مؤكد عبر منصة تواصل صحراء')}&location=${encodeURIComponent(event.location || 'ورقلة')}`;
+                window.open(gcalUrl, '_blank');
+              }}
+              className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-2 rounded-full transition-colors cursor-pointer"
+              title="إضافة إلى تقويم Google"
+            >
+              <Calendar size={14} />
+              <span>تقويم Google</span>
+            </button>
+            <button
+              onClick={() => handlePrint()}
+              className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-medium px-3.5 py-2 rounded-full transition-colors cursor-pointer"
+            >
+              <Printer size={14} />
+              <span>طباعة</span>
+            </button>
+          </div>
         </div>
 
         {/* Ticket */}

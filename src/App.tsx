@@ -1,66 +1,77 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 import { supabase, type Profile } from './lib/supabase';
 import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
-
-// الصفحات
-import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AssociationDashboard from './pages/association/AssociationDashboard';
-import CreateEvent from './pages/association/CreateEvent';
-import EditEvent from './pages/association/EditEvent';
-import AttendeeDashboard from './pages/attendee/AttendeeDashboard';
-import EventDetails from './pages/EventDetails';
-import Heritage from './pages/Heritage';
-import HeritageMap from './pages/HeritageMap';
-import EventsExplorer from './pages/EventsExplorer';
 import PWAInstallBanner from './components/PWAInstallBanner';
 import { useNotifications } from './hooks/useNotifications';
+
+// Lazy loading for heavy pages to optimize initial bundle size & mobile load time
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const Login = lazy(() => import('./pages/Login'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AssociationDashboard = lazy(() => import('./pages/association/AssociationDashboard'));
+const CreateEvent = lazy(() => import('./pages/association/CreateEvent'));
+const EditEvent = lazy(() => import('./pages/association/EditEvent'));
+const AttendeeDashboard = lazy(() => import('./pages/attendee/AttendeeDashboard'));
+const EventDetails = lazy(() => import('./pages/EventDetails'));
+const Heritage = lazy(() => import('./pages/Heritage'));
+const HeritageMap = lazy(() => import('./pages/HeritageMap'));
+const EventsExplorer = lazy(() => import('./pages/EventsExplorer'));
+
+function RouteLoadingFallback() {
+  return (
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-[#fdfbf7]" dir="rtl">
+      <div className="w-12 h-12 border-4 border-[#b87a29] border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p className="text-sm font-bold text-[#723c11] animate-pulse">جاري تحميل الصفحة...</p>
+    </div>
+  );
+}
 
 function AppRoutes({ session, profile, loading }: { session: any, profile: Profile | null, loading: boolean }) {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
-        
-        <Route path="/login" element={
-          <PageTransition>
-            {!session ? (
-              <Login />
-            ) : loading || !profile ? (
-              <div className="h-screen flex flex-col items-center justify-center bg-white">
-                <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <h2 className="text-xl font-bold text-amber-700 animate-pulse">جاري تجهيز حسابك...</h2>
-              </div>
-            ) : (
-              <Navigate to={
-                profile.role === 'super_admin' ? '/admin' :
-                  profile.role === 'association' ? '/association' : '/attendee'
-              } replace />
-            )}
-          </PageTransition>
-        } />
+    <Suspense fallback={<RouteLoadingFallback />}>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
+          
+          <Route path="/login" element={
+            <PageTransition>
+              {!session ? (
+                <Login />
+              ) : loading || !profile ? (
+                <div className="h-screen flex flex-col items-center justify-center bg-white">
+                  <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <h2 className="text-xl font-bold text-amber-700 animate-pulse">جاري تجهيز حسابك...</h2>
+                </div>
+              ) : (
+                <Navigate to={
+                  profile.role === 'super_admin' ? '/admin' :
+                    profile.role === 'association' ? '/association' : '/attendee'
+                } replace />
+              )}
+            </PageTransition>
+          } />
 
-        <Route path="/events" element={<PageTransition><EventsExplorer /></PageTransition>} />
-        <Route path="/heritage" element={<PageTransition><Heritage /></PageTransition>} />
-        <Route path="/map" element={<PageTransition><HeritageMap /></PageTransition>} />
-        <Route path="/event/:id" element={<PageTransition><EventDetails userRole={profile?.role || null} /></PageTransition>} />
+          <Route path="/events" element={<PageTransition><EventsExplorer /></PageTransition>} />
+          <Route path="/heritage" element={<PageTransition><Heritage /></PageTransition>} />
+          <Route path="/map" element={<PageTransition><HeritageMap /></PageTransition>} />
+          <Route path="/event/:id" element={<PageTransition><EventDetails userRole={profile?.role || null} /></PageTransition>} />
 
-        <Route path="/admin" element={session && profile?.role === 'super_admin' ? <PageTransition><AdminDashboard /></PageTransition> : (loading ? <div className="h-screen flex items-center justify-center font-bold text-emerald-600">جاري التحميل...</div> : <Navigate to="/" replace />)} />
-        <Route path="/association" element={session && profile?.role === 'association' ? <PageTransition><AssociationDashboard /></PageTransition> : (loading ? <div className="h-screen flex items-center justify-center font-bold text-emerald-600">جاري التحميل...</div> : <Navigate to="/" replace />)} />
-        <Route path="/association/create-event" element={session && profile?.role === 'association' ? <PageTransition><CreateEvent /></PageTransition> : (loading ? <div className="h-screen flex items-center justify-center font-bold text-emerald-600">جاري التحميل...</div> : <Navigate to="/" replace />)} />
-        <Route path="/association/edit-event/:id" element={session && profile?.role === 'association' ? <PageTransition><EditEvent /></PageTransition> : (loading ? <div className="h-screen flex items-center justify-center font-bold text-emerald-600">جاري التحميل...</div> : <Navigate to="/" replace />)} />
-        <Route path="/attendee" element={session && profile?.role === 'attendee' ? <PageTransition><AttendeeDashboard /></PageTransition> : (loading ? <div className="h-screen flex items-center justify-center font-bold text-emerald-600">جاري التحميل...</div> : <Navigate to="/" replace />)} />
+          <Route path="/admin" element={session && profile?.role === 'super_admin' ? <PageTransition><AdminDashboard /></PageTransition> : (loading ? <RouteLoadingFallback /> : <Navigate to="/" replace />)} />
+          <Route path="/association" element={session && profile?.role === 'association' ? <PageTransition><AssociationDashboard /></PageTransition> : (loading ? <RouteLoadingFallback /> : <Navigate to="/" replace />)} />
+          <Route path="/association/create-event" element={session && profile?.role === 'association' ? <PageTransition><CreateEvent /></PageTransition> : (loading ? <RouteLoadingFallback /> : <Navigate to="/" replace />)} />
+          <Route path="/association/edit-event/:id" element={session && profile?.role === 'association' ? <PageTransition><EditEvent /></PageTransition> : (loading ? <RouteLoadingFallback /> : <Navigate to="/" replace />)} />
+          <Route path="/attendee" element={session && profile?.role === 'attendee' ? <PageTransition><AttendeeDashboard /></PageTransition> : (loading ? <RouteLoadingFallback /> : <Navigate to="/" replace />)} />
 
-        <Route path="*" element={<Navigate to={session ? (profile?.role === 'super_admin' ? '/admin' : profile?.role === 'association' ? '/association' : '/attendee') : '/'} replace />} />
-      </Routes>
-    </AnimatePresence>
+          <Route path="*" element={<Navigate to={session ? (profile?.role === 'super_admin' ? '/admin' : profile?.role === 'association' ? '/association' : '/attendee') : '/'} replace />} />
+        </Routes>
+      </AnimatePresence>
+    </Suspense>
   );
 }
 
