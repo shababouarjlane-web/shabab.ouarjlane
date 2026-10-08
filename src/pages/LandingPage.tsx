@@ -58,11 +58,30 @@ export default function LandingPage() {
   // Partner Ads State
   const [ads, setAds] = useState<any[]>([]);
 
+  // Logged in user state
+  const [currentSession, setCurrentSession] = useState<any>(null);
+  const [userRole, setUserRole] = useState<'super_admin' | 'association' | 'attendee' | null>(null);
+
   // Scroll to Top State
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     fetchPublicData();
+
+    // Check if user is currently logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentSession(session);
+      if (session?.user) {
+        supabase
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.role) setUserRole(data.role);
+          });
+      }
+    });
 
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 350);
@@ -307,17 +326,32 @@ export default function LandingPage() {
               )}
             </Button>
 
-            {/* Login / Auth Button */}
-            <Button 
-              onClick={() => {
-                setIsSignUp(false);
-                setIsLoginOpen(true);
-              }}
-              className="h-11 px-5 rounded-xl bg-[#301809] hover:bg-[#723c11] text-white text-sm font-semibold flex items-center gap-2 shadow-sm transition-all"
-            >
-              <LogIn className="w-4 h-4 text-[#efa83f]" />
-              <span>تسجيل الدخول</span>
-            </Button>
+            {/* Login / Auth Button or User Dashboard Shortcut */}
+            {currentSession ? (
+              <Button 
+                onClick={() => {
+                  const dest = userRole === 'super_admin' ? '/admin' : userRole === 'association' ? '/association' : '/attendee';
+                  navigate(dest);
+                }}
+                className="h-11 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
+              >
+                <User className="w-4 h-4 text-white" />
+                <span>
+                  {userRole === 'super_admin' ? 'لوحة الإدارة 🛡️' : userRole === 'association' ? 'لوحة الجمعية 🏛️' : 'حسابي وتذاكري 🎟'}
+                </span>
+              </Button>
+            ) : (
+              <Button 
+                onClick={() => {
+                  setIsSignUp(false);
+                  setIsLoginOpen(true);
+                }}
+                className="h-11 px-5 rounded-xl bg-[#301809] hover:bg-[#723c11] text-white text-sm font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+              >
+                <LogIn className="w-4 h-4 text-[#efa83f]" />
+                <span>تسجيل الدخول</span>
+              </Button>
+            )}
           </div>
         </div>
       </header>

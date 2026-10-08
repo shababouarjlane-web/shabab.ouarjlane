@@ -1,11 +1,39 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
-import { Users, Building2, Calendar, Ticket, ChevronDown, ChevronUp, History, Plus, Trash2, Megaphone, Link as LinkIcon, Edit, Smartphone, Send, Loader2, Bell, ShieldCheck, UserX, Search, RefreshCw } from 'lucide-react';
+import { 
+  Users, 
+  Building2, 
+  Calendar, 
+  Ticket, 
+  ChevronDown, 
+  ChevronUp, 
+  History, 
+  Trash2, 
+  Megaphone, 
+  Link as LinkIcon, 
+  Edit, 
+  Smartphone, 
+  Send, 
+  Loader2, 
+  Bell, 
+  ShieldCheck, 
+  UserX, 
+  Search, 
+  RefreshCw,
+  Settings,
+  KeyRound,
+  LogOut,
+  ArrowRight,
+  Sparkles,
+  TrendingUp,
+  Activity
+} from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Textarea } from '../../components/ui/textarea';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -16,6 +44,14 @@ import {
   DialogTitle,
   DialogDescription
 } from '../../components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu';
 
 interface DashboardStats {
   total_users: number;
@@ -25,6 +61,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     total_users: 0,
     total_associations: 0,
@@ -452,21 +489,109 @@ export default function AdminDashboard() {
   });
 
   return (
-    <div className="container mx-auto p-4 md:p-8 space-y-8 font-sans" dir="rtl">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-800">لوحة تحكم الإدارة</h1>
-          <p className="text-slate-500 mt-1 font-bold">نظرة عامة على نشاط منصة تواصل صحراء (بيانات حية)</p>
+    <div className="min-h-screen bg-[#fdfbf7] text-[#301809] font-sans pb-16 selection:bg-[#efa83f]/30" dir="rtl">
+      {/* Top Header Bar */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#dbc397]/50 shadow-xs">
+        <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between gap-4">
+          
+          {/* Logo & Platform Info */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] font-black text-xl shadow-md shrink-0">
+              🛡️
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg md:text-xl font-thmanyah font-bold text-[#301809] leading-none">
+                  لوحة الإدارة المركزية
+                </h1>
+                <span className="hidden sm:inline-block bg-[#efa83f]/20 text-[#723c11] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#efa83f]/40">
+                  سوبر أدمن
+                </span>
+              </div>
+              <p className="text-[11px] text-[#723c11]/80 font-medium mt-1">
+                تواصل صحراء · ولاية ورقلة (بيانات حية متزامنة)
+              </p>
+            </div>
+          </div>
+
+          {/* Header Action Buttons & Settings Gear */}
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="hidden sm:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-10 px-3.5 text-xs font-bold transition-all cursor-pointer"
+            >
+              <ArrowRight className="w-3.5 h-3.5 text-[#b87a29]" />
+              <span>الموقع الرئيسي</span>
+            </Button>
+
+            {/* Gear Dropdown Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-11 h-11 rounded-2xl border-2 border-[#dbc397] bg-white hover:bg-[#fae1b7]/30 text-[#301809] shadow-xs hover:border-[#b87a29] transition-all cursor-pointer focus-visible:ring-[#b87a29]"
+                  title="الإعدادات والحساب"
+                >
+                  <Settings className="w-5 h-5 text-[#723c11] animate-hover-spin" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="start"
+                sideOffset={8}
+                className="w-60 bg-white/95 backdrop-blur-md rounded-2xl border-2 border-[#dbc397] p-1.5 shadow-2xl font-sans text-right"
+              >
+                <DropdownMenuLabel className="px-3 py-2 text-right">
+                  <p className="text-xs font-black text-[#301809]">حساب الإدارة</p>
+                  <p className="text-[10px] text-slate-500 font-mono truncate mt-0.5">Super Admin Session</p>
+                </DropdownMenuLabel>
+
+                <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
+
+                <DropdownMenuItem
+                  onClick={() => setIsPasswordModalOpen(true)}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/50 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="w-4 h-4 text-[#b87a29]" />
+                    <span>تغيير كلمة المرور</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">🔑</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => navigate('/')}
+                  className="sm:hidden flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/50 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4 text-[#b87a29]" />
+                    <span>الانتقال للموقع الرئيسي</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">🌐</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
+
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <LogOut className="w-4 h-4 text-red-500" />
+                    <span>تسجيل الخروج</span>
+                  </div>
+                  <span className="text-[10px] text-red-400">خروج</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsPasswordModalOpen(true)} className="font-bold rounded-xl border-slate-200">
-            تغيير كلمة المرور
-          </Button>
-          <Button variant="destructive" onClick={handleLogout} className="font-bold rounded-xl">
-            تسجيل الخروج
-          </Button>
-        </div>
-      </div>
+      </header>
+
+      <div className="container mx-auto px-4 md:px-8 pt-8 space-y-8">
 
       <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
         <DialogContent className="font-sans" dir="rtl">
@@ -496,112 +621,179 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-emerald-50 border-emerald-100 rounded-3xl shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-emerald-800 font-bold">إجمالي المستخدمين</CardTitle>
-            <Users className="h-6 w-6 text-emerald-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-black text-emerald-600">{stats.total_users}</div>
-          </CardContent>
-        </Card>
+      {/* Modern Dashboard KPI Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Card 1: Users */}
+        <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">إجمالي المستخدمين</span>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-600 shadow-xs group-hover:scale-110 transition-transform">
+              <Users className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-baseline justify-between">
+            <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{stats.total_users}</span>
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <TrendingUp className="w-3.5 h-3.5" /> نشط
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-500 rounded-full" style={{ width: '100%' }} />
+          </div>
+        </div>
 
-        <Card className="bg-amber-50 border-amber-100 rounded-3xl shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-amber-800 font-bold">الجمعيات النشطة</CardTitle>
-            <Building2 className="h-6 w-6 text-amber-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-black text-amber-600">{stats.total_associations}</div>
-          </CardContent>
-        </Card>
+        {/* Card 2: Associations */}
+        <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">الجمعيات المعتمدة</span>
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-[#b87a29] shadow-xs group-hover:scale-110 transition-transform">
+              <Building2 className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-baseline justify-between">
+            <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{stats.total_associations}</span>
+            <span className="text-xs font-bold text-[#b87a29] bg-amber-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5" /> مرخص
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] rounded-full" style={{ width: '100%' }} />
+          </div>
+        </div>
 
-        <Card className="bg-blue-50 border-blue-100 rounded-3xl shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-blue-800 font-bold">الفعاليات المنظمة</CardTitle>
-            <Calendar className="h-6 w-6 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-black text-blue-600">{stats.total_events}</div>
-          </CardContent>
-        </Card>
+        {/* Card 3: Events */}
+        <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">الفعاليات المنظمة</span>
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-600 shadow-xs group-hover:scale-110 transition-transform">
+              <Calendar className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-baseline justify-between">
+            <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{stats.total_events}</span>
+            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <Activity className="w-3.5 h-3.5" /> فعالية
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 rounded-full" style={{ width: '100%' }} />
+          </div>
+        </div>
 
-        <Card className="bg-purple-50 border-purple-100 rounded-3xl shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-purple-800 font-bold">تأكيدات الحضور</CardTitle>
-            <Ticket className="h-6 w-6 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-black text-purple-600">{stats.total_rsvps}</div>
-          </CardContent>
-        </Card>
+        {/* Card 4: RSVPs */}
+        <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">تأكيدات الحضور (RSVP)</span>
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-200/80 flex items-center justify-center text-purple-600 shadow-xs group-hover:scale-110 transition-transform">
+              <Ticket className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-baseline justify-between">
+            <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{stats.total_rsvps}</span>
+            <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5" /> تذكرة
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-full bg-purple-500 rounded-full" style={{ width: '100%' }} />
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-8">
-        <TabsList className="bg-slate-100 p-1.5 rounded-2xl h-auto min-h-14 w-full max-w-4xl border grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
-          <TabsTrigger value="overview" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm py-2.5">إحصائيات ومنظمات</TabsTrigger>
-          <TabsTrigger value="users" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-sm py-2.5">المستخدمون والأدوار</TabsTrigger>
-          <TabsTrigger value="heritage" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=active]:shadow-sm py-2.5">الأرشيف التراثي</TabsTrigger>
-          <TabsTrigger value="ads" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm py-2.5">إدارة الإعلانات</TabsTrigger>
-          <TabsTrigger value="broadcast" className="text-sm md:text-base font-bold rounded-xl data-[state=active]:bg-white data-[state=active]:text-red-700 data-[state=active]:shadow-sm py-2.5">بث إشعار عام 📣</TabsTrigger>
+        <TabsList className="bg-white/80 backdrop-blur-md p-1.5 rounded-3xl border-2 border-[#dbc397]/60 shadow-sm h-auto min-h-14 w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5">
+          <TabsTrigger value="overview" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
+            📊 إحصائيات ومنظمات
+          </TabsTrigger>
+          <TabsTrigger value="users" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
+            👥 المستخدمون والأدوار
+          </TabsTrigger>
+          <TabsTrigger value="heritage" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
+            🏺 الأرشيف التراثي
+          </TabsTrigger>
+          <TabsTrigger value="ads" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
+            📢 إدارة الإعلانات
+          </TabsTrigger>
+          <TabsTrigger value="broadcast" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
+            📣 بث إشعار عام
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="lg:col-span-2 shadow-xl border-none rounded-3xl bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50 border-b pb-4">
-                <CardTitle className="text-xl font-black text-slate-800">النشاط الشهري — الفعاليات والزوار</CardTitle>
+            <Card className="lg:col-span-2 shadow-xl border-2 border-[#dbc397]/50 rounded-3xl bg-white overflow-hidden">
+              <CardHeader className="bg-[#fdfbf7] border-b border-[#dbc397]/40 pb-4">
+                <CardTitle className="text-lg md:text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+                  <span>📈 النشاط الشهري — الفعاليات وتأكيدات الحضور</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="h-80 w-full pt-6" dir="ltr">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={monthlyStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <XAxis dataKey="name" tick={{ fill: '#6b7280', fontWeight: 'bold', fontSize: 12 }} />
-                    <YAxis tick={{ fill: '#6b7280', fontWeight: 'bold' }} allowDecimals={false} />
-                    <Tooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 'bold', direction: 'rtl' }} />
-                    <Legend wrapperStyle={{ fontWeight: 'bold', direction: 'rtl' }} />
-                    <Bar dataKey="الفعاليات" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                    <XAxis dataKey="name" tick={{ fill: '#723c11', fontWeight: 'bold', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#723c11', fontWeight: 'bold' }} allowDecimals={false} />
+                    <Tooltip 
+                      cursor={{ fill: 'rgba(239, 168, 63, 0.1)' }} 
+                      contentStyle={{ 
+                        borderRadius: '16px', 
+                        border: '2px border #dbc397', 
+                        boxShadow: '0 10px 25px -5px rgba(48, 24, 9, 0.15)', 
+                        fontWeight: 'bold', 
+                        direction: 'rtl', 
+                        backgroundColor: '#ffffff',
+                        color: '#301809'
+                      }}
+                      itemStyle={{ color: '#301809', fontWeight: 'bold' }}
+                      labelStyle={{ color: '#b87a29', fontWeight: 'black', marginBottom: '4px' }}
+                    />
+                    <Legend wrapperStyle={{ fontWeight: 'bold', direction: 'rtl', paddingTop: '10px' }} />
+                    <Bar dataKey="الفعاليات" fill="#b87a29" radius={[8, 8, 0, 0]} />
                     <Bar dataKey="الزوار" fill="#10b981" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            <Card className="shadow-xl border-2 border-amber-500 rounded-3xl overflow-hidden">
-              <CardHeader className="bg-amber-500 text-white text-center pb-6">
-                <CardTitle className="text-xl font-black">إضافة جمعية جديدة</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-8">
-                <form onSubmit={handleCreateAssociation} className="space-y-6 text-right">
-                  <div className="space-y-2">
-                    <Label htmlFor="assocName" className="font-bold text-slate-700">اسم الجمعية</Label>
+            {/* Create Association Card */}
+            <Card className="shadow-xl border-2 border-[#dbc397] rounded-3xl overflow-hidden bg-white">
+              <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] mx-auto mb-2 text-2xl shadow-sm">
+                  🏛️
+                </div>
+                <h3 className="text-lg font-black text-[#fae1b7]">اعتماد جمعية جديدة</h3>
+                <p className="text-xs text-[#d4b174] mt-1">تفعيل صلاحيات تنظيم الفعاليات لممثل جمعية</p>
+              </div>
+              <CardContent className="pt-6">
+                <form onSubmit={handleCreateAssociation} className="space-y-5 text-right">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="assocName" className="font-bold text-xs text-[#301809]">اسم الجمعية الرسمية</Label>
                     <Input
                       id="assocName"
                       value={assocName}
                       onChange={(e) => setAssocName(e.target.value)}
-                      placeholder="مثال: جمعية الإحسان"
+                      placeholder="مثال: جمعية الإحسان للتراث"
                       required
-                      className="h-12 font-bold"
+                      className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="managerEmail" className="font-bold text-slate-700">البريد الإلكتروني للمدير</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="managerEmail" className="font-bold text-xs text-[#301809]">البريد الإلكتروني لممثل الجمعية</Label>
                     <Input
                       id="managerEmail"
                       type="email"
                       value={managerEmail}
                       onChange={(e) => setManagerEmail(e.target.value)}
                       placeholder="manager@example.com"
-                      className="h-12 text-left font-sans"
+                      className="h-11 text-left font-sans border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                       dir="ltr"
                       required
                     />
-                    <p className="text-[10px] text-slate-500 font-bold bg-slate-50 p-2 rounded-lg border mt-2">
-                      * يجب أن يمتلك المدير حساباً مسبقاً (دخول كزائر لمرة واحدة يكفي لإنشاء حسابه).
+                    <p className="text-[10px] text-[#723c11] font-semibold bg-[#fae1b7]/40 p-2.5 rounded-xl border border-[#dbc397]/60 mt-2 leading-relaxed">
+                      💡 ملاحظة: يجب أن يكون الممثل قد سجل دخوله مسبقاً في المنصة ليرتبط حسابه بالجمعية تلقائياً.
                     </p>
                   </div>
-                  <Button type="submit" disabled={loading} className="w-full h-14 text-lg font-black bg-amber-600 hover:bg-amber-700 text-white mt-4 shadow-lg rounded-xl">
-                    {loading ? "جاري الحفظ..." : "اعتماد الجمعية"}
+                  <Button type="submit" disabled={loading} className="w-full h-12 text-sm font-black bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white shadow-lg rounded-xl cursor-pointer transition-all">
+                    {loading ? "جاري الاعتماد..." : "اعتماد الجمعية وتفعيل الصلاحيات"}
                   </Button>
                 </form>
               </CardContent>
@@ -609,62 +801,63 @@ export default function AdminDashboard() {
           </div>
 
           <div className="mt-8">
-            <h2 className="text-2xl font-black text-slate-800 mb-6 border-b pb-2 flex items-center gap-3">
-              <Building2 className="text-emerald-600" /> تفاصيل الجمعيات والفعاليات
+            <h2 className="text-xl md:text-2xl font-thmanyah font-bold text-[#301809] mb-5 pb-3 border-b-2 border-[#dbc397]/40 flex items-center gap-3">
+              <Building2 className="text-[#b87a29]" />
+              <span>تفاصيل الجمعيات والفعاليات المعتمدة</span>
             </h2>
             <div className="space-y-4">
               {associationsDetails.length === 0 ? (
-                <div className="text-center text-gray-500 py-8 bg-slate-50 rounded-2xl border border-slate-200">
-                  لا توجد جمعيات حتى الآن.
+                <div className="text-center text-[#723c11] py-12 bg-white rounded-3xl border-2 border-dashed border-[#dbc397] font-bold">
+                  لا توجد جمعيات مسجلة حتى الآن.
                 </div>
               ) : (
                 associationsDetails.map((assoc) => (
-                  <Card key={assoc.id} className="overflow-hidden shadow-sm border border-slate-200 rounded-2xl">
+                  <Card key={assoc.id} className="overflow-hidden shadow-sm hover:shadow-md transition-all border-2 border-[#dbc397]/60 rounded-3xl bg-white">
                     <div 
-                      className="flex items-center justify-between p-5 cursor-pointer bg-white hover:bg-slate-50 transition-colors"
+                      className="flex items-center justify-between p-5 cursor-pointer bg-white hover:bg-[#fae1b7]/20 transition-colors"
                       onClick={() => toggleAccordion(assoc.id)}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="bg-emerald-100 p-3 rounded-xl">
-                          <Building2 className="text-emerald-600 h-6 w-6" />
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] flex items-center justify-center text-[#efa83f] font-bold text-lg shadow-sm shrink-0">
+                          🏛️
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-slate-800">{assoc.name}</h3>
-                          <p className="text-sm text-slate-500 font-sans" dir="ltr">{assoc.users?.email}</p>
+                          <h3 className="text-base font-bold text-[#301809]">{assoc.name}</h3>
+                          <p className="text-xs text-[#723c11]/80 font-mono mt-0.5" dir="ltr">{assoc.users?.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold border border-emerald-100">
+                      <div className="flex items-center gap-3">
+                        <span className="bg-[#fae1b7]/70 text-[#723c11] border border-[#d4b174]/60 px-3 py-1 rounded-full text-xs font-bold shadow-2xs">
                           {assoc.events?.filter((e: any) => e !== null).length || 0} فعالية نشطة
-                        </div>
+                        </span>
                         {expandedAssocId === assoc.id ? (
-                          <ChevronUp className="h-5 w-5 text-slate-400" />
+                          <ChevronUp className="h-5 w-5 text-[#b87a29]" />
                         ) : (
-                          <ChevronDown className="h-5 w-5 text-slate-400" />
+                          <ChevronDown className="h-5 w-5 text-[#b87a29]" />
                         )}
                       </div>
                     </div>
                     
                     {expandedAssocId === assoc.id && (
-                      <div className="bg-slate-50 border-t border-slate-100 p-5">
+                      <div className="bg-[#fdfbf7] border-t border-[#dbc397]/50 p-5">
                         {assoc.events && assoc.events.filter((e: any) => e !== null).length > 0 ? (
                           <ul className="space-y-3">
                             {assoc.events.filter((e: any) => e !== null).map((event: any) => (
-                              <li key={event.id} className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                              <li key={event.id} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-[#dbc397]/60 shadow-xs">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                  <span className="font-bold text-slate-700">{event.title}</span>
+                                  <div className="w-2.5 h-2.5 rounded-full bg-[#efa83f] animate-ping" />
+                                  <span className="font-bold text-sm text-[#301809]">{event.title}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
-                                  <Calendar className="h-4 w-4" />
+                                <div className="flex items-center gap-2 text-xs font-bold text-[#723c11] bg-[#fae1b7]/50 px-3 py-1.5 rounded-xl border border-[#dbc397]">
+                                  <Calendar className="h-3.5 w-3.5 text-[#b87a29]" />
                                   <span dir="ltr">{event.date}</span>
                                 </div>
                               </li>
                             ))}
                           </ul>
                         ) : (
-                          <p className="text-slate-500 text-center py-4 bg-white rounded-xl border border-dashed border-slate-300">
-                            لا توجد فعاليات لهذه الجمعية.
+                          <p className="text-[#723c11]/70 text-center py-5 bg-white rounded-2xl border border-dashed border-[#dbc397] text-xs font-bold">
+                            لا توجد فعاليات قادمة لهذه الجمعية حتى الآن.
                           </p>
                         )}
                       </div>
@@ -679,55 +872,55 @@ export default function AdminDashboard() {
         <TabsContent value="users" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Header & Stats Banner */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <Card className="bg-white border-2 border-[#dbc397]/50 rounded-3xl shadow-sm hover:shadow-md hover:border-[#b87a29] transition-all p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-slate-400">إجمالي الحسابات</p>
-                  <p className="text-3xl font-black text-slate-800 mt-1">{usersList.length}</p>
+                  <p className="text-xs font-bold text-[#723c11]">إجمالي الحسابات</p>
+                  <p className="text-3xl font-black text-[#301809] mt-1">{usersList.length}</p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+                <div className="w-12 h-12 rounded-2xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center text-[#723c11]">
                   <Users className="w-6 h-6" />
                 </div>
               </div>
             </Card>
 
-            <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <Card className="bg-white border-2 border-[#dbc397]/50 rounded-3xl shadow-sm hover:shadow-md hover:border-[#b87a29] transition-all p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-slate-400">الزوار والمشاركون</p>
-                  <p className="text-3xl font-black text-blue-600 mt-1">
+                  <p className="text-xs font-bold text-[#723c11]">الزوار والمشاركون</p>
+                  <p className="text-3xl font-black text-[#b87a29] mt-1">
                     {usersList.filter(u => u.role === 'attendee').length}
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-[#b87a29]">
                   <Users className="w-6 h-6" />
                 </div>
               </div>
             </Card>
 
-            <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <Card className="bg-white border-2 border-[#dbc397]/50 rounded-3xl shadow-sm hover:shadow-md hover:border-[#b87a29] transition-all p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-slate-400">مسؤولو الجمعيات</p>
-                  <p className="text-3xl font-black text-amber-600 mt-1">
+                  <p className="text-xs font-bold text-[#723c11]">مسؤولو الجمعيات</p>
+                  <p className="text-3xl font-black text-[#723c11] mt-1">
                     {usersList.filter(u => u.role === 'association').length}
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                <div className="w-12 h-12 rounded-2xl bg-[#fae1b7]/60 border border-[#d4b174] flex items-center justify-center text-[#723c11]">
                   <Building2 className="w-6 h-6" />
                 </div>
               </div>
             </Card>
 
-            <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <Card className="bg-white border-2 border-[#dbc397]/50 rounded-3xl shadow-sm hover:shadow-md hover:border-[#b87a29] transition-all p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-bold text-slate-400">المدراء العامون</p>
-                  <p className="text-3xl font-black text-purple-600 mt-1">
+                  <p className="text-xs font-bold text-[#723c11]">المدراء العامون</p>
+                  <p className="text-3xl font-black text-[#301809] mt-1">
                     {usersList.filter(u => u.role === 'super_admin').length}
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] border border-[#dbc397] flex items-center justify-center text-[#efa83f]">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
               </div>
@@ -735,17 +928,17 @@ export default function AdminDashboard() {
           </div>
 
           {/* Search, Filter & Actions Toolbar */}
-          <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+          <Card className="bg-white border-2 border-[#dbc397]/60 rounded-3xl shadow-sm p-4">
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
               {/* Search input */}
               <div className="relative flex-1">
-                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#b87a29]" />
                 <Input
                   type="text"
                   placeholder="ابحث بالبريد الإلكتروني أو المعرّف..."
                   value={userSearchQuery}
                   onChange={(e) => setUserSearchQuery(e.target.value)}
-                  className="pr-10 h-11 bg-slate-50 border-slate-200 rounded-xl font-medium"
+                  className="pr-10 h-11 bg-[#fdfbf7] border-2 border-[#dbc397] rounded-xl font-medium focus-visible:border-[#b87a29]"
                 />
               </div>
 
@@ -756,7 +949,11 @@ export default function AdminDashboard() {
                   variant={userRoleFilter === 'all' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setUserRoleFilter('all')}
-                  className={`rounded-xl text-xs font-bold h-10 px-4 ${userRoleFilter === 'all' ? 'bg-slate-800 text-white' : 'text-slate-600'}`}
+                  className={`rounded-xl text-xs font-bold h-10 px-4 transition-all cursor-pointer ${
+                    userRoleFilter === 'all' 
+                      ? 'bg-[#301809] text-[#fae1b7] border-[#301809] shadow-sm' 
+                      : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
+                  }`}
                 >
                   الكل ({usersList.length})
                 </Button>
@@ -765,7 +962,11 @@ export default function AdminDashboard() {
                   variant={userRoleFilter === 'attendee' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setUserRoleFilter('attendee')}
-                  className={`rounded-xl text-xs font-bold h-10 px-4 ${userRoleFilter === 'attendee' ? 'bg-blue-600 text-white' : 'text-slate-600'}`}
+                  className={`rounded-xl text-xs font-bold h-10 px-4 transition-all cursor-pointer ${
+                    userRoleFilter === 'attendee' 
+                      ? 'bg-[#b87a29] text-white border-[#b87a29] shadow-sm' 
+                      : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
+                  }`}
                 >
                   زوار / مشاركون
                 </Button>
@@ -774,7 +975,11 @@ export default function AdminDashboard() {
                   variant={userRoleFilter === 'association' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setUserRoleFilter('association')}
-                  className={`rounded-xl text-xs font-bold h-10 px-4 ${userRoleFilter === 'association' ? 'bg-amber-600 text-white' : 'text-slate-600'}`}
+                  className={`rounded-xl text-xs font-bold h-10 px-4 transition-all cursor-pointer ${
+                    userRoleFilter === 'association' 
+                      ? 'bg-[#723c11] text-[#fae1b7] border-[#723c11] shadow-sm' 
+                      : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
+                  }`}
                 >
                   جمعيات
                 </Button>
@@ -783,7 +988,11 @@ export default function AdminDashboard() {
                   variant={userRoleFilter === 'super_admin' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setUserRoleFilter('super_admin')}
-                  className={`rounded-xl text-xs font-bold h-10 px-4 ${userRoleFilter === 'super_admin' ? 'bg-purple-600 text-white' : 'text-slate-600'}`}
+                  className={`rounded-xl text-xs font-bold h-10 px-4 transition-all cursor-pointer ${
+                    userRoleFilter === 'super_admin' 
+                      ? 'bg-[#301809] text-[#efa83f] border-[#301809] shadow-sm' 
+                      : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
+                  }`}
                 >
                   مدراء
                 </Button>
@@ -795,33 +1004,33 @@ export default function AdminDashboard() {
                   size="sm"
                   onClick={fetchUsers}
                   disabled={usersLoading}
-                  className="rounded-xl h-10 w-10 p-0 text-slate-500 hover:text-slate-700"
+                  className="rounded-xl h-10 w-10 p-0 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30 hover:text-[#301809] cursor-pointer"
                   title="تحديث القائمة"
                 >
-                  <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin text-emerald-600' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin text-[#b87a29]' : ''}`} />
                 </Button>
               </div>
             </div>
           </Card>
 
           {/* Users Table / List */}
-          <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+          <Card className="bg-white border-2 border-[#dbc397]/60 rounded-3xl shadow-sm overflow-hidden">
             {usersLoading ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-[#723c11]">
+                <Loader2 className="w-8 h-8 animate-spin text-[#b87a29]" />
                 <p className="font-bold text-sm">جاري تحميل بيانات المستخدمين...</p>
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="text-center py-16 px-4">
-                <UserX className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-base font-bold text-slate-700">لم يتم العثور على أي مستخدمين</h3>
-                <p className="text-xs text-slate-400 mt-1">جرب تغيير كلمات البحث أو الفلتر أعلاه</p>
+                <UserX className="w-12 h-12 text-[#dbc397] mx-auto mb-3" />
+                <h3 className="text-base font-bold text-[#301809]">لم يتم العثور على أي مستخدمين</h3>
+                <p className="text-xs text-[#723c11]/80 mt-1">جرب تغيير كلمات البحث أو الفلتر أعلاه</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-right border-collapse">
                   <thead>
-                    <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 text-xs font-bold">
+                    <tr className="bg-[#fdfbf7] border-b-2 border-[#dbc397]/50 text-[#723c11] text-xs font-bold">
                       <th className="p-4">المستخدم</th>
                       <th className="p-4">تاريخ التسجيل</th>
                       <th className="p-4">النقاط والشارة</th>
@@ -830,22 +1039,22 @@ export default function AdminDashboard() {
                       <th className="p-4 text-center">إجراءات</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-sm font-medium">
+                  <tbody className="divide-y divide-[#dbc397]/30 text-sm font-medium">
                     {filteredUsers.map((user) => {
                       const isCurrentUserUpdating = updatingUserId === user.id;
                       return (
-                        <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                        <tr key={user.id} className="hover:bg-[#fae1b7]/15 transition-colors">
                           {/* User info */}
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center font-bold text-slate-700 uppercase shrink-0">
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#fae1b7] to-[#dbc397] border border-[#d4b174] flex items-center justify-center font-black text-[#301809] uppercase shrink-0 shadow-2xs">
                                 {user.email ? user.email.charAt(0) : 'U'}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-bold text-slate-800 truncate" dir="ltr">
+                                <p className="font-bold text-[#301809] truncate" dir="ltr">
                                   {user.email || 'بدون بريد'}
                                 </p>
-                                <p className="text-[11px] text-slate-400 font-mono truncate" dir="ltr">
+                                <p className="text-[11px] text-[#723c11]/70 font-mono truncate" dir="ltr">
                                   ID: {user.id.substring(0, 8)}...
                                 </p>
                               </div>
@@ -853,7 +1062,7 @@ export default function AdminDashboard() {
                           </td>
 
                           {/* Created date */}
-                          <td className="p-4 text-slate-500 text-xs">
+                          <td className="p-4 text-[#723c11] text-xs font-semibold">
                             {user.created_at ? new Date(user.created_at).toLocaleDateString('ar-DZ', {
                               year: 'numeric',
                               month: 'short',
@@ -864,11 +1073,11 @@ export default function AdminDashboard() {
                           {/* Points & badge */}
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              <span className="bg-amber-50 text-amber-700 border border-amber-200/60 px-2 py-0.5 rounded-lg text-xs font-bold">
+                              <span className="bg-[#fae1b7]/50 text-[#723c11] border border-[#dbc397] px-2.5 py-0.5 rounded-lg text-xs font-bold">
                                 {user.points ?? 0} نقطة
                               </span>
                               {user.badge && (
-                                <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md font-semibold">
+                                <span className="text-[11px] text-[#301809] bg-[#fae1b7]/80 border border-[#d4b174] px-2 py-0.5 rounded-md font-semibold">
                                   {user.badge}
                                 </span>
                               )}
@@ -878,17 +1087,17 @@ export default function AdminDashboard() {
                           {/* Role Badge */}
                           <td className="p-4">
                             {user.role === 'super_admin' ? (
-                              <span className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1 rounded-full text-xs font-black shadow-sm">
+                              <span className="inline-flex items-center gap-1.5 bg-[#301809] text-[#efa83f] border border-[#b87a29] px-3 py-1 rounded-full text-xs font-black shadow-xs">
                                 <ShieldCheck className="w-3.5 h-3.5" />
                                 مدير عام (Super Admin)
                               </span>
                             ) : user.role === 'association' ? (
-                              <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-black shadow-sm">
+                              <span className="inline-flex items-center gap-1.5 bg-[#fae1b7] text-[#723c11] border border-[#d4b174] px-3 py-1 rounded-full text-xs font-black shadow-xs">
                                 <Building2 className="w-3.5 h-3.5" />
                                 ممثل جمعية (Association)
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full text-xs font-black shadow-sm">
+                              <span className="inline-flex items-center gap-1.5 bg-[#fdfbf7] text-[#723c11] border border-[#dbc397] px-3 py-1 rounded-full text-xs font-black shadow-xs">
                                 <Users className="w-3.5 h-3.5" />
                                 مشارك / زائر (Attendee)
                               </span>
@@ -897,16 +1106,16 @@ export default function AdminDashboard() {
 
                           {/* Quick Role Changer */}
                           <td className="p-4 text-center">
-                            <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                            <div className="inline-flex items-center gap-1 bg-[#fdfbf7] p-1 rounded-xl border border-[#dbc397]">
                               <button
                                 type="button"
                                 disabled={isCurrentUserUpdating || user.role === 'attendee'}
                                 onClick={() => handleUpdateUserRole(user.id, 'attendee')}
-                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                                   user.role === 'attendee'
-                                    ? 'bg-blue-600 text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-blue-700 hover:bg-white'
-                                } disabled:opacity-60`}
+                                    ? 'bg-[#b87a29] text-white shadow-xs'
+                                    : 'text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40'
+                                } disabled:opacity-50`}
                                 title="تحويل لمشارك"
                               >
                                 زائر
@@ -915,11 +1124,11 @@ export default function AdminDashboard() {
                                 type="button"
                                 disabled={isCurrentUserUpdating || user.role === 'association'}
                                 onClick={() => handleUpdateUserRole(user.id, 'association')}
-                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                                   user.role === 'association'
-                                    ? 'bg-amber-600 text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-amber-700 hover:bg-white'
-                                } disabled:opacity-60`}
+                                    ? 'bg-[#723c11] text-[#fae1b7] shadow-xs'
+                                    : 'text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40'
+                                } disabled:opacity-50`}
                                 title="ترقية لممثل جمعية"
                               >
                                 جمعية
@@ -928,11 +1137,11 @@ export default function AdminDashboard() {
                                 type="button"
                                 disabled={isCurrentUserUpdating || user.role === 'super_admin'}
                                 onClick={() => handleUpdateUserRole(user.id, 'super_admin')}
-                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                                   user.role === 'super_admin'
-                                    ? 'bg-purple-600 text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-purple-700 hover:bg-white'
-                                } disabled:opacity-60`}
+                                    ? 'bg-[#301809] text-[#efa83f] shadow-xs'
+                                    : 'text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40'
+                                } disabled:opacity-50`}
                                 title="ترقية لمدير عام"
                               >
                                 مدير
@@ -946,7 +1155,7 @@ export default function AdminDashboard() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteUser(user.id, user.email)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0 rounded-xl"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0 rounded-xl cursor-pointer"
                               title="حذف المستخدم نهائياً"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -964,36 +1173,41 @@ export default function AdminDashboard() {
 
         <TabsContent value="heritage" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="shadow-lg border-2 border-amber-600 rounded-3xl overflow-hidden">
-               <CardHeader className="bg-amber-600 text-white p-6">
-                 <CardTitle className="flex items-center gap-3"><Plus /> إضافة مادة تراثية</CardTitle>
-               </CardHeader>
+            <Card className="shadow-xl border-2 border-[#dbc397] rounded-3xl overflow-hidden bg-white">
+               <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 text-center">
+                 <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] mx-auto mb-2 text-2xl shadow-sm">
+                   🏺
+                 </div>
+                 <h3 className="text-lg font-black text-[#fae1b7]">إضافة مادة تراثية جديدة</h3>
+                 <p className="text-xs text-[#d4b174] mt-1">توثيق تاريخ ومعالم ورقلة وقصورها العريقة</p>
+               </div>
                <CardContent className="p-6">
-                 <form onSubmit={handleCreateHeritage} className="space-y-4">
-                   <div className="space-y-2">
-                     <Label className="font-bold">العنوان</Label>
-                     <Input required value={newHeritage.title} onChange={e => setNewHeritage({...newHeritage, title: e.target.value})} placeholder="مثال: القصر القديم بالرويسات" />
+                 <form onSubmit={handleCreateHeritage} className="space-y-4 text-right">
+                   <div className="space-y-1.5">
+                     <Label className="font-bold text-xs text-[#301809]">عنوان المعلم أو المادة التراثية</Label>
+                     <Input required value={newHeritage.title} onChange={e => setNewHeritage({...newHeritage, title: e.target.value})} placeholder="مثال: القصر القديم بالرويسات" className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]" />
                    </div>
-                   <div className="space-y-2">
-                     <Label className="font-bold">المحتوى / الوصف</Label>
-                     <Textarea required value={newHeritage.content} onChange={e => setNewHeritage({...newHeritage, content: e.target.value})} placeholder="تفاصيل تاريخية..." rows={5} />
+                   <div className="space-y-1.5">
+                     <Label className="font-bold text-xs text-[#301809]">المحتوى / الوصف التاريخي</Label>
+                     <Textarea required value={newHeritage.content} onChange={e => setNewHeritage({...newHeritage, content: e.target.value})} placeholder="تفاصيل تاريخية وأصل المادة..." rows={5} className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]" />
                    </div>
-                   <div className="space-y-2">
-                     <Label className="font-bold">رابط الصورة (اختياري)</Label>
-                     <Input value={newHeritage.image_url} onChange={e => setNewHeritage({...newHeritage, image_url: e.target.value})} placeholder="https://..." dir="ltr" />
+                   <div className="space-y-1.5">
+                     <Label className="font-bold text-xs text-[#301809]">رابط الصورة (اختياري)</Label>
+                     <Input value={newHeritage.image_url} onChange={e => setNewHeritage({...newHeritage, image_url: e.target.value})} placeholder="https://..." dir="ltr" className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]" />
                    </div>
-                   <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 h-12 font-bold rounded-xl">حفظ في الأرشيف</Button>
+                   <Button type="submit" className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white rounded-xl shadow-md cursor-pointer transition-all">حفظ وتوثيق في الأرشيف</Button>
                  </form>
                </CardContent>
             </Card>
 
             <div className="lg:col-span-2 space-y-4">
-               <h3 className="text-xl font-black text-slate-800 flex items-center gap-3 mb-4">
-                 <History className="text-amber-600" /> المواد المسجلة حالياً ({heritageItems.length})
+               <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
+                 <History className="text-[#b87a29]" />
+                 <span>المواد الموثقة بالأرشيف حالياً ({heritageItems.length})</span>
                </h3>
                {heritageItems.map(item => (
-                 <Card key={item.id} className="p-4 flex gap-4 items-center bg-white shadow-sm border rounded-2xl">
-                   <div className="w-20 h-20 rounded-xl bg-amber-50 flex items-center justify-center overflow-hidden shrink-0 relative">
+                 <Card key={item.id} className="p-4 flex gap-4 items-center bg-white shadow-xs hover:shadow-md transition-all border-2 border-[#dbc397]/60 rounded-3xl">
+                   <div className="w-20 h-20 rounded-2xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center overflow-hidden shrink-0 relative shadow-2xs">
                      <img 
                        src={item.image_url} 
                        className="object-cover h-full w-full" 
@@ -1003,27 +1217,35 @@ export default function AdminDashboard() {
                          if (fallback) fallback.classList.remove('hidden');
                        }}
                      />
-                     <div className="admin-heritage-thumb-fallback hidden absolute inset-0 bg-amber-100 flex items-center justify-center">
-                       <History size={24} className="text-amber-300" />
+                     <div className="admin-heritage-thumb-fallback hidden absolute inset-0 bg-[#fae1b7] flex items-center justify-center">
+                       <History size={24} className="text-[#b87a29]" />
                      </div>
                    </div>
-                   <div className="flex-1">
-                     <h4 className="font-bold text-slate-800">{item.title}</h4>
-                     <p className="text-xs text-slate-500 line-clamp-2 mt-1">{item.content}</p>
+                   <div className="flex-1 min-w-0">
+                     <h4 className="font-bold text-base text-[#301809] truncate">{item.title}</h4>
+                     <p className="text-xs text-[#723c11]/80 line-clamp-2 mt-1 leading-relaxed">{item.content}</p>
                    </div>
-                   <div className="flex gap-2">
+                   <div className="flex gap-1.5 shrink-0">
                      <Button 
                        variant="ghost" 
+                       size="icon"
                        onClick={() => {
                          setEditingHeritage(item);
                          setIsHeritageEditOpen(true);
                        }} 
-                       className="text-amber-600 hover:bg-amber-50 p-2 h-auto"
+                       className="text-[#b87a29] hover:bg-[#fae1b7]/40 h-9 w-9 rounded-xl cursor-pointer"
+                       title="تعديل"
                      >
-                       <Edit size={20} />
+                       <Edit size={18} />
                      </Button>
-                     <Button variant="ghost" onClick={() => handleDeleteItem('heritage_archive', item.id)} className="text-red-500 hover:bg-red-50 p-2 h-auto">
-                       <Trash2 size={20} />
+                     <Button 
+                       variant="ghost" 
+                       size="icon"
+                       onClick={() => handleDeleteItem('heritage_archive', item.id)} 
+                       className="text-red-500 hover:bg-red-50 h-9 w-9 rounded-xl cursor-pointer"
+                       title="حذف"
+                     >
+                       <Trash2 size={18} />
                      </Button>
                    </div>
                  </Card>
@@ -1032,42 +1254,42 @@ export default function AdminDashboard() {
           </div>
 
           <Dialog open={isHeritageEditOpen} onOpenChange={setIsHeritageEditOpen}>
-            <DialogContent className="sm:max-w-[500px]" dir="rtl">
+            <DialogContent className="sm:max-w-[500px] border-2 border-[#dbc397] rounded-3xl bg-white" dir="rtl">
               <DialogHeader>
-                <DialogTitle className="text-right text-2xl font-black text-amber-700">تعديل مادة تراثية</DialogTitle>
+                <DialogTitle className="text-right text-2xl font-thmanyah font-bold text-[#301809]">تعديل مادة تراثية</DialogTitle>
                 <DialogDescription className="sr-only">استخدم هذا النموذج لتعديل تفاصيل المادة التراثية المختارة.</DialogDescription>
               </DialogHeader>
               {editingHeritage && (
                 <form onSubmit={handleUpdateHeritage} className="space-y-4 text-right pt-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-slate-700">العنوان</Label>
+                  <div className="space-y-1.5">
+                    <Label className="font-bold text-xs text-[#301809]">العنوان</Label>
                     <Input 
                       required 
                       value={editingHeritage.title} 
                       onChange={e => setEditingHeritage({...editingHeritage, title: e.target.value})} 
-                      className="h-12 font-bold"
+                      className="h-11 font-bold border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-slate-700">المحتوى</Label>
+                  <div className="space-y-1.5">
+                    <Label className="font-bold text-xs text-[#301809]">المحتوى والتفاصيل</Label>
                     <Textarea 
                       required 
                       value={editingHeritage.content} 
                       onChange={e => setEditingHeritage({...editingHeritage, content: e.target.value})} 
-                      rows={6} 
-                      className="font-medium"
+                      rows={5} 
+                      className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-slate-700">رابط الصورة</Label>
+                  <div className="space-y-1.5">
+                    <Label className="font-bold text-xs text-[#301809]">رابط الصورة</Label>
                     <Input 
                       value={editingHeritage.image_url} 
                       onChange={e => setEditingHeritage({...editingHeritage, image_url: e.target.value})} 
                       dir="ltr" 
-                      className="h-12 font-sans"
+                      className="h-11 font-sans text-left border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 h-14 text-lg font-black text-white mt-6 shadow-lg rounded-xl">
+                  <Button type="submit" className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white mt-4 shadow-lg rounded-xl cursor-pointer transition-all">
                     حفظ التغييرات
                   </Button>
                 </form>
@@ -1078,48 +1300,52 @@ export default function AdminDashboard() {
 
         <TabsContent value="ads" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="shadow-lg border-2 border-blue-600 rounded-3xl overflow-hidden">
-               <CardHeader className="bg-blue-600 text-white p-6">
-                 <CardTitle className="flex items-center gap-3"><Plus /> إضافة إعلان شريك</CardTitle>
-               </CardHeader>
+            <Card className="shadow-xl border-2 border-[#dbc397] rounded-3xl overflow-hidden bg-white">
+               <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 text-center">
+                 <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] mx-auto mb-2 text-2xl shadow-sm">
+                   📢
+                 </div>
+                 <h3 className="text-lg font-black text-[#fae1b7]">إضافة إعلان شريك</h3>
+                 <p className="text-xs text-[#d4b174] mt-1">عرض شعارات ورعاة فعاليات ورقلة</p>
+               </div>
                <CardContent className="p-6">
                  <form onSubmit={handleCreateAd} className="space-y-4 text-right">
-                   <div className="space-y-2">
-                     <Label className="font-bold text-slate-700">اسم الشريك</Label>
+                   <div className="space-y-1.5">
+                     <Label className="font-bold text-xs text-[#301809]">اسم الشريك</Label>
                      <Input 
                         required 
                         value={newAd.partner_name} 
                         onChange={e => setNewAd({...newAd, partner_name: e.target.value})} 
                         placeholder="مثال: اتصالات الجزائر" 
-                        className="h-12 font-bold"
+                        className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                      />
                    </div>
-                   <div className="space-y-2">
-                     <Label className="font-bold text-slate-700">رابط الصورة (اختياري)</Label>
+                   <div className="space-y-1.5">
+                     <Label className="font-bold text-xs text-[#301809]">رابط الصورة (اختياري)</Label>
                      <Input 
                         value={newAd.image_url} 
                         onChange={e => setNewAd({...newAd, image_url: e.target.value})} 
                         placeholder="https://..." 
                         dir="ltr" 
-                        className="h-12 font-sans"
+                        className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]"
                      />
                    </div>
                    
-                   <div className="space-y-2 pt-2 border-t mt-2">
-                      <Label className="font-bold text-blue-800">أو قم برفع ملف الصورة</Label>
+                   <div className="space-y-2 pt-2 border-t border-[#dbc397]/50 mt-2">
+                      <Label className="font-bold text-xs text-[#301809]">أو قم برفع ملف الصورة</Label>
                       <div className="flex items-center gap-4">
                         <Input 
                           type="file" 
                           accept="image/*" 
                           onChange={e => setAdFile(e.target.files?.[0] || null)}
-                          className="bg-blue-50/50 border-dashed border-2 cursor-pointer h-14 pt-3 font-bold"
+                          className="bg-[#fdfbf7] border-dashed border-2 border-[#dbc397] cursor-pointer h-14 pt-3 font-bold rounded-xl text-[#723c11]"
                         />
                         {adFile && (
                           <Button 
                             type="button" 
                             variant="ghost" 
                             onClick={() => setAdFile(null)}
-                            className="text-red-500 hover:bg-red-50"
+                            className="text-red-500 hover:bg-red-50 rounded-xl"
                           >
                             <Trash2 size={20} />
                           </Button>
@@ -1127,55 +1353,70 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                   <div className="space-y-2">
-                     <Label className="font-bold text-slate-700">الرابط الموجه (URL)</Label>
+                   <div className="space-y-1.5">
+                     <Label className="font-bold text-xs text-[#301809]">الرابط الموجه (URL)</Label>
                      <Input 
                         value={newAd.link} 
                         onChange={e => setNewAd({...newAd, link: e.target.value})} 
                         placeholder="https://..." 
                         dir="ltr" 
-                        className="h-12 font-sans"
+                        className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]"
                      />
                    </div>
                    <Button 
                       type="submit" 
                       disabled={adUploading} 
-                      className="w-full bg-blue-600 hover:bg-blue-700 h-14 text-lg font-black text-white mt-4 shadow-lg rounded-xl"
+                      className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white mt-4 shadow-lg rounded-xl cursor-pointer transition-all"
                    >
-                     {adUploading ? "جاري الرفع والنشر..." : "نشر الإعلان"}
+                     {adUploading ? "جاري الرفع والنشر..." : "نشر الإعلان والشراكة"}
                    </Button>
                  </form>
                </CardContent>
             </Card>
 
             <div className="lg:col-span-2 space-y-4">
-               <h3 className="text-xl font-black text-slate-800 flex items-center gap-3 mb-4">
-                 <Megaphone className="text-blue-600" /> الإعلانات الحالية ({ads.length})
+               <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-3 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
+                 <Megaphone className="text-[#b87a29]" /> الإعلانات الحالية ({ads.length})
                </h3>
-               {ads.map(ad => (
-                 <Card key={ad.id} className="p-4 flex gap-4 items-center bg-white shadow-sm border rounded-2xl relative overflow-hidden">
-                   <div className="w-32 h-20 rounded-xl bg-blue-50 flex items-center justify-center overflow-hidden shrink-0 relative">
-                     <img 
-                       src={ad.image_url} 
-                       className="object-cover h-full w-full" 
-                       onError={(e) => {
-                         e.currentTarget.style.display = 'none';
-                         const fallback = e.currentTarget.parentElement?.querySelector('.admin-thumb-fallback');
-                         if (fallback) fallback.classList.remove('hidden');
-                       }}
-                     />
-                     <div className="admin-thumb-fallback hidden absolute inset-0 bg-blue-100 flex items-center justify-center">
-                       <Megaphone size={24} className="text-blue-300" />
+               {ads.length === 0 ? (
+                 <div className="text-center text-[#723c11] py-12 bg-white rounded-3xl border-2 border-dashed border-[#dbc397] font-bold">
+                   لا توجد إعلانات شركاء نشطة حالياً.
+                 </div>
+               ) : (
+                 ads.map(ad => (
+                   <Card key={ad.id} className="p-4 flex gap-4 items-center bg-white shadow-sm hover:shadow-md border-2 border-[#dbc397]/60 rounded-3xl relative overflow-hidden transition-all">
+                     <div className="w-32 h-20 rounded-2xl bg-[#fdfbf7] border border-[#dbc397] flex items-center justify-center overflow-hidden shrink-0 relative">
+                       <img 
+                         src={ad.image_url} 
+                         className="object-cover h-full w-full" 
+                         onError={(e) => {
+                           e.currentTarget.style.display = 'none';
+                           const fallback = e.currentTarget.parentElement?.querySelector('.admin-thumb-fallback');
+                           if (fallback) fallback.classList.remove('hidden');
+                         }}
+                       />
+                       <div className="admin-thumb-fallback hidden absolute inset-0 bg-[#fae1b7]/40 flex items-center justify-center">
+                         <Megaphone size={24} className="text-[#b87a29]" />
+                       </div>
                      </div>
-                   </div>
-                   <div className="flex-1">
-                     <h4 className="font-bold text-slate-800">{ad.partner_name}</h4>
-                     {ad.link && <LinkIcon size={12} className="inline ml-1 text-slate-400" />}
-                     <p className="text-xs text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-full inline-block mt-2">نشط</p>
-                   </div>
-                   <Button variant="ghost" onClick={() => handleDeleteItem('partner_ads', ad.id)} className="text-red-500 hover:bg-red-50 p-2 h-auto"><Trash2 size={20} /></Button>
-                 </Card>
-               ))}
+                     <div className="flex-1 min-w-0">
+                       <h4 className="font-bold text-[#301809] text-base">{ad.partner_name}</h4>
+                       {ad.link && (
+                         <a href={ad.link} target="_blank" rel="noreferrer" className="text-xs text-[#b87a29] hover:underline flex items-center gap-1 mt-1 truncate" dir="ltr">
+                           <LinkIcon size={12} className="inline shrink-0" />
+                           {ad.link}
+                         </a>
+                       )}
+                       <span className="text-xs text-[#723c11] font-bold bg-[#fae1b7]/70 border border-[#dbc397] px-2.5 py-0.5 rounded-full inline-block mt-2">
+                         نشط على الصفحة الرئيسية
+                       </span>
+                     </div>
+                     <Button variant="ghost" onClick={() => handleDeleteItem('partner_ads', ad.id)} className="text-red-500 hover:bg-red-50 p-2 h-10 w-10 rounded-xl cursor-pointer shrink-0">
+                       <Trash2 size={18} />
+                     </Button>
+                   </Card>
+                 ))
+               )}
             </div>
           </div>
         </TabsContent>
@@ -1184,32 +1425,38 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Broadcast Form */}
-            <Card className="lg:col-span-7 shadow-xl border-none rounded-[2rem] bg-white overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-red-600 to-rose-600 text-white p-6">
-                <CardTitle className="text-xl font-black flex items-center gap-2">
-                  <Megaphone className="h-6 w-6" />
-                  إرسال إشعار عام للنظام
-                </CardTitle>
-                <p className="text-xs text-red-100 font-medium mt-1">
-                  بصفتك مديراً عاماً للمنصة، سيتم إرسال هذا التنبيه لكافة المستخدمين والزوار فورياً كإشعار هاتف أصيل.
-                </p>
-              </CardHeader>
-              <CardContent className="p-8">
-                <form onSubmit={handleSendBroadcast} className="space-y-6 text-right">
-                  <div className="space-y-2">
-                    <Label htmlFor="admin-broadcast-title" className="font-bold text-slate-700">عنوان الإشعار</Label>
+            <Card className="lg:col-span-7 shadow-xl border-2 border-[#dbc397] rounded-3xl bg-white overflow-hidden">
+              <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] text-2xl shadow-sm shrink-0">
+                    📣
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[#fae1b7] flex items-center gap-2">
+                      إرسال إشعار عام للمنصة
+                    </h3>
+                    <p className="text-xs text-[#d4b174] font-medium mt-1">
+                      بصفتك مديراً عاماً، سيتم إرسال هذا التنبيه لكافة المستخدمين والزوار فورياً كإشعار هاتف وتطبيق أصيل.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <CardContent className="p-6 md:p-8">
+                <form onSubmit={handleSendBroadcast} className="space-y-5 text-right">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="admin-broadcast-title" className="font-bold text-xs text-[#301809]">عنوان الإشعار</Label>
                     <Input 
                       id="admin-broadcast-title"
                       required
                       value={broadcastTitle}
                       onChange={e => setBroadcastTitle(e.target.value)}
-                      placeholder="عنوان التنبيه الرئيسي..."
-                      className="h-12 font-bold"
+                      placeholder="مثال: انطلاق فعاليات موسم القصور العتيقة..."
+                      className="h-11 font-bold border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="admin-broadcast-body" className="font-bold text-slate-700">نص الرسالة</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="admin-broadcast-body" className="font-bold text-xs text-[#301809]">نص الرسالة</Label>
                     <Textarea 
                       id="admin-broadcast-body"
                       required
@@ -1217,33 +1464,33 @@ export default function AdminDashboard() {
                       onChange={e => setBroadcastBody(e.target.value)}
                       placeholder="اكتب تفاصيل التنبيه الهام هنا..."
                       rows={5}
-                      className="font-medium"
+                      className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="admin-broadcast-url" className="font-bold text-slate-700">رابط التوجيه (اختياري)</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="admin-broadcast-url" className="font-bold text-xs text-[#301809]">رابط التوجيه (اختياري)</Label>
                     <Input 
                       id="admin-broadcast-url"
                       value={broadcastUrl}
                       onChange={e => setBroadcastUrl(e.target.value)}
-                      placeholder="مثال: /heritage (سيتم فتح صفحة التراث عند الضغط)"
+                      placeholder="/heritage أو https://..."
                       dir="ltr"
-                      className="h-12 font-sans text-left"
+                      className="h-11 font-sans text-left border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                     />
                   </div>
 
                   <Button 
                     type="submit" 
                     disabled={broadcasting}
-                    className="w-full h-14 text-lg font-black bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/10 rounded-2xl gap-2 mt-4"
+                    className="w-full h-12 text-sm font-black bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white shadow-lg rounded-xl gap-2 mt-4 cursor-pointer transition-all"
                   >
                     {broadcasting ? (
                       <Loader2 className="w-5 h-5 animate-spin mx-auto" />
                     ) : (
                       <>
-                        <Send className="w-5 h-5" />
-                        <span>بث التنبيه العام للهواتف</span>
+                        <Send className="w-4 h-4 ml-1" />
+                        <span>بث التنبيه العام لجميع الهواتف</span>
                       </>
                     )}
                   </Button>
@@ -1253,41 +1500,43 @@ export default function AdminDashboard() {
 
             {/* Mobile Phone Mockup Preview */}
             <div className="lg:col-span-5 flex flex-col items-center">
-              <span className="text-sm font-black text-slate-500 mb-4 flex items-center gap-1.5">
-                <Smartphone className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm font-black text-[#723c11] mb-4 flex items-center gap-2 bg-[#fae1b7]/50 border border-[#dbc397] px-4 py-1.5 rounded-full">
+                <Smartphone className="w-4 h-4 text-[#b87a29]" />
                 معاينة الإشعار على هاتف المستخدم
               </span>
 
-              <div className="w-full max-w-[320px] aspect-[9/18.5] bg-slate-950 rounded-[40px] p-3 shadow-2xl border-4 border-slate-800 relative overflow-hidden">
-                <div className="w-32 h-6 bg-slate-800 absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20" />
+              <div className="w-full max-w-[320px] aspect-[9/18.5] bg-[#1a0c04] rounded-[44px] p-3 shadow-2xl border-4 border-[#301809] relative overflow-hidden ring-4 ring-[#dbc397]/40">
+                <div className="w-32 h-6 bg-[#301809] absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20 flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-slate-900 border border-white/10" />
+                </div>
                 
-                <div className="w-full h-full bg-gradient-to-b from-slate-900 to-slate-950 rounded-[32px] p-4 flex flex-col justify-between relative text-right">
-                  <div className="flex justify-between items-center text-[10px] text-white/40 font-sans">
-                    <span>الآن</span>
-                    <span>📶🔋</span>
+                <div className="w-full h-full bg-gradient-to-b from-[#251206] via-[#301809] to-[#1a0c04] rounded-[34px] p-4 flex flex-col justify-between relative text-right">
+                  <div className="flex justify-between items-center text-[10px] text-[#fae1b7]/60 font-sans pt-1">
+                    <span>12:00</span>
+                    <span>📶 4G 🔋</span>
                   </div>
 
                   {/* Simulated Banner */}
-                  <div className="mt-6">
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-red-500/20 text-slate-800 text-right">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[9px] font-black text-red-700 flex items-center gap-1">
-                          <Bell className="w-3 h-3 text-red-600 animate-bounce" />
+                  <div className="mt-8">
+                    <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-2xl border-2 border-[#dbc397] text-slate-800 text-right">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-[10px] font-black text-[#723c11] flex items-center gap-1.5 bg-[#fae1b7]/60 px-2 py-0.5 rounded-md border border-[#dbc397]">
+                          <Bell className="w-3 h-3 text-[#b87a29] animate-bounce" />
                           تواصل صحراء
                         </span>
-                        <span className="text-[8px] text-slate-400">الآن</span>
+                        <span className="text-[9px] text-slate-400 font-bold">الآن</span>
                       </div>
-                      <h5 className="font-black text-xs text-slate-900 truncate">
-                        {broadcastTitle ? `إدارة المنصة: ${broadcastTitle}` : 'عنوان الإشعار يظهر هنا'}
+                      <h5 className="font-black text-xs text-[#301809] truncate mt-1">
+                        {broadcastTitle ? broadcastTitle : 'عنوان الإشعار يظهر هنا'}
                       </h5>
-                      <p className="text-[10px] text-slate-500 mt-1 font-medium leading-relaxed break-words line-clamp-3">
+                      <p className="text-[10px] text-[#723c11] mt-1 font-medium leading-relaxed break-words line-clamp-3">
                         {broadcastBody || 'محتوى ونصوص رسالة الإشعار كما قمت بكتابتها في النموذج ستظهر هنا في شاشة الهاتف...'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="text-center text-white/20 text-[9px] mb-4">
-                    حرك للأعلى لإلغاء القفل
+                  <div className="text-center text-[#fae1b7]/30 text-[10px] font-bold mb-4">
+                    حرك للأعلى لإلغاء القفل 🔒
                   </div>
                 </div>
               </div>
@@ -1295,31 +1544,31 @@ export default function AdminDashboard() {
 
             {/* Notification History */}
             <div className="col-span-1 lg:col-span-12 mt-8">
-               <h3 className="text-xl font-black text-slate-800 flex items-center gap-3 mb-4">
-                 <History className="text-red-600" /> أرشيف الإشعارات المرسلة
+               <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-3 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
+                 <History className="text-[#b87a29]" /> أرشيف الإشعارات المرسلة
                </h3>
-               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+               <div className="bg-white border-2 border-[#dbc397]/60 rounded-3xl p-5 shadow-sm">
                  <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                    {notificationHistory.length === 0 ? (
-                     <div className="text-center py-8 text-slate-500 font-bold">
+                     <div className="text-center py-8 text-[#723c11] font-bold">
                        لا توجد إشعارات سابقة.
                      </div>
                    ) : (
                      notificationHistory.map(notif => (
-                       <div key={notif.id} className="bg-white border border-slate-200 shadow-sm rounded-xl p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-red-200 transition-colors">
+                       <div key={notif.id} className="bg-[#fdfbf7] border border-[#dbc397] shadow-xs rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#b87a29] transition-colors">
                          <div className="flex-1 min-w-0">
                            <div className="flex items-center gap-2 mb-1">
-                             <h4 className="font-bold text-slate-800 text-sm truncate">{notif.title}</h4>
-                             <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full shrink-0" dir="ltr">
+                             <h4 className="font-bold text-[#301809] text-sm truncate">{notif.title}</h4>
+                             <span className="text-[10px] text-[#723c11] bg-[#fae1b7]/60 border border-[#dbc397] px-2.5 py-0.5 rounded-full shrink-0 font-bold" dir="ltr">
                                {new Date(notif.created_at).toLocaleDateString('ar-DZ')}
                              </span>
                            </div>
-                           <p className="text-xs text-slate-500 truncate">{notif.body}</p>
+                           <p className="text-xs text-[#723c11]/80 truncate">{notif.body}</p>
                          </div>
                          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
                            <Button 
                              variant="outline" 
-                             className="flex-1 sm:flex-none border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 rounded-lg text-xs font-bold h-9 px-3"
+                             className="flex-1 sm:flex-none border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 hover:text-[#301809] rounded-xl text-xs font-bold h-9 px-3 cursor-pointer"
                              onClick={() => {
                                setBroadcastTitle(notif.title);
                                setBroadcastBody(notif.body);
@@ -1327,12 +1576,12 @@ export default function AdminDashboard() {
                                window.scrollTo({ top: 0, behavior: 'smooth' });
                              }}
                            >
-                             <History className="w-3 h-3 ml-1" />
+                             <History className="w-3 h-3 ml-1 text-[#b87a29]" />
                              إعادة استخدام
                            </Button>
                            <Button 
                              variant="ghost" 
-                             className="text-red-500 hover:bg-red-50 hover:text-red-700 h-9 w-9 p-0 rounded-lg shrink-0"
+                             className="text-red-500 hover:bg-red-50 hover:text-red-700 h-9 w-9 p-0 rounded-xl shrink-0 cursor-pointer"
                              onClick={() => handleDeleteItem('notifications_history', notif.id)}
                              title="حذف الإشعار"
                            >
@@ -1349,6 +1598,7 @@ export default function AdminDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
