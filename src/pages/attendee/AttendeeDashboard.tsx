@@ -556,96 +556,96 @@ export default function AttendeeDashboard() {
       </header>
 
       {/* Main Container */}
-      <div className="container mx-auto px-4 md:px-8 pt-8 space-y-8">
+      <div className="container mx-auto px-4 md:px-8 pt-5 md:pt-6 space-y-5 md:space-y-6">
 
-        {/* Attendee Quick KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* Attendee Quick KPI Cards (Compact & Elegant) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {/* Card 1: My Tickets */}
-          <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider block">تذاكري المؤكدة</span>
-                <span className="text-[11px] text-[#723c11]/70 font-medium">فعاليات قادمة لك</span>
+          <div className="relative overflow-hidden bg-white rounded-2xl p-3.5 sm:p-4 border border-[#dbc397]/70 shadow-xs hover:shadow-md hover:border-[#b87a29] transition-all group">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[11px] sm:text-xs font-bold text-[#723c11] block truncate">تذاكري المؤكدة</span>
+                <span className="text-[10px] text-[#723c11]/70 block truncate">فعاليات قادمة</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center text-[#723c11] shadow-xs group-hover:scale-110 transition-transform">
-                <Ticket className="w-6 h-6 text-[#b87a29]" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center text-[#723c11] shrink-0 group-hover:scale-105 transition-transform">
+                <Ticket className="w-4 h-4 text-[#b87a29]" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{myEvents.length}</span>
-              <span className="text-xs font-bold text-[#723c11] bg-[#fae1b7]/60 px-2.5 py-1 rounded-full flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-[#b87a29]" /> تذكرة
+            <div className="mt-2.5 flex items-baseline justify-between gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-[#301809] tracking-tight">{myEvents.length}</span>
+              <span className="text-[10px] sm:text-xs font-bold text-[#723c11] bg-[#fae1b7]/60 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                <Sparkles className="w-3 h-3 text-[#b87a29]" /> تذكرة
               </span>
             </div>
-            <div className="mt-3 h-1.5 w-full bg-[#fae1b7]/30 rounded-full overflow-hidden">
+            <div className="mt-2 h-1 w-full bg-[#fae1b7]/30 rounded-full overflow-hidden">
               <div className="h-full bg-[#b87a29] rounded-full" style={{ width: '100%' }} />
             </div>
           </div>
 
           {/* Card 2: Points (Gaming Purple/Gold accent) */}
-          <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-purple-600 transition-all group">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-purple-900 uppercase tracking-wider block">رصيد النقاط</span>
-                <span className="text-[11px] text-purple-700/70 font-medium">نقاط التفاعل والمشاركة</span>
+          <div className="relative overflow-hidden bg-white rounded-2xl p-3.5 sm:p-4 border border-[#dbc397]/70 shadow-xs hover:shadow-md hover:border-purple-600 transition-all group">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[11px] sm:text-xs font-bold text-purple-900 block truncate">رصيد النقاط</span>
+                <span className="text-[10px] text-purple-700/70 block truncate">التفاعل والمشاركة</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700 shadow-xs group-hover:scale-110 transition-transform">
-                <Star className="w-6 h-6 text-yellow-500 fill-yellow-400" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700 shrink-0 group-hover:scale-105 transition-transform">
+                <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-4xl md:text-5xl font-black text-purple-950 tracking-tight">{userProfile?.points || 0}</span>
-              <span className="text-xs font-bold text-purple-800 bg-purple-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+            <div className="mt-2.5 flex items-baseline justify-between gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-purple-950 tracking-tight">{userProfile?.points || 0}</span>
+              <span className="text-[10px] sm:text-xs font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                 ⭐ نقطة
               </span>
             </div>
-            <div className="mt-3 h-1.5 w-full bg-purple-100 rounded-full overflow-hidden">
+            <div className="mt-2 h-1 w-full bg-purple-100 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full" style={{ width: `${(userProfile?.points || 0) % 100}%` }} />
             </div>
           </div>
 
           {/* Card 3: Level (Gaming Trophy) */}
-          <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-amber-500 transition-all group">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider block">مستوى المكتشف</span>
-                <span className="text-[11px] text-[#723c11]/70 font-medium">رتبة حسابك الحالية</span>
+          <div className="relative overflow-hidden bg-white rounded-2xl p-3.5 sm:p-4 border border-[#dbc397]/70 shadow-xs hover:shadow-md hover:border-amber-500 transition-all group">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[11px] sm:text-xs font-bold text-[#723c11] block truncate">مستوى المكتشف</span>
+                <span className="text-[10px] text-[#723c11]/70 block truncate">{userProfile?.badge || 'عضو نشط'}</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-xs group-hover:scale-110 transition-transform">
-                <Trophy className="w-6 h-6 text-amber-500" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0 group-hover:scale-105 transition-transform">
+                <Trophy className="w-4 h-4 text-amber-500" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">
-                المستوى {Math.floor((userProfile?.points || 0) / 100) + 1}
+            <div className="mt-2.5 flex items-baseline justify-between gap-2">
+              <span className="text-xl sm:text-2xl font-black text-[#301809] tracking-tight whitespace-nowrap">
+                مستوى {Math.floor((userProfile?.points || 0) / 100) + 1}
               </span>
-              <span className="text-xs font-bold text-[#b87a29] bg-amber-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-                {userProfile?.badge || 'عضو نشط'}
+              <span className="text-[10px] sm:text-xs font-bold text-[#b87a29] bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                رتبة
               </span>
             </div>
-            <div className="mt-3 h-1.5 w-full bg-amber-100 rounded-full overflow-hidden">
+            <div className="mt-2 h-1 w-full bg-amber-100 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full" style={{ width: '100%' }} />
             </div>
           </div>
 
           {/* Card 4: Available Events in Ouargla */}
-          <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider block">الفعاليات المتاحة</span>
-                <span className="text-[11px] text-[#723c11]/70 font-medium">في مختلف قصور وبلديات ورقلة</span>
+          <div className="relative overflow-hidden bg-white rounded-2xl p-3.5 sm:p-4 border border-[#dbc397]/70 shadow-xs hover:shadow-md hover:border-[#b87a29] transition-all group">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[11px] sm:text-xs font-bold text-[#723c11] block truncate">الفعاليات المتاحة</span>
+                <span className="text-[10px] text-[#723c11]/70 block truncate">قصور وبلديات ورقلة</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] border border-[#dbc397] flex items-center justify-center text-[#efa83f] shadow-xs group-hover:scale-110 transition-transform">
-                <Compass className="w-6 h-6" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-[#301809] to-[#723c11] border border-[#dbc397] flex items-center justify-center text-[#efa83f] shrink-0 group-hover:scale-105 transition-transform">
+                <Compass className="w-4 h-4" />
               </div>
             </div>
-            <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{publicEvents.length}</span>
-              <span className="text-xs font-bold text-[#efa83f] bg-[#301809] px-2.5 py-1 rounded-full flex items-center gap-1">
+            <div className="mt-2.5 flex items-baseline justify-between gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-[#301809] tracking-tight">{publicEvents.length}</span>
+              <span className="text-[10px] sm:text-xs font-bold text-[#efa83f] bg-[#301809] px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                 فعالية
               </span>
             </div>
-            <div className="mt-3 h-1.5 w-full bg-[#fae1b7]/30 rounded-full overflow-hidden">
+            <div className="mt-2 h-1 w-full bg-[#fae1b7]/30 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] rounded-full" style={{ width: '100%' }} />
             </div>
           </div>
