@@ -249,6 +249,7 @@ export default function AssociationDashboard() {
   const activeEvents = events.filter(e => e.status !== 'archived');
   const archivedEvents = events.filter(e => e.status === 'archived');
   const totalRsvps = events.reduce((acc, ev) => acc + (ev.rsvps?.[0]?.count || 0), 0);
+  const avgAttendees = events.length > 0 ? Math.round(totalRsvps / events.length) : 0;
 
   const filteredActiveEvents = activeEvents.filter(e => 
     e.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -578,12 +579,42 @@ export default function AssociationDashboard() {
       {/* Main Content Area */}
       <div className="container mx-auto px-4 md:px-8 pt-8 space-y-8">
 
+        {/* Association-Specific KPI Header */}
+        <div className="bg-white border-2 border-[#dbc397]/60 rounded-3xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#fae1b7]/60 border border-[#dbc397] flex items-center justify-center text-xl shrink-0">
+              📊
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base md:text-lg font-thmanyah font-bold text-[#301809]">
+                  مؤشرات وإحصائيات خاصة بـ: <span className="text-[#b87a29]">{assocName || 'جمعيتكم'}</span>
+                </h2>
+                <span className="bg-[#fae1b7] text-[#723c11] border border-[#d4b174] text-[10px] font-black px-2.5 py-0.5 rounded-full">
+                  حصرية لجمعيتكم 🔒
+                </span>
+              </div>
+              <p className="text-xs text-[#723c11]/80 font-medium mt-0.5">
+                هذه الإحصائيات تحسب نشاطات وتذاكر فعاليات جمعيتكم فقط، ومفصولة تماماً عن الجمعيات الأخرى في المنصة.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 self-start md:self-auto bg-[#fdfbf7] border border-[#dbc397] px-3.5 py-1.5 rounded-2xl text-xs font-bold text-[#723c11]">
+            <Building2 className="w-4 h-4 text-[#b87a29]" />
+            <span>حساب الجمعية: {assocName || 'معتمد'}</span>
+          </div>
+        </div>
+
         {/* Association KPI Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Card 1: Active Events */}
           <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">الفعاليات النشطة</span>
+              <div>
+                <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider block">فعالياتكم النشطة</span>
+                <span className="text-[11px] text-[#723c11]/70 font-medium">متاحة للحجز الآن</span>
+              </div>
               <div className="w-12 h-12 rounded-2xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center text-[#723c11] shadow-xs group-hover:scale-110 transition-transform">
                 <CalendarIcon className="w-6 h-6" />
               </div>
@@ -602,7 +633,10 @@ export default function AssociationDashboard() {
           {/* Card 2: Total RSVPs */}
           <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">تأكيدات الحضور (RSVPs)</span>
+              <div>
+                <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider block">مسجلو فعالياتكم</span>
+                <span className="text-[11px] text-[#723c11]/70 font-medium">تذاكر جمهوركم المؤكدة</span>
+              </div>
               <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-[#b87a29] shadow-xs group-hover:scale-110 transition-transform">
                 <Ticket className="w-6 h-6" />
               </div>
@@ -618,18 +652,21 @@ export default function AssociationDashboard() {
             </div>
           </div>
 
-          {/* Card 3: Archived Events */}
+          {/* Card 3: Average Attendance */}
           <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">الفعاليات السابقة / الأرشيف</span>
+              <div>
+                <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider block">متوسط الحضور بالفعالية</span>
+                <span className="text-[11px] text-[#723c11]/70 font-medium">معدل الإقبال لجمعيتكم</span>
+              </div>
               <div className="w-12 h-12 rounded-2xl bg-[#fae1b7]/60 border border-[#d4b174] flex items-center justify-center text-[#723c11] shadow-xs group-hover:scale-110 transition-transform">
-                <Archive className="w-6 h-6" />
+                <Users className="w-6 h-6" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{archivedEvents.length}</span>
+              <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{avgAttendees}</span>
               <span className="text-xs font-bold text-[#723c11] bg-[#fae1b7]/60 px-2.5 py-1 rounded-full flex items-center gap-1">
-                مؤرشفة
+                مشارك/فعالية
               </span>
             </div>
             <div className="mt-3 h-1.5 w-full bg-[#fae1b7]/30 rounded-full overflow-hidden">
@@ -637,10 +674,13 @@ export default function AssociationDashboard() {
             </div>
           </div>
 
-          {/* Card 4: Total Events Created */}
+          {/* Card 4: Total Association Events */}
           <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">إجمالي كافة الفعاليات</span>
+              <div>
+                <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider block">إجمالي فعاليات الجمعية</span>
+                <span className="text-[11px] text-[#723c11]/70 font-medium">{activeEvents.length} نشطة • {archivedEvents.length} سابقة</span>
+              </div>
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] border border-[#dbc397] flex items-center justify-center text-[#efa83f] shadow-xs group-hover:scale-110 transition-transform">
                 <Building2 className="w-6 h-6" />
               </div>
@@ -648,7 +688,7 @@ export default function AssociationDashboard() {
             <div className="mt-4 flex items-baseline justify-between">
               <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{events.length}</span>
               <span className="text-xs font-bold text-[#efa83f] bg-[#301809] px-2.5 py-1 rounded-full flex items-center gap-1">
-                فعالية
+                خاصة بكم
               </span>
             </div>
             <div className="mt-3 h-1.5 w-full bg-[#fae1b7]/30 rounded-full overflow-hidden">
