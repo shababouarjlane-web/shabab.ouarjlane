@@ -375,9 +375,9 @@ export default function LandingPage() {
             </div>
             
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-thmanyah font-bold text-[#301809] leading-[1.38] tracking-normal">
-              تواصل، تفاعل وارتقِ مع <br />
-              <span className="text-[#b87a29] inline-block pt-1">مجتمعك وأصالتك التراثية</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-thmanyah font-bold text-[#301809] leading-[1.6] tracking-normal">
+              <span className="block pb-2 sm:pb-3">تواصل، تفاعل وارتقِ مع</span>
+              <span className="text-[#b87a29] block">مجتمعك وأصالتك التراثية</span>
             </h1>
             
             {/* Subtitle Description */}
