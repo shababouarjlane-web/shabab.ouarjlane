@@ -314,11 +314,9 @@ export default function AdminDashboard() {
         finalImageUrl = publicUrlData.publicUrl;
       }
 
-      if (!finalImageUrl) throw new Error('يجب توفير صورة (رابط أو ملف)');
-
       const { error } = await supabase.from('partner_ads').insert({
         partner_name: newAd.partner_name,
-        image_url: finalImageUrl,
+        image_url: finalImageUrl || null,
         link: newAd.link || null
       });
 

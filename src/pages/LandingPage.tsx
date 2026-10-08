@@ -537,26 +537,30 @@ export default function LandingPage() {
                   href={ad.link || '#'} 
                   target={ad.link ? "_blank" : undefined}
                   rel={ad.link ? "noopener noreferrer" : undefined}
-                  className="flex items-center justify-center gap-3.5 bg-white px-6 py-3.5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#b87a29] transition-all border-2 border-[#dbc397]/60 group min-w-[190px] max-w-[280px]"
+                  title={ad.partner_name}
+                  className="flex items-center justify-center bg-white px-6 py-3.5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#b87a29] transition-all border-2 border-[#dbc397]/60 group min-w-[150px] max-w-[260px] h-16"
                 >
-                  <div className="h-9 w-20 flex items-center justify-center overflow-hidden">
-                    <img 
-                      src={ad.image_url} 
-                      alt={ad.partner_name} 
-                      className="max-h-full max-w-full object-contain filter group-hover:scale-105 transition-transform" 
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const fallback = e.currentTarget.parentElement?.querySelector('.partner-logo-fallback');
-                        if (fallback) fallback.classList.remove('hidden');
-                      }}
-                    />
-                    <div className="partner-logo-fallback hidden font-black text-xs text-[#b87a29] tracking-wider uppercase">
-                      {ad.partner_name}
+                  {ad.image_url ? (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <img 
+                        src={ad.image_url} 
+                        alt={ad.partner_name} 
+                        className="max-h-10 max-w-full object-contain filter group-hover:scale-105 transition-transform" 
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.parentElement?.querySelector('.partner-logo-fallback');
+                          if (fallback) fallback.classList.remove('hidden');
+                        }}
+                      />
+                      <span className="partner-logo-fallback hidden font-thmanyah font-bold text-sm md:text-base text-[#301809] group-hover:text-[#b87a29] transition-colors">
+                        {ad.partner_name}
+                      </span>
                     </div>
-                  </div>
-                  <span className="font-bold text-xs md:text-sm text-[#301809] group-hover:text-[#b87a29] transition-colors truncate">
-                    {ad.partner_name}
-                  </span>
+                  ) : (
+                    <span className="font-thmanyah font-bold text-sm md:text-base text-[#301809] group-hover:text-[#b87a29] transition-colors tracking-wide">
+                      {ad.partner_name}
+                    </span>
+                  )}
                 </a>
               ))}
             </div>
