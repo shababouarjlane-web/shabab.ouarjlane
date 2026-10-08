@@ -31,13 +31,7 @@ export default function PartnerAdsBanner() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      const normalized = (data || []).map(ad => {
-        if (ad.partner_name?.toLowerCase().includes('ignatex')) {
-          return { ...ad, image_url: '/ignatex-logo.png' };
-        }
-        return ad;
-      });
-      setAds(normalized);
+      setAds(data || []);
     } catch (error) {
       console.error('Error fetching ads:', error);
     } finally {
@@ -69,11 +63,11 @@ export default function PartnerAdsBanner() {
           >
             <div className="flex h-full flex-col md:flex-row">
               {/* Image Side */}
-              <div className="w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden bg-gradient-to-br from-[#fdfbf7] to-[#fae1b7]/40 flex items-center justify-center p-4">
+              <div className="w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden bg-slate-100 flex items-center justify-center">
                 <img
                   src={ad.image_url}
                   alt={ad.partner_name}
-                  className="w-full h-full object-contain filter drop-shadow-sm transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallback = e.currentTarget.parentElement?.querySelector('.ad-image-fallback');
