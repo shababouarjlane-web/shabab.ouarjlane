@@ -96,6 +96,7 @@ export function usePWA() {
     isInstallable,
     isStandalone,
     isOnline,
+    hasNativePrompt: !!deferredPrompt,
     installApp
   };
 }

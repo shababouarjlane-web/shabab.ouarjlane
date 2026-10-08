@@ -5,10 +5,23 @@ import { Button } from './ui/button';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function PWAInstallBanner() {
-  const { isInstallable, isStandalone, isOnline, installApp } = usePWA();
+  const { isStandalone, isOnline, hasNativePrompt, installApp } = usePWA();
   const [dismissedInstall, setDismissedInstall] = useState(false);
   const [showVault, setShowVault] = useState(false);
+  const [showManualGuide, setShowManualGuide] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<OfflineTicket | null>(null);
+
+  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid = typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent);
+
+  const handleInstallClick = async () => {
+    if (hasNativePrompt) {
+      const ok = await installApp();
+      if (!ok) setShowManualGuide(true);
+    } else {
+      setShowManualGuide(true);
+    }
+  };
 
   const offlineTickets = getOfflineTickets();
 
@@ -30,7 +43,7 @@ export default function PWAInstallBanner() {
               <Button
                 size="sm"
                 onClick={() => setShowVault(true)}
-                className="bg-[#efa83f] hover:bg-[#f0b24d] text-[#301809] font-black rounded-lg h-7 px-2.5 text-[11px] shadow-sm flex items-center gap-1"
+                className="bg-[#efa83f] hover:bg-[#f0b24d] text-[#301809] font-black rounded-lg h-7 px-2.5 text-[11px] shadow-sm flex items-center gap-1 cursor-pointer"
               >
                 <Ticket className="w-3.5 h-3.5" />
                 <span>تذاكري المحفوظة ({offlineTickets.length})</span>
@@ -40,8 +53,8 @@ export default function PWAInstallBanner() {
         </aside>
       )}
 
-      {/* ── 2. Install App Prompt Banner ─────────────────────── */}
-      {isInstallable && !isStandalone && !dismissedInstall && (
+      {/* ── 2. Install App Prompt Banner (Always Visible on Mobile/Browser if not installed) ── */}
+      {!isStandalone && !dismissedInstall && (
         <aside aria-label="تثبيت التطبيق" className="fixed bottom-4 left-4 right-4 md:left-6 md:right-auto md:max-w-md z-[90] bg-[#301809]/95 backdrop-blur-md text-white border-2 border-[#efa83f]/60 rounded-3xl p-4 shadow-2xl animate-in slide-in-from-bottom-5 duration-500" dir="rtl">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#efa83f] to-[#b87a29] flex items-center justify-center text-white shrink-0 shadow-md">
@@ -63,20 +76,20 @@ export default function PWAInstallBanner() {
               </div>
 
               <p className="text-[11px] text-[#fae1b7]/80 mt-1 leading-relaxed">
-                ثبّت المنصة كتطبيق على شاشتك الرئيسية لتصفح الفعاليات وحفظ تذاكر QR للعمل دون الحاجة لشبكة إنترنت.
+                ثبّت المنصة كتطبيق على هاتفك لتصفح الفعاليات وحفظ تذاكر QR لتعمل بدون إنترنت.
               </p>
 
               <div className="flex items-center gap-2 mt-3">
                 <Button
-                  onClick={installApp}
+                  onClick={handleInstallClick}
                   size="sm"
-                  className="bg-gradient-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-[#301809] font-black rounded-xl h-8 px-4 text-xs shadow-glow-amber transition-all"
+                  className="bg-gradient-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-[#301809] font-black rounded-xl h-8 px-4 text-xs shadow-glow-amber transition-all cursor-pointer"
                 >
                   تثبيت الآن 📲
                 </Button>
                 <button
                   onClick={() => setDismissedInstall(true)}
-                  className="text-[11px] text-[#fae1b7]/60 hover:text-white font-semibold px-2 py-1"
+                  className="text-[11px] text-[#fae1b7]/60 hover:text-white font-semibold px-2 py-1 cursor-pointer"
                 >
                   لاحقاً
                 </button>
@@ -86,7 +99,71 @@ export default function PWAInstallBanner() {
         </aside>
       )}
 
-      {/* ── 3. Offline Tickets Vault Modal ───────────────────── */}
+      {/* ── 3. Manual Installation Guide Modal (for HTTP / iOS) ── */}
+      {showManualGuide && (
+        <div className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-[#dbc397] animate-in zoom-in-95 duration-300">
+            <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-5 text-center relative">
+              <button
+                onClick={() => setShowManualGuide(false)}
+                className="absolute top-4 left-4 text-white/60 hover:text-white p-1 rounded-full cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+              <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] mx-auto mb-2 text-2xl shadow-sm">
+                📲
+              </div>
+              <h3 className="text-lg font-black text-[#fae1b7]">تثبيت تطبيق تواصل صحراء</h3>
+              <p className="text-xs text-[#d4b174] mt-1">
+                {isIOS ? 'خطوات التثبيت على آيفون / آيباد' : isAndroid ? 'خطوات التثبيت على هواتف أندرويد' : 'خطوات التثبيت على جهازك'}
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4 text-right">
+              {isIOS ? (
+                <div className="space-y-3 text-xs text-[#301809]">
+                  <div className="flex items-start gap-3 bg-amber-50/70 p-3 rounded-xl border border-amber-200/60">
+                    <span className="w-6 h-6 rounded-full bg-[#301809] text-white flex items-center justify-center font-bold text-xs shrink-0">1</span>
+                    <p className="font-semibold">اضغط على زر <strong>المشاركة (Share ⎘)</strong> في أسفل شاشة متصفح Safari.</p>
+                  </div>
+                  <div className="flex items-start gap-3 bg-amber-50/70 p-3 rounded-xl border border-amber-200/60">
+                    <span className="w-6 h-6 rounded-full bg-[#301809] text-white flex items-center justify-center font-bold text-xs shrink-0">2</span>
+                    <p className="font-semibold">مرر للأسفل واضغط على <strong>"إضافة إلى الشاشة الرئيسية" (Add to Home Screen ⊕)</strong>.</p>
+                  </div>
+                  <div className="flex items-start gap-3 bg-amber-50/70 p-3 rounded-xl border border-amber-200/60">
+                    <span className="w-6 h-6 rounded-full bg-[#301809] text-white flex items-center justify-center font-bold text-xs shrink-0">3</span>
+                    <p className="font-semibold">اضغط <strong>"إضافة" (Add)</strong> في أعلى الزاوية، وسيظهر التطبيق على شاشتك الرئيسية فوراً!</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 text-xs text-[#301809]">
+                  <div className="flex items-start gap-3 bg-amber-50/70 p-3 rounded-xl border border-amber-200/60">
+                    <span className="w-6 h-6 rounded-full bg-[#301809] text-white flex items-center justify-center font-bold text-xs shrink-0">1</span>
+                    <p className="font-semibold">اضغط على زر <strong>القائمة الثلاثية (⋮)</strong> في أعلى المتصفح (Chrome/Samsung).</p>
+                  </div>
+                  <div className="flex items-start gap-3 bg-amber-50/70 p-3 rounded-xl border border-amber-200/60">
+                    <span className="w-6 h-6 rounded-full bg-[#301809] text-white flex items-center justify-center font-bold text-xs shrink-0">2</span>
+                    <p className="font-semibold">اختر <strong>"تثبيت التطبيق" (Install app)</strong> أو <strong>"الإضافة إلى الشاشة الرئيسية"</strong>.</p>
+                  </div>
+                  <div className="flex items-start gap-3 bg-amber-50/70 p-3 rounded-xl border border-amber-200/60">
+                    <span className="w-6 h-6 rounded-full bg-[#301809] text-white flex items-center justify-center font-bold text-xs shrink-0">3</span>
+                    <p className="font-semibold">أكد بالضغط على <strong>"تثبيت"</strong> وسينزل التطبيق على شاشة هاتفك الرئيسية فوراً!</p>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                onClick={() => setShowManualGuide(false)}
+                className="w-full bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] font-bold text-xs h-10 rounded-xl mt-2 cursor-pointer"
+              >
+                فهمت ذلك ✓
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 4. Offline Tickets Vault Modal ───────────────────── */}
       {showVault && (
         <div className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" dir="rtl">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden my-6 border border-[#dbc397]">
@@ -107,7 +184,7 @@ export default function PWAInstallBanner() {
                   setShowVault(false);
                   setSelectedTicket(null);
                 }}
-                className="text-white/60 hover:text-white p-1.5 rounded-full"
+                className="text-white/60 hover:text-white p-1.5 rounded-full cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -160,7 +237,7 @@ export default function PWAInstallBanner() {
                   <Button
                     onClick={() => setSelectedTicket(null)}
                     variant="outline"
-                    className="w-full rounded-xl text-xs font-bold border-[#dbc397]"
+                    className="w-full rounded-xl text-xs font-bold border-[#dbc397] cursor-pointer"
                   >
                     ← العودة لقائمة التذاكر
                   </Button>
@@ -200,7 +277,7 @@ export default function PWAInstallBanner() {
                   setShowVault(false);
                   setSelectedTicket(null);
                 }}
-                className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] rounded-xl px-6 text-xs font-bold"
+                className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] rounded-xl px-6 text-xs font-bold cursor-pointer"
               >
                 إغلاق
               </Button>
