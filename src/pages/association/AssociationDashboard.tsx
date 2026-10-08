@@ -580,29 +580,24 @@ export default function AssociationDashboard() {
       <div className="container mx-auto px-4 md:px-8 pt-8 space-y-8">
 
         {/* Association-Specific KPI Header */}
-        <div className="bg-white border-2 border-[#dbc397]/60 rounded-3xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white border-2 border-[#dbc397]/60 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#fae1b7]/60 border border-[#dbc397] flex items-center justify-center text-xl shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#fae1b7]/60 border border-[#dbc397] flex items-center justify-center text-lg shrink-0">
               📊
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base md:text-lg font-thmanyah font-bold text-[#301809]">
-                  مؤشرات وإحصائيات خاصة بـ: <span className="text-[#b87a29]">{assocName || 'جمعيتكم'}</span>
+                <h2 className="text-sm md:text-base font-thmanyah font-bold text-[#301809]">
+                  المؤشرات والإحصائيات الفورية
                 </h2>
                 <span className="bg-[#fae1b7] text-[#723c11] border border-[#d4b174] text-[10px] font-black px-2.5 py-0.5 rounded-full">
-                  حصرية لجمعيتكم 🔒
+                  خاصة بفعالياتكم 🔒
                 </span>
               </div>
-              <p className="text-xs text-[#723c11]/80 font-medium mt-0.5">
-                هذه الإحصائيات تحسب نشاطات وتذاكر فعاليات جمعيتكم فقط، ومفصولة تماماً عن الجمعيات الأخرى في المنصة.
+              <p className="text-[11px] md:text-xs text-[#723c11]/80 font-medium mt-0.5">
+                إحصائيات مباشرة ومفصولة تماماً، تُحتسب لأنشطة وتذاكر جمعيتكم فقط.
               </p>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2 self-start md:self-auto bg-[#fdfbf7] border border-[#dbc397] px-3.5 py-1.5 rounded-2xl text-xs font-bold text-[#723c11]">
-            <Building2 className="w-4 h-4 text-[#b87a29]" />
-            <span>حساب الجمعية: {assocName || 'معتمد'}</span>
           </div>
         </div>
 
