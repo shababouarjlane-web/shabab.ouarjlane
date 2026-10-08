@@ -122,8 +122,17 @@ export default function LandingPage() {
         .from('partner_ads')
         .select('*')
         .eq('is_active', true)
-        .limit(3);
-      setAds(adsData || []);
+        .limit(6);
+
+      // Ensure verified sponsors like Ignatex always use their clean transparent vector/PNG logo
+      const normalizedAds = (adsData || []).map(ad => {
+        if (ad.partner_name?.toLowerCase().includes('ignatex')) {
+          return { ...ad, image_url: '/ignatex-logo.png' };
+        }
+        return ad;
+      });
+
+      setAds(normalizedAds);
 
     } catch (err) {
       console.error('Error fetching landing page data:', err);

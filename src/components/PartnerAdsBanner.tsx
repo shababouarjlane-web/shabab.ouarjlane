@@ -31,7 +31,13 @@ export default function PartnerAdsBanner() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAds(data || []);
+      const normalized = (data || []).map(ad => {
+        if (ad.partner_name?.toLowerCase().includes('ignatex')) {
+          return { ...ad, image_url: '/ignatex-logo.png' };
+        }
+        return ad;
+      });
+      setAds(normalized);
     } catch (error) {
       console.error('Error fetching ads:', error);
     } finally {
