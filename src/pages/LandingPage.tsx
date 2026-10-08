@@ -124,12 +124,18 @@ export default function LandingPage() {
         .eq('is_active', true)
         .limit(6);
 
-      // Ensure verified sponsors like Ignatex always use their clean transparent vector/PNG logo
+      // Parse partner ads: extract logo specifically for landing page sponsors strip
       const normalizedAds = (adsData || []).map(ad => {
-        if (ad.partner_name?.toLowerCase().includes('ignatex')) {
-          return { ...ad, image_url: '/ignatex-logo.png' };
+        let logo = '';
+        if (ad.image_url && ad.image_url.includes('||')) {
+          const parts = ad.image_url.split('||');
+          logo = parts[1] || '';
+        } else if (ad.partner_name?.toLowerCase().includes('ignatex')) {
+          logo = '/ignatex-logo.png';
+        } else {
+          logo = ad.image_url || '';
         }
-        return ad;
+        return { ...ad, logo_url: logo };
       });
 
       setAds(normalizedAds);
@@ -540,38 +546,41 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6">
-              {ads.map(ad => (
-                <a 
-                  key={ad.id} 
-                  href={ad.link || '#'} 
-                  target={ad.link ? "_blank" : undefined}
-                  rel={ad.link ? "noopener noreferrer" : undefined}
-                  title={ad.partner_name}
-                  className="flex items-center justify-center bg-white px-6 py-3.5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#b87a29] transition-all border-2 border-[#dbc397]/60 group min-w-[150px] max-w-[260px] h-16"
-                >
-                  {ad.image_url ? (
-                    <div className="h-full w-full flex items-center justify-center">
-                      <img 
-                        src={ad.image_url} 
-                        alt={ad.partner_name} 
-                        className="max-h-10 max-w-full object-contain filter group-hover:scale-105 transition-transform" 
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const fallback = e.currentTarget.parentElement?.querySelector('.partner-logo-fallback');
-                          if (fallback) fallback.classList.remove('hidden');
-                        }}
-                      />
-                      <span className="partner-logo-fallback hidden font-thmanyah font-bold text-sm md:text-base text-[#301809] group-hover:text-[#b87a29] transition-colors">
+              {ads.map(ad => {
+                const logoSrc = ad.logo_url;
+                return (
+                  <a 
+                    key={ad.id} 
+                    href={ad.link || '#'} 
+                    target={ad.link ? "_blank" : undefined}
+                    rel={ad.link ? "noopener noreferrer" : undefined}
+                    title={ad.partner_name}
+                    className="flex items-center justify-center bg-white px-6 py-3.5 rounded-2xl shadow-xs hover:shadow-md hover:border-[#b87a29] transition-all border-2 border-[#dbc397]/60 group min-w-[150px] max-w-[260px] h-16"
+                  >
+                    {logoSrc ? (
+                      <div className="h-full w-full flex items-center justify-center">
+                        <img 
+                          src={logoSrc} 
+                          alt={ad.partner_name} 
+                          className="max-h-10 max-w-full object-contain filter group-hover:scale-105 transition-transform" 
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.parentElement?.querySelector('.partner-logo-fallback');
+                            if (fallback) fallback.classList.remove('hidden');
+                          }}
+                        />
+                        <span className="partner-logo-fallback hidden font-thmanyah font-bold text-sm md:text-base text-[#301809] group-hover:text-[#b87a29] transition-colors">
+                          {ad.partner_name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="font-thmanyah font-bold text-sm md:text-base text-[#301809] group-hover:text-[#b87a29] transition-colors tracking-wide">
                         {ad.partner_name}
                       </span>
-                    </div>
-                  ) : (
-                    <span className="font-thmanyah font-bold text-sm md:text-base text-[#301809] group-hover:text-[#b87a29] transition-colors tracking-wide">
-                      {ad.partner_name}
-                    </span>
-                  )}
-                </a>
-              ))}
+                    )}
+                  </a>
+                );
+              })}
             </div>
           </div>
         </section>

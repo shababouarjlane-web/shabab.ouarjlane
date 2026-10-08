@@ -54,40 +54,60 @@ export default function PartnerAdsBanner() {
   return (
     <div className="relative group w-full mb-10" dir="rtl">
       <div className="overflow-hidden rounded-3xl shadow-xl bg-white border-2 border-[#dbc397]/60 h-[190px] md:h-[240px]">
-        {ads.map((ad, index) => (
-          <div
-            key={ad.id}
-            className={`absolute inset-0 transition-all duration-1000 ease-in-out transform ${
-              index === currentIndex ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
-            }`}
-          >
-            <div className="flex h-full flex-col md:flex-row">
-              {/* Image Side */}
-              <div className="w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden bg-slate-100 flex items-center justify-center">
-                <img
-                  src={ad.image_url}
-                  alt={ad.partner_name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.parentElement?.querySelector('.ad-image-fallback');
-                    if (fallback) fallback.classList.remove('hidden');
-                  }}
-                />
-                <div className="ad-image-fallback hidden absolute inset-0 bg-gradient-to-br from-[#301809] via-[#723c11] to-[#b87a29] flex items-center justify-center">
-                  <Megaphone className="w-14 h-14 text-[#efa83f]/60 animate-pulse" />
+        {ads.map((ad, index) => {
+          let adPhoto = ad.image_url || '';
+          let adLogo = '';
+          if (ad.image_url && ad.image_url.includes('||')) {
+            const parts = ad.image_url.split('||');
+            adPhoto = parts[0] || parts[1] || '';
+            adLogo = parts[1] || '';
+          }
+
+          return (
+            <div
+              key={ad.id}
+              className={`absolute inset-0 transition-all duration-1000 ease-in-out transform ${
+                index === currentIndex ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
+              }`}
+            >
+              <div className="flex h-full flex-col md:flex-row">
+                {/* Image Side - Activity / Product Photo */}
+                <div className="w-full md:w-1/2 h-1/2 md:h-full relative overflow-hidden bg-slate-100 flex items-center justify-center">
+                  {adPhoto ? (
+                    <img
+                      src={adPhoto}
+                      alt={ad.partner_name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.parentElement?.querySelector('.ad-image-fallback');
+                        if (fallback) fallback.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`ad-image-fallback ${adPhoto ? 'hidden' : ''} absolute inset-0 bg-gradient-to-br from-[#301809] via-[#723c11] to-[#b87a29] flex items-center justify-center`}>
+                    <Megaphone className="w-14 h-14 text-[#efa83f]/60 animate-pulse" />
+                  </div>
                 </div>
-              </div>
-              
-              {/* Content Side */}
-              <div className="w-full md:w-1/2 h-1/2 md:h-full p-6 md:p-8 flex flex-col justify-center bg-gradient-to-br from-[#fdfbf7] via-white to-[#fae1b7]/20 text-right relative border-t md:border-t-0 md:border-r border-[#dbc397]/50">
-                <div className="absolute top-4 left-4 bg-[#fae1b7]/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-black text-[#723c11] border border-[#dbc397] uppercase tracking-wider">
-                  شريك معتمد • رعاية
-                </div>
-                <h3 className="text-xl md:text-3xl font-thmanyah font-bold text-[#301809] mb-2 truncate">
-                  {ad.partner_name}
-                </h3>
-                <p className="text-xs md:text-sm text-[#723c11]/80 mb-3 md:mb-5 line-clamp-2 font-medium">
+                
+                {/* Content Side */}
+                <div className="w-full md:w-1/2 h-1/2 md:h-full p-6 md:p-8 flex flex-col justify-center bg-gradient-to-br from-[#fdfbf7] via-white to-[#fae1b7]/20 text-right relative border-t md:border-t-0 md:border-r border-[#dbc397]/50">
+                  <div className="absolute top-4 left-4 bg-[#fae1b7]/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-black text-[#723c11] border border-[#dbc397] uppercase tracking-wider">
+                    شريك معتمد • رعاية
+                  </div>
+                  
+                  <div className="flex items-center gap-3 mb-2">
+                    {adLogo && (
+                      <div className="h-9 px-2 bg-white rounded-xl border border-[#dbc397]/60 shadow-xs flex items-center justify-center shrink-0">
+                        <img src={adLogo} alt={ad.partner_name} className="max-h-7 max-w-[80px] object-contain" />
+                      </div>
+                    )}
+                    <h3 className="text-xl md:text-3xl font-thmanyah font-bold text-[#301809] truncate">
+                      {ad.partner_name}
+                    </h3>
+                  </div>
+
+                  <p className="text-xs md:text-sm text-[#723c11]/80 mb-3 md:mb-5 line-clamp-2 font-medium">
                   اكتشف العروض والخدمات المتميزة من شركاء ورعاة فعاليات وارجلان وحوض سدراتة.
                 </p>
                 {ad.link && (
@@ -104,7 +124,8 @@ export default function PartnerAdsBanner() {
               </div>
             </div>
           </div>
-        ))}
+        );
+      })}
       </div>
 
       {/* Navigation Buttons */}

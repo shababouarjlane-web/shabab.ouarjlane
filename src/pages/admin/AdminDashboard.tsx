@@ -91,7 +91,8 @@ export default function AdminDashboard() {
   const [editingHeritage, setEditingHeritage] = useState<any | null>(null);
   const [isHeritageEditOpen, setIsHeritageEditOpen] = useState(false);
   
-  const [newAd, setNewAd] = useState({ partner_name: '', image_url: '', link: '' });
+  const [newAd, setNewAd] = useState({ partner_name: '', logo_url: '', image_url: '', link: '' });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [adFile, setAdFile] = useState<File | null>(null);
   const [adUploading, setAdUploading] = useState(false);
 
@@ -301,29 +302,46 @@ export default function AdminDashboard() {
     setAdUploading(true);
     
     try {
+      let finalLogoUrl = newAd.logo_url;
       let finalImageUrl = newAd.image_url;
 
+      // 1. Upload Logo if provided
+      if (logoFile) {
+        const ext = logoFile.name.split('.').pop();
+        const fileName = `logos/${Math.random().toString(36).substring(7)}.${ext}`;
+        const { error: uploadLogoErr } = await supabase.storage.from('events').upload(fileName, logoFile);
+        if (uploadLogoErr) throw new Error('فشل رفع ملف الشعار');
+        const { data: publicUrlData } = supabase.storage.from('events').getPublicUrl(fileName);
+        finalLogoUrl = publicUrlData.publicUrl;
+      }
+
+      // 2. Upload Ad Image / Product Photo if provided
       if (adFile) {
         const ext = adFile.name.split('.').pop();
         const fileName = `ads/${Math.random().toString(36).substring(7)}.${ext}`;
         const { error: uploadError } = await supabase.storage.from('events').upload(fileName, adFile);
-        
         if (uploadError) throw new Error('فشل رفع صورة الإعلان');
-        
         const { data: publicUrlData } = supabase.storage.from('events').getPublicUrl(fileName);
         finalImageUrl = publicUrlData.publicUrl;
       }
 
+      // Pack both images into the image_url field: "ad_img_url||logo_img_url"
+      let storedImageUrl: string | null = null;
+      if (finalImageUrl || finalLogoUrl) {
+        storedImageUrl = `${finalImageUrl || ''}||${finalLogoUrl || ''}`;
+      }
+
       const { error } = await supabase.from('partner_ads').insert({
         partner_name: newAd.partner_name,
-        image_url: finalImageUrl || null,
+        image_url: storedImageUrl || null,
         link: newAd.link || null
       });
 
       if (error) throw error;
 
-      toast.success('تمت إضافة إعلان جديد');
-      setNewAd({ partner_name: '', image_url: '', link: '' });
+      toast.success('تمت إضافة الراعي والشراكة بنجاح');
+      setNewAd({ partner_name: '', logo_url: '', image_url: '', link: '' });
+      setLogoFile(null);
       setAdFile(null);
       fetchHeritageAndAds();
     } catch (error: any) {
@@ -1307,63 +1325,121 @@ export default function AdminDashboard() {
                  <p className="text-xs text-[#d4b174] mt-1">عرض شعارات ورعاة فعاليات ورقلة</p>
                </div>
                <CardContent className="p-6">
-                 <form onSubmit={handleCreateAd} className="space-y-4 text-right">
-                   <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">اسم الشريك</Label>
-                     <Input 
-                        required 
-                        value={newAd.partner_name} 
-                        onChange={e => setNewAd({...newAd, partner_name: e.target.value})} 
-                        placeholder="مثال: اتصالات الجزائر" 
-                        className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
-                     />
-                   </div>
-                   <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">رابط الصورة (اختياري)</Label>
-                     <Input 
-                        value={newAd.image_url} 
-                        onChange={e => setNewAd({...newAd, image_url: e.target.value})} 
-                        placeholder="https://..." 
-                        dir="ltr" 
-                        className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]"
-                     />
-                   </div>
-                   
-                   <div className="space-y-2 pt-2 border-t border-[#dbc397]/50 mt-2">
-                      <Label className="font-bold text-xs text-[#301809]">أو قم برفع ملف الصورة</Label>
-                      <div className="flex items-center gap-4">
+                  <form onSubmit={handleCreateAd} className="space-y-5 text-right">
+                    {/* اسم الشريك */}
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">اسم الشريك / الراعي *</Label>
+                      <Input 
+                         required 
+                         value={newAd.partner_name} 
+                         onChange={e => setNewAd({...newAd, partner_name: e.target.value})} 
+                         placeholder="مثال: Ignatex، اتصالات الجزائر، موبيليس..." 
+                         className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+
+                    {/* خانة 1: شعار الراعي (Logo) - خاص بالصفحة الرئيسية */}
+                    <div className="p-4 rounded-2xl bg-[#fdfbf7] border-2 border-[#dbc397]/80 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="font-black text-xs text-[#301809] flex items-center gap-1.5">
+                          <span>🏷️ 1. شعار الراعي (Logo)</span>
+                        </Label>
+                        <span className="text-[10px] font-bold text-[#b87a29] bg-[#fae1b7]/80 border border-[#dbc397] px-2 py-0.5 rounded-full">
+                          يظهر في الصفحة الرئيسية
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#723c11]/80">
+                        شعار الشريك فقط (PNG بخلفية شفافة أو SVG). إذا تُرك فارغاً سيظهر اسم الراعي نصياً فقط دون أي صورة.
+                      </p>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <Input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={e => setLogoFile(e.target.files?.[0] || null)}
+                            className="bg-white border-dashed border-2 border-[#dbc397] cursor-pointer h-12 pt-2.5 font-bold rounded-xl text-[#723c11] text-xs"
+                          />
+                          {logoFile && (
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              onClick={() => setLogoFile(null)}
+                              className="text-red-500 hover:bg-red-50 rounded-xl shrink-0 h-10 w-10 p-0"
+                              title="حذف ملف الشعار"
+                            >
+                              <Trash2 size={18} />
+                            </Button>
+                          )}
+                        </div>
+
                         <Input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={e => setAdFile(e.target.files?.[0] || null)}
-                          className="bg-[#fdfbf7] border-dashed border-2 border-[#dbc397] cursor-pointer h-14 pt-3 font-bold rounded-xl text-[#723c11]"
+                          value={newAd.logo_url} 
+                          onChange={e => setNewAd({...newAd, logo_url: e.target.value})} 
+                          placeholder="أو ضع رابط الشعار المباشر https://..." 
+                          dir="ltr" 
+                          className="h-10 border border-[#dbc397] rounded-xl text-left font-sans text-xs bg-white focus-visible:border-[#b87a29]"
                         />
-                        {adFile && (
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            onClick={() => setAdFile(null)}
-                            className="text-red-500 hover:bg-red-50 rounded-xl"
-                          >
-                            <Trash2 size={20} />
-                          </Button>
-                        )}
                       </div>
                     </div>
 
+                    {/* خانة 2: صورة الإعلان / التخصص - خاصة ببنر المشارك */}
+                    <div className="p-4 rounded-2xl bg-[#fdfbf7] border-2 border-[#dbc397]/80 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="font-black text-xs text-[#301809] flex items-center gap-1.5">
+                          <span>📸 2. صورة الإعلان أو التخصص</span>
+                        </Label>
+                        <span className="text-[10px] font-bold text-[#723c11] bg-[#fae1b7]/80 border border-[#dbc397] px-2 py-0.5 rounded-full">
+                          يظهر في بنر المشارك/الزائر
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#723c11]/80">
+                        صورة فوتوغرافية أو إعلانية عن نشاط وتخصص الراعي (مثل ماكينة خياطة، لافتة، منتج، صورة المحل...).
+                      </p>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <Input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={e => setAdFile(e.target.files?.[0] || null)}
+                            className="bg-white border-dashed border-2 border-[#dbc397] cursor-pointer h-12 pt-2.5 font-bold rounded-xl text-[#723c11] text-xs"
+                          />
+                          {adFile && (
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              onClick={() => setAdFile(null)}
+                              className="text-red-500 hover:bg-red-50 rounded-xl shrink-0 h-10 w-10 p-0"
+                              title="حذف ملف الصورة"
+                            >
+                              <Trash2 size={18} />
+                            </Button>
+                          )}
+                        </div>
+
+                        <Input 
+                          value={newAd.image_url} 
+                          onChange={e => setNewAd({...newAd, image_url: e.target.value})} 
+                          placeholder="أو ضع رابط صورة الإعلان https://..." 
+                          dir="ltr" 
+                          className="h-10 border border-[#dbc397] rounded-xl text-left font-sans text-xs bg-white focus-visible:border-[#b87a29]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* الرابط الموجه للشريك */}
                     <div className="space-y-1.5">
                       <Label className="font-bold text-xs text-[#301809]">الرابط الموجه للشريك (URL)</Label>
                       <Input 
                          value={newAd.link} 
                          onChange={e => setNewAd({...newAd, link: e.target.value})} 
-                         placeholder="https://ignatex.com أو صفحة فيسبوك/إنستغرام" 
+                         placeholder="https://facebook.com/... أو موقع الشريك" 
                          dir="ltr" 
                          className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]"
                       />
-                      <p className="text-[11px] text-[#723c11]/80 font-medium">
-                        💡 نصيحة: يفضل رفع شعار بخلفية شفافة (PNG) أو صورة عالية الجودة ليظهر الشريك بأعلى درجات الاحترافية في شريط الرعاة والبنر الترويجي.
-                      </p>
                     </div>
+
                     <Button 
                        type="submit" 
                        disabled={adUploading} 
@@ -1384,40 +1460,78 @@ export default function AdminDashboard() {
                     لا توجد إعلانات شركاء نشطة حالياً.
                   </div>
                 ) : (
-                  ads.map(ad => (
-                    <Card key={ad.id} className="p-4 flex gap-4 items-center bg-white shadow-sm hover:shadow-md border-2 border-[#dbc397]/60 rounded-3xl relative overflow-hidden transition-all">
-                      <div className="w-32 h-20 rounded-2xl bg-[#fdfbf7] border border-[#dbc397] flex items-center justify-center p-2 overflow-hidden shrink-0 relative">
-                        <img 
-                          src={ad.image_url} 
-                          alt={ad.partner_name}
-                          className="object-contain max-h-full max-w-full" 
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const fallback = e.currentTarget.parentElement?.querySelector('.admin-thumb-fallback');
-                            if (fallback) fallback.classList.remove('hidden');
-                          }}
-                        />
-                        <div className="admin-thumb-fallback hidden absolute inset-0 bg-[#fae1b7]/40 flex items-center justify-center">
-                          <Megaphone size={24} className="text-[#b87a29]" />
+                  ads.map(ad => {
+                    let adPhoto = ad.image_url || '';
+                    let adLogo = '';
+                    if (ad.image_url && ad.image_url.includes('||')) {
+                      const parts = ad.image_url.split('||');
+                      adPhoto = parts[0] || '';
+                      adLogo = parts[1] || '';
+                    } else if (ad.partner_name?.toLowerCase().includes('ignatex')) {
+                      adLogo = '/ignatex-logo.png';
+                    }
+
+                    return (
+                      <Card key={ad.id} className="p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-white shadow-sm hover:shadow-md border-2 border-[#dbc397]/60 rounded-3xl relative overflow-hidden transition-all">
+                        {/* Dual Previews */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* Logo Preview */}
+                          <div className="w-20 h-16 rounded-xl bg-[#fdfbf7] border border-[#dbc397] flex flex-col items-center justify-center p-1.5 overflow-hidden relative">
+                            {adLogo ? (
+                              <img 
+                                src={adLogo} 
+                                alt="الشعار" 
+                                className="object-contain max-h-9 max-w-full" 
+                              />
+                            ) : (
+                              <span className="text-[10px] text-gray-400 font-bold">بدون شعار</span>
+                            )}
+                            <span className="text-[8px] font-bold text-[#b87a29] mt-auto">الرئيسية</span>
+                          </div>
+
+                          {/* Ad Photo Preview */}
+                          <div className="w-24 h-16 rounded-xl bg-[#fdfbf7] border border-[#dbc397] flex flex-col items-center justify-center p-1 overflow-hidden relative">
+                            {adPhoto ? (
+                              <img 
+                                src={adPhoto} 
+                                alt="صورة التخصص" 
+                                className="object-cover w-full h-10 rounded-lg" 
+                              />
+                            ) : (
+                              <Megaphone size={16} className="text-[#b87a29]" />
+                            )}
+                            <span className="text-[8px] font-bold text-[#723c11] mt-auto">البنر</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-[#301809] text-base">{ad.partner_name}</h4>
-                        {ad.link && (
-                          <a href={ad.link} target="_blank" rel="noreferrer" className="text-xs text-[#b87a29] hover:underline flex items-center gap-1 mt-1 truncate" dir="ltr">
-                            <LinkIcon size={12} className="inline shrink-0" />
-                            {ad.link}
-                          </a>
-                        )}
-                        <span className="text-xs font-bold text-[#723c11] bg-[#fae1b7]/70 border border-[#dbc397] px-2.5 py-0.5 rounded-full inline-block mt-2">
-                          نشط في شريط الرعاة والبنر
-                        </span>
-                      </div>
-                      <Button variant="ghost" onClick={() => handleDeleteItem('partner_ads', ad.id)} className="text-red-500 hover:bg-red-50 p-2 h-10 w-10 rounded-xl cursor-pointer shrink-0">
-                        <Trash2 size={18} />
-                      </Button>
-                    </Card>
-                  ))
+
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-[#301809] text-base">{ad.partner_name}</h4>
+                          {ad.link && (
+                            <a href={ad.link} target="_blank" rel="noreferrer" className="text-xs text-[#b87a29] hover:underline flex items-center gap-1 mt-1 truncate" dir="ltr">
+                              <LinkIcon size={12} className="inline shrink-0" />
+                              {ad.link}
+                            </a>
+                          )}
+                          <div className="flex items-center gap-2 mt-2">
+                            {adLogo && (
+                              <span className="text-[10px] font-bold text-[#b87a29] bg-[#fae1b7]/70 border border-[#dbc397] px-2 py-0.5 rounded-full">
+                                ✓ شعار للرئيسية
+                              </span>
+                            )}
+                            {adPhoto && (
+                              <span className="text-[10px] font-bold text-[#723c11] bg-[#dbc397]/40 border border-[#dbc397] px-2 py-0.5 rounded-full">
+                                ✓ صورة للبنر
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <Button variant="ghost" onClick={() => handleDeleteItem('partner_ads', ad.id)} className="text-red-500 hover:bg-red-50 p-2 h-10 w-10 rounded-xl cursor-pointer shrink-0 self-end sm:self-center">
+                          <Trash2 size={18} />
+                        </Button>
+                      </Card>
+                    );
+                  })
                 )}
             </div>
           </div>
