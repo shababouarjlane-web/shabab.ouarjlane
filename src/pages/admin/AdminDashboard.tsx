@@ -52,6 +52,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
+import {
+  HERITAGE_CATEGORIES,
+  packHeritageMeta,
+  parseHeritageMeta
+} from '../../lib/helpers';
 
 interface DashboardStats {
   total_users: number;
@@ -88,7 +93,12 @@ export default function AdminDashboard() {
   const [heritageItems, setHeritageItems] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
   
-  const [newHeritage, setNewHeritage] = useState({ title: '', content: '', image_url: '' });
+  const [newHeritage, setNewHeritage] = useState({
+    title: '',
+    category: HERITAGE_CATEGORIES[0] as string,
+    content: '',
+    image_url: ''
+  });
   const [editingHeritage, setEditingHeritage] = useState<any | null>(null);
   const [isHeritageEditOpen, setIsHeritageEditOpen] = useState(false);
   
@@ -268,11 +278,20 @@ export default function AdminDashboard() {
 
   const handleCreateHeritage = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from('heritage_archive').insert(newHeritage);
+    const packedContent = packHeritageMeta(newHeritage.content, {
+      category: newHeritage.category,
+      contributor: 'إدارة المنصة',
+      status: 'approved'
+    });
+    const { error } = await supabase.from('heritage_archive').insert({
+      title: newHeritage.title,
+      content: packedContent,
+      image_url: newHeritage.image_url || null
+    });
     if (error) toast.error('خطأ في إضافة التراث');
     else {
       toast.success('تمت إضافة مادة تراثية جديدة');
-      setNewHeritage({ title: '', content: '', image_url: '' });
+      setNewHeritage({ title: '', category: HERITAGE_CATEGORIES[0], content: '', image_url: '' });
       fetchHeritageAndAds();
     }
   };
@@ -280,12 +299,18 @@ export default function AdminDashboard() {
   const handleUpdateHeritage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingHeritage) return;
-    
+
+    const packedContent = packHeritageMeta(editingHeritage.cleanContent ?? editingHeritage.content, {
+      category: editingHeritage.category || HERITAGE_CATEGORIES[0],
+      contributor: editingHeritage.contributor || 'إدارة المنصة',
+      status: 'approved'
+    });
+
     const { error } = await supabase
       .from('heritage_archive')
       .update({
         title: editingHeritage.title,
-        content: editingHeritage.content,
+        content: packedContent,
         image_url: editingHeritage.image_url
       })
       .eq('id', editingHeritage.id);
@@ -295,6 +320,25 @@ export default function AdminDashboard() {
       toast.success('تم تحديث المادة التراثية');
       setIsHeritageEditOpen(false);
       setEditingHeritage(null);
+      fetchHeritageAndAds();
+    }
+  };
+
+  const handleApproveHeritageSuggestion = async (item: any) => {
+    const parsed = parseHeritageMeta(item.content, item.title);
+    const approvedContent = packHeritageMeta(parsed.cleanContent, {
+      category: parsed.category,
+      contributor: parsed.contributor || 'مساهم من المجتمع',
+      status: 'approved'
+    });
+    const { error } = await supabase
+      .from('heritage_archive')
+      .update({ content: approvedContent })
+      .eq('id', item.id);
+    if (error) {
+      toast.error('تعذر اعتماد المساهمة التراثية');
+    } else {
+      toast.success('تم اعتماد ونشر المساهمة في الأرشيف التراثي بنجاح! ✅');
       fetchHeritageAndAds();
     }
   };
@@ -1303,6 +1347,121 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="heritage" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Incoming Association Join & Contact Requests Section */}
+          {heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'contact_request').length > 0 && (
+            <Card className="border-2 border-emerald-300 bg-emerald-50/40 rounded-3xl p-6 shadow-md space-y-4">
+              <h3 className="text-lg font-thmanyah font-bold text-emerald-950 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-emerald-700" />
+                <span>طلبات انضمام الجمعيات ورسائل التواصل الواردة ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'contact_request').length})</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {heritageItems
+                  .filter(item => parseHeritageMeta(item.content, item.title).status === 'contact_request')
+                  .map(item => {
+                    const meta = parseHeritageMeta(item.content, item.title);
+                    return (
+                      <div key={item.id} className="bg-white rounded-2xl p-4 border border-emerald-200 shadow-xs flex flex-col justify-between gap-3">
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <span className="text-xs font-black bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full">
+                              {meta.category || 'طلب تواصل'}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              {new Date(item.created_at).toLocaleDateString('ar-DZ')}
+                            </span>
+                          </div>
+                          <h4 className="font-black text-base text-[#301809] mb-1">{item.title}</h4>
+                          <p className="text-xs text-[#723c11] whitespace-pre-wrap leading-relaxed">{meta.cleanContent}</p>
+                        </div>
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-emerald-100">
+                          <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                            {meta.contactPhone && (
+                              <a
+                                href={`tel:${meta.contactPhone}`}
+                                className="bg-[#fae1b7]/60 text-[#301809] px-3 py-1 rounded-xl font-mono"
+                                dir="ltr"
+                              >
+                                📞 {meta.contactPhone}
+                              </a>
+                            )}
+                            {meta.contactEmail && (
+                              <a
+                                href={`mailto:${meta.contactEmail}`}
+                                className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl font-mono"
+                                dir="ltr"
+                              >
+                                ✉️ {meta.contactEmail}
+                              </a>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteItem('heritage_archive', item.id)}
+                            className="text-red-500 hover:bg-red-50 rounded-xl h-8 px-2.5 text-xs font-bold cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 ml-1" /> أرشفة / حذف
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </Card>
+          )}
+
+          {/* Pending Community Heritage Suggestions Section */}
+          {heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'pending').length > 0 && (
+            <Card className="border-2 border-amber-300 bg-amber-50/50 rounded-3xl p-6 shadow-md space-y-4">
+              <h3 className="text-lg font-thmanyah font-bold text-amber-950 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-600" />
+                <span>مساهمات تراثية مقترحة من الزوار والجمعيات بانتظار الاعتماد ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'pending').length})</span>
+              </h3>
+              <div className="space-y-3">
+                {heritageItems
+                  .filter(item => parseHeritageMeta(item.content, item.title).status === 'pending')
+                  .map(item => {
+                    const meta = parseHeritageMeta(item.content, item.title);
+                    return (
+                      <div key={item.id} className="bg-white rounded-2xl p-4 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="space-y-1 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="bg-[#301809] text-[#efa83f] text-[11px] font-black px-2.5 py-0.5 rounded-lg">
+                              {meta.category}
+                            </span>
+                            {meta.contributor && (
+                              <span className="text-xs font-bold text-[#723c11]">
+                                مساهمة من: {meta.contributor}
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-black text-base text-[#301809]">{item.title}</h4>
+                          <p className="text-xs text-[#723c11]/85 leading-relaxed whitespace-pre-wrap">{meta.cleanContent}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            onClick={() => handleApproveHeritageSuggestion(item)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl h-9 px-4 cursor-pointer"
+                          >
+                            ✅ اعتماد ونشر بالأرشيف
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteItem('heritage_archive', item.id)}
+                            className="text-red-500 hover:bg-red-50 h-9 w-9 rounded-xl cursor-pointer"
+                            title="رفض وحذف"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </Card>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <Card className="shadow-xl border-2 border-[#dbc397] rounded-3xl overflow-hidden bg-white">
                <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 text-center">
@@ -1317,6 +1476,18 @@ export default function AdminDashboard() {
                    <div className="space-y-1.5">
                      <Label className="font-bold text-xs text-[#301809]">عنوان المعلم أو المادة التراثية</Label>
                      <Input required value={newHeritage.title} onChange={e => setNewHeritage({...newHeritage, title: e.target.value})} placeholder="مثال: القصر القديم بالرويسات" className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]" />
+                   </div>
+                   <div className="space-y-1.5">
+                     <Label className="font-bold text-xs text-[#301809]">التصنيف التراثي</Label>
+                     <select
+                       value={newHeritage.category}
+                       onChange={e => setNewHeritage({ ...newHeritage, category: e.target.value })}
+                       className="w-full h-11 rounded-xl border-2 border-[#dbc397] bg-white px-3 text-xs font-bold text-[#301809] focus:outline-none focus:border-[#b87a29]"
+                     >
+                       {HERITAGE_CATEGORIES.map(c => (
+                         <option key={c} value={c}>{c}</option>
+                       ))}
+                     </select>
                    </div>
                    <div className="space-y-1.5">
                      <Label className="font-bold text-xs text-[#301809]">المحتوى / الوصف التاريخي</Label>
@@ -1334,53 +1505,73 @@ export default function AdminDashboard() {
             <div className="lg:col-span-2 space-y-4">
                <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
                  <History className="text-[#b87a29]" />
-                 <span>المواد الموثقة بالأرشيف حالياً ({heritageItems.length})</span>
+                 <span>المواد المعتمدة بالأرشيف حالياً ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'approved').length})</span>
                </h3>
-               {heritageItems.map(item => (
-                 <Card key={item.id} className="p-4 flex gap-4 items-center bg-white shadow-xs hover:shadow-md transition-all border-2 border-[#dbc397]/60 rounded-3xl">
-                   <div className="w-20 h-20 rounded-2xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center overflow-hidden shrink-0 relative shadow-2xs">
-                     <img 
-                       src={item.image_url} 
-                       className="object-cover h-full w-full" 
-                       onError={(e) => {
-                         e.currentTarget.style.display = 'none';
-                         const fallback = e.currentTarget.parentElement?.querySelector('.admin-heritage-thumb-fallback');
-                         if (fallback) fallback.classList.remove('hidden');
-                       }}
-                     />
-                     <div className="admin-heritage-thumb-fallback hidden absolute inset-0 bg-[#fae1b7] flex items-center justify-center">
-                       <History size={24} className="text-[#b87a29]" />
-                     </div>
-                   </div>
-                   <div className="flex-1 min-w-0">
-                     <h4 className="font-bold text-base text-[#301809] truncate">{item.title}</h4>
-                     <p className="text-xs text-[#723c11]/80 line-clamp-2 mt-1 leading-relaxed">{item.content}</p>
-                   </div>
-                   <div className="flex gap-1.5 shrink-0">
-                     <Button 
-                       variant="ghost" 
-                       size="icon"
-                       onClick={() => {
-                         setEditingHeritage(item);
-                         setIsHeritageEditOpen(true);
-                       }} 
-                       className="text-[#b87a29] hover:bg-[#fae1b7]/40 h-9 w-9 rounded-xl cursor-pointer"
-                       title="تعديل"
-                     >
-                       <Edit size={18} />
-                     </Button>
-                     <Button 
-                       variant="ghost" 
-                       size="icon"
-                       onClick={() => handleDeleteItem('heritage_archive', item.id)} 
-                       className="text-red-500 hover:bg-red-50 h-9 w-9 rounded-xl cursor-pointer"
-                       title="حذف"
-                     >
-                       <Trash2 size={18} />
-                     </Button>
-                   </div>
-                 </Card>
-               ))}
+               {heritageItems
+                 .filter(item => parseHeritageMeta(item.content, item.title).status === 'approved')
+                 .map(item => {
+                   const meta = parseHeritageMeta(item.content, item.title);
+                   return (
+                     <Card key={item.id} className="p-4 flex gap-4 items-center bg-white shadow-xs hover:shadow-md transition-all border-2 border-[#dbc397]/60 rounded-3xl">
+                       <div className="w-20 h-20 rounded-2xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center overflow-hidden shrink-0 relative shadow-2xs">
+                         <img 
+                           src={item.image_url} 
+                           className="object-cover h-full w-full" 
+                           onError={(e) => {
+                             e.currentTarget.style.display = 'none';
+                             const fallback = e.currentTarget.parentElement?.querySelector('.admin-heritage-thumb-fallback');
+                             if (fallback) fallback.classList.remove('hidden');
+                           }}
+                         />
+                         <div className="admin-heritage-thumb-fallback hidden absolute inset-0 bg-[#fae1b7] flex items-center justify-center">
+                           <History size={24} className="text-[#b87a29]" />
+                         </div>
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         <div className="flex items-center gap-2 mb-1">
+                           <span className="bg-[#fae1b7] text-[#723c11] text-[10px] font-black px-2 py-0.5 rounded-md border border-[#dbc397]">
+                             {meta.category}
+                           </span>
+                           {meta.contributor && (
+                             <span className="text-[10px] text-[#723c11]/70 font-bold">
+                               • {meta.contributor}
+                             </span>
+                           )}
+                         </div>
+                         <h4 className="font-bold text-base text-[#301809] truncate">{item.title}</h4>
+                         <p className="text-xs text-[#723c11]/80 line-clamp-2 mt-1 leading-relaxed">{meta.cleanContent}</p>
+                       </div>
+                       <div className="flex gap-1.5 shrink-0">
+                         <Button 
+                           variant="ghost" 
+                           size="icon"
+                           onClick={() => {
+                             setEditingHeritage({
+                               ...item,
+                               cleanContent: meta.cleanContent,
+                               category: meta.category,
+                               contributor: meta.contributor
+                             });
+                             setIsHeritageEditOpen(true);
+                           }} 
+                           className="text-[#b87a29] hover:bg-[#fae1b7]/40 h-9 w-9 rounded-xl cursor-pointer"
+                           title="تعديل"
+                         >
+                           <Edit size={18} />
+                         </Button>
+                         <Button 
+                           variant="ghost" 
+                           size="icon"
+                           onClick={() => handleDeleteItem('heritage_archive', item.id)} 
+                           className="text-red-500 hover:bg-red-50 h-9 w-9 rounded-xl cursor-pointer"
+                           title="حذف"
+                         >
+                           <Trash2 size={18} />
+                         </Button>
+                       </div>
+                     </Card>
+                   );
+                 })}
             </div>
           </div>
 
@@ -1402,11 +1593,23 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div className="space-y-1.5">
+                    <Label className="font-bold text-xs text-[#301809]">التصنيف التراثي</Label>
+                    <select
+                      value={editingHeritage.category || HERITAGE_CATEGORIES[0]}
+                      onChange={e => setEditingHeritage({ ...editingHeritage, category: e.target.value })}
+                      className="w-full h-11 rounded-xl border-2 border-[#dbc397] bg-white px-3 text-xs font-bold text-[#301809]"
+                    >
+                      {HERITAGE_CATEGORIES.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
                     <Label className="font-bold text-xs text-[#301809]">المحتوى والتفاصيل</Label>
                     <Textarea 
                       required 
-                      value={editingHeritage.content} 
-                      onChange={e => setEditingHeritage({...editingHeritage, content: e.target.value})} 
+                      value={editingHeritage.cleanContent ?? editingHeritage.content} 
+                      onChange={e => setEditingHeritage({...editingHeritage, cleanContent: e.target.value, content: e.target.value})} 
                       rows={5} 
                       className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                     />
@@ -1414,7 +1617,7 @@ export default function AdminDashboard() {
                   <div className="space-y-1.5">
                     <Label className="font-bold text-xs text-[#301809]">رابط الصورة</Label>
                     <Input 
-                      value={editingHeritage.image_url} 
+                      value={editingHeritage.image_url || ''} 
                       onChange={e => setEditingHeritage({...editingHeritage, image_url: e.target.value})} 
                       dir="ltr" 
                       className="h-11 font-sans text-left border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"

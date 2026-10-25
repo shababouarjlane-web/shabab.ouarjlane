@@ -25,7 +25,11 @@ import {
   ArrowRight,
   Sparkles,
   Loader2,
-  X
+  X,
+  Heart,
+  Navigation,
+  Hourglass,
+  CheckCircle2
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import TicketCard from '../components/TicketCard';
@@ -38,6 +42,9 @@ import {
   downloadEventIcs,
   buildWhatsAppShareUrl,
   calculateBadgeFromPoints,
+  isEventFavorite,
+  toggleFavoriteEvent,
+  buildGoogleMapsDirectionsUrl,
   type EventReview
 } from '../lib/helpers';
 
@@ -54,10 +61,15 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
     externalUserRole === 'attendee' ? 'attendee' : 'guest'
   );
   const [rsvps, setRsvps] = useState<any[]>([]);
+  const [waitlistRsvps, setWaitlistRsvps] = useState<any[]>([]);
   const [totalAttendingCount, setTotalAttendingCount] = useState<number>(0);
+  const [totalWaitlistCount, setTotalWaitlistCount] = useState<number>(0);
   const [hasRsvpd, setHasRsvpd] = useState(false);
+  const [isWaitlisted, setIsWaitlisted] = useState(false);
+  const [waitlistPosition, setWaitlistPosition] = useState<number>(0);
   const [showTicket, setShowTicket] = useState(false);
   const [myRsvpId, setMyRsvpId] = useState<string | undefined>(undefined);
+  const [isFav, setIsFav] = useState<boolean>(false);
 
   // Attendee Contact Info (Full Name & Phone)
   const [attendeeName, setAttendeeName] = useState('');
@@ -100,6 +112,7 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
         return;
       }
       setEvent(eventData);
+      setIsFav(isEventFavorite(eventData.id));
 
       // Count total attending RSVPs
       const { count: attendingCount } = await supabase
@@ -109,6 +122,18 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
         .eq('status', 'attending');
 
       setTotalAttendingCount(attendingCount || 0);
+
+      // Fetch Waitlist RSVPs ordered by oldest first (FIFO queue)
+      const { data: wlData } = await supabase
+        .from('rsvps')
+        .select('*, users(email, full_name)')
+        .eq('event_id', eventData.id)
+        .eq('status', 'waitlist')
+        .order('created_at', { ascending: true });
+
+      const wlList = wlData || [];
+      setWaitlistRsvps(wlList);
+      setTotalWaitlistCount(wlList.length);
 
       // Determine Role & Fetch User Profile
       if (currentUser) {
@@ -143,7 +168,14 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
 
           if (myRsvp && myRsvp.status === 'attending') {
             setHasRsvpd(true);
+            setIsWaitlisted(false);
             setMyRsvpId(myRsvp.id);
+          } else if (myRsvp && myRsvp.status === 'waitlist') {
+            setHasRsvpd(false);
+            setIsWaitlisted(true);
+            setMyRsvpId(myRsvp.id);
+            const idx = wlList.findIndex((w: any) => w.user_id === currentUser.id);
+            setWaitlistPosition(idx >= 0 ? idx + 1 : wlList.length || 1);
           }
         }
       } else {
@@ -174,6 +206,16 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
     }
   };
 
+  const handleToggleFavorite = () => {
+    if (!event) return;
+    const nextState = toggleFavoriteEvent(event.id);
+    setIsFav(nextState);
+    toast({
+      title: nextState ? '❤️ تمت إضافة الفعالية إلى المفضلة' : 'تمت إزالة الفعالية من المفضلة',
+      description: nextState ? 'يمكنك الرجوع إليها سريعاً من قسم المفضلة.' : undefined
+    });
+  };
+
   const handleRsvp = async () => {
     if (!user) {
       toast({ variant: 'destructive', title: 'تنبيه', description: 'يرجى تسجيل الدخول أولاً لتأكيد الحجز.' });
@@ -187,8 +229,11 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
 
     setRsvpLoading(true);
     try {
-      // 1. Verify capacity before booking
+      const packedContact = packUserContact(attendeeName, attendeePhone);
+
+      // 1. Check capacity before booking
       const maxCap = event.max_capacity || event.capacity;
+      let shouldWaitlist = false;
       if (maxCap && maxCap > 0) {
         const { count, error: countErr } = await supabase
           .from('rsvps')
@@ -197,20 +242,13 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
           .eq('status', 'attending');
 
         if (!countErr && typeof count === 'number' && count >= maxCap) {
-          toast({
-            variant: 'destructive',
-            title: 'عذراً، اكتمل العدد!',
-            description: 'وصلت الفعالية للحد الأقصى من المقاعد المتاحة.'
-          });
-          setRsvpLoading(false);
-          return;
+          shouldWaitlist = true;
         }
       }
 
-      // 2. Save user full name & phone to users table
-      const packedContact = packUserContact(attendeeName, attendeePhone);
+      const targetStatus = shouldWaitlist ? 'waitlist' : 'attending';
 
-      // 3. Check if already registered
+      // 2. Check if already registered
       const { data: existing } = await supabase
         .from('rsvps')
         .select('id, status')
@@ -225,6 +263,7 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
         if (existing.status === 'attending') {
           await supabase.from('users').update({ full_name: packedContact }).eq('id', user.id);
           setHasRsvpd(true);
+          setIsWaitlisted(false);
           setMyRsvpId(existing.id);
           setShowTicket(true);
           toast({ title: 'أنت مسجل بالفعل! 🎟', description: 'تذكرتك جاهزة للعرض.' });
@@ -233,7 +272,7 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
         } else {
           const { error: updateErr } = await supabase
             .from('rsvps')
-            .update({ status: 'attending' })
+            .update({ status: targetStatus })
             .eq('id', existing.id);
           if (updateErr) throw updateErr;
           isNewBooking = true;
@@ -244,7 +283,7 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
           .insert({
             event_id: event.id,
             user_id: user.id,
-            status: 'attending'
+            status: targetStatus
           })
           .select('id')
           .single();
@@ -254,9 +293,9 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
         isNewBooking = true;
       }
 
-      // 4. Award +10 points and update contact info
+      // 3. Update contact info & award points if confirmed
       const currentPoints = Number(userProfile?.points || 0);
-      const updatedPoints = isNewBooking ? currentPoints + 10 : currentPoints;
+      const updatedPoints = !shouldWaitlist && isNewBooking ? currentPoints + 10 : currentPoints;
       const updatedBadge = calculateBadgeFromPoints(updatedPoints);
 
       await supabase
@@ -269,11 +308,25 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
         .eq('id', user.id);
 
       setUserProfile((prev: any) => ({ ...prev, full_name: packedContact, points: updatedPoints, badge: updatedBadge }));
-      setHasRsvpd(true);
-      setTotalAttendingCount(prev => prev + 1);
       if (insertedId) setMyRsvpId(insertedId);
-      setShowTicket(true);
-      toast({ title: '🎟 تذكرتك جاهزة!', description: 'تم تأكيد حضورك وحصلت على +10 نقاط في رصيدك الشرفي.' });
+
+      if (shouldWaitlist) {
+        setHasRsvpd(false);
+        setIsWaitlisted(true);
+        const newRank = totalWaitlistCount + 1;
+        setTotalWaitlistCount(newRank);
+        setWaitlistPosition(newRank);
+        toast({
+          title: `⏳ أنت في قائمة الانتظار الذكية (الترتيب #${newRank})`,
+          description: 'اكتملت المقاعد حالياً، وسيتم ترقية حجزك تلقائياً إلى تذكرة مؤكدة فور شغور أي مقعد!'
+        });
+      } else {
+        setHasRsvpd(true);
+        setIsWaitlisted(false);
+        setTotalAttendingCount(prev => prev + 1);
+        setShowTicket(true);
+        toast({ title: '🎟 تذكرتك جاهزة!', description: 'تم تأكيد حضورك وحصلت على +10 نقاط في رصيدك الشرفي.' });
+      }
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'خطأ', description: error?.message || 'لم نتمكن من تأكيد حجزك، يرجى المحاولة لاحقاً.' });
     } finally {
@@ -282,8 +335,12 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
   };
 
   const handleCancelRsvp = async () => {
-    if (!window.confirm('هل أنت متأكد من رغبتك في إلغاء حجز هذه التذكرة؟')) return;
+    const confirmMsg = isWaitlisted
+      ? 'هل أنت متأكد من رغبتك في الانسحاب من قائمة الانتظار؟'
+      : 'هل أنت متأكد من رغبتك في إلغاء حجز هذه التذكرة؟';
+    if (!window.confirm(confirmMsg)) return;
 
+    const wasAttending = hasRsvpd;
     setRsvpLoading(true);
     try {
       const { error } = await supabase
@@ -295,14 +352,64 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
       if (error) throw error;
 
       setHasRsvpd(false);
+      setIsWaitlisted(false);
       setMyRsvpId(undefined);
       setShowTicket(false);
-      setTotalAttendingCount(prev => Math.max(0, prev - 1));
-      toast({ title: 'تم إلغاء الحجز بنجاح', description: 'تم إخلاء مقعدك وإتاحته لمشاركين آخرين.' });
+
+      if (wasAttending) {
+        // Smart Waitlist Auto-Promotion: check oldest waitlisted user
+        const { data: nextInLine } = await supabase
+          .from('rsvps')
+          .select('id, user_id')
+          .eq('event_id', event.id)
+          .eq('status', 'waitlist')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (nextInLine) {
+          await supabase
+            .from('rsvps')
+            .update({ status: 'attending' })
+            .eq('id', nextInLine.id);
+          setTotalWaitlistCount(prev => Math.max(0, prev - 1));
+          toast({
+            title: 'تم إلغاء الحجز وترقية أول منتظر تلقائياً 🔄',
+            description: 'تم منح مقعدك تلقائياً لأول مشارك في قائمة الانتظار الذكية.'
+          });
+        } else {
+          setTotalAttendingCount(prev => Math.max(0, prev - 1));
+          toast({ title: 'تم إلغاء الحجز بنجاح', description: 'تم إخلاء مقعدك وإتاحته لمشاركين آخرين.' });
+        }
+      } else {
+        setTotalWaitlistCount(prev => Math.max(0, prev - 1));
+        toast({ title: 'تم الانسحاب من قائمة الانتظار' });
+      }
     } catch {
       toast({ variant: 'destructive', title: 'خطأ', description: 'تعذر إلغاء الحجز حالياً.' });
     } finally {
       setRsvpLoading(false);
+    }
+  };
+
+  const handlePromoteWaitlistUser = async (waitlistRsvp: any) => {
+    try {
+      const { error } = await supabase
+        .from('rsvps')
+        .update({ status: 'attending' })
+        .eq('id', waitlistRsvp.id);
+      if (error) throw error;
+
+      setWaitlistRsvps(prev => prev.filter(w => w.id !== waitlistRsvp.id));
+      setTotalWaitlistCount(prev => Math.max(0, prev - 1));
+      setRsvps(prev => [...prev, { ...waitlistRsvp, status: 'attending' }]);
+      setTotalAttendingCount(prev => prev + 1);
+      toast({
+        title: 'تمت ترقية المشارك إلى مقعد مؤكد ✓',
+        description: 'أصبحت تذكرته جاهزة وفعالة الآن.'
+      });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'خطأ في الترقية', description: err.message });
     }
   };
 
@@ -484,6 +591,19 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
+              onClick={handleToggleFavorite}
+              className={`rounded-xl text-xs font-bold h-9 px-3.5 gap-1.5 cursor-pointer transition-colors ${
+                isFav
+                  ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100'
+                  : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 bg-white'
+              }`}
+            >
+              <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-rose-500 text-rose-500' : 'text-rose-500'}`} />
+              <span>{isFav ? 'محفوظة في المفضلة' : 'حفظ الفعالية'}</span>
+            </Button>
+
+            <Button
+              variant="outline"
               onClick={() => window.open(buildGoogleCalendarUrl(event), '_blank')}
               className="border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl text-xs font-bold h-9 px-3 gap-1.5 cursor-pointer bg-white"
             >
@@ -582,12 +702,27 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                     <MapPin className="w-4 h-4 text-[#b87a29]" />
                     <span>{event.location}</span>
                   </div>
+                  <a
+                    href={buildGoogleMapsDirectionsUrl(event.location || 'ورقلة')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-3.5 py-2 rounded-xl gap-1.5 transition-colors"
+                  >
+                    <Navigation className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>التوجيه عبر Google Maps</span>
+                  </a>
                   <div className="flex items-center bg-[#fae1b7]/40 border border-[#dbc397] px-3.5 py-2 rounded-xl gap-2">
                     <Users className="w-4 h-4 text-[#b87a29]" />
                     <span>
                       {totalAttendingCount} مسجل {maxCap ? `من أصل ${maxCap} مقعد` : ''}
                     </span>
                   </div>
+                  {totalWaitlistCount > 0 && (
+                    <div className="flex items-center bg-amber-50 text-amber-800 border border-amber-300 px-3.5 py-2 rounded-xl gap-1.5">
+                      <Hourglass className="w-3.5 h-3.5 text-amber-600" />
+                      <span>قائمة الانتظار: {totalWaitlistCount}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -827,12 +962,18 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                         <div className="mt-2 text-[#301809] font-black bg-[#fae1b7]/70 border border-[#dbc397] py-2.5 rounded-xl text-sm">
                           إجمالي المسجلين: {rsvps.length} {maxCap ? `/ ${maxCap}` : ''}
                         </div>
+                        {waitlistRsvps.length > 0 && (
+                          <div className="text-amber-900 font-black bg-amber-100/80 border border-amber-300 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5">
+                            <Hourglass className="w-3.5 h-3.5 text-amber-700" />
+                            <span>قائمة الانتظار الذكية: {waitlistRsvps.length} منتظر</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Quick Attendee Contact Preview for Manager */}
                       {rsvps.length > 0 && (
                         <div className="text-right pt-3 border-t border-[#dbc397] space-y-2">
-                          <p className="text-xs font-black text-[#301809]">قائمة المسجلين السريعة:</p>
+                          <p className="text-xs font-black text-[#301809]">قائمة المسجلين المؤكدين ({rsvps.length}):</p>
                           <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
                             {rsvps.map((r, i) => {
                               const c = parseUserContact(r.users?.full_name, r.users?.email);
@@ -851,6 +992,39 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                                       {c.phone}
                                     </a>
                                   )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Waitlist Preview & Manual Promotion for Manager */}
+                      {waitlistRsvps.length > 0 && (
+                        <div className="text-right pt-3 border-t border-amber-300 space-y-2">
+                          <p className="text-xs font-black text-amber-900 flex items-center gap-1">
+                            <Hourglass className="w-3.5 h-3.5 text-amber-700" />
+                            <span>قائمة الانتظار بالترتيب ({waitlistRsvps.length}):</span>
+                          </p>
+                          <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                            {waitlistRsvps.map((w, idx) => {
+                              const c = parseUserContact(w.users?.full_name, w.users?.email);
+                              return (
+                                <div key={w.id || idx} className="bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 text-xs flex items-center justify-between gap-2">
+                                  <div className="truncate">
+                                    <p className="font-bold text-[#301809] truncate">
+                                      <span className="text-amber-700 font-black ml-1">#{idx + 1}</span>
+                                      {c.name}
+                                    </p>
+                                    {c.phone && <p className="text-[10px] text-[#723c11] font-mono" dir="ltr">{c.phone}</p>}
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handlePromoteWaitlistUser(w)}
+                                    className="h-7 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-lg gap-1 shrink-0"
+                                  >
+                                    <CheckCircle2 className="w-3 h-3" /> ترقية لمقعد
+                                  </Button>
                                 </div>
                               );
                             })}
@@ -921,15 +1095,46 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                             </div>
                           </div>
                         </div>
+                      ) : isWaitlisted ? (
+                        <div className="space-y-4">
+                          <div className="bg-gradient-to-br from-amber-700 via-[#723c11] to-[#301809] text-white p-6 rounded-2xl shadow-xl relative overflow-hidden text-center border-2 border-[#efa83f]/40">
+                            <Hourglass className="w-12 h-12 mx-auto mb-2 text-[#efa83f] animate-pulse" />
+                            <h3 className="text-xl font-thmanyah font-bold mb-1 text-[#fae1b7]">أنت في قائمة الانتظار الذكية</h3>
+                            <div className="inline-block bg-[#efa83f] text-[#301809] font-black text-sm px-4 py-1 rounded-full my-2 shadow">
+                              ترتيبك الحالي في القائمة: #{waitlistPosition || 1}
+                            </div>
+                            <p className="text-[#fae1b7]/85 text-xs leading-relaxed mb-4">
+                              سيتم ترقية حجزك تلقائياً إلى تذكرة مؤكدة فور اعتذار أو إلغاء أي مشارك لحجزه!
+                            </p>
+                            <Button
+                              onClick={handleCancelRsvp}
+                              disabled={rsvpLoading}
+                              variant="ghost"
+                              className="w-full h-9 text-xs text-red-200 hover:text-white hover:bg-red-500/20 rounded-xl cursor-pointer"
+                            >
+                              الانسحاب من قائمة الانتظار
+                            </Button>
+                          </div>
+                        </div>
                       ) : (
                         <div className="text-right space-y-4">
                           <div className="text-center">
                             <div className="w-14 h-14 rounded-2xl bg-[#fae1b7]/70 border border-[#dbc397] flex items-center justify-center mx-auto mb-3 text-[#b87a29]">
-                              <Ticket className="w-7 h-7" />
+                              {maxCap && totalAttendingCount >= maxCap ? (
+                                <Hourglass className="w-7 h-7 text-amber-700" />
+                              ) : (
+                                <Ticket className="w-7 h-7" />
+                              )}
                             </div>
-                            <h3 className="text-xl font-thmanyah font-bold text-[#301809]">احجز مقعدك المجاني</h3>
+                            <h3 className="text-xl font-thmanyah font-bold text-[#301809]">
+                              {maxCap && totalAttendingCount >= maxCap
+                                ? 'اكتملت المقاعد — قائمة الانتظار الذكية متاحة'
+                                : 'احجز مقعدك المجاني'}
+                            </h3>
                             <p className="text-[#723c11]/80 text-xs mt-1">
-                              أدخل اسمك ورقم هاتفك لإصدار تذكرتك الفورية برمز QR (+10 نقاط)
+                              {maxCap && totalAttendingCount >= maxCap
+                                ? 'سجّل بياناتك للانضمام لقائمة الانتظار وستحصل على تذكرتك تلقائياً فور شغور مقعد'
+                                : 'أدخل اسمك ورقم هاتفك لإصدار تذكرتك الفورية برمز QR (+10 نقاط)'}
                             </p>
                           </div>
 
@@ -968,7 +1173,11 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                             disabled={rsvpLoading}
                             className="w-full h-13 text-base font-black bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] shadow-lg text-white rounded-xl cursor-pointer transition-all"
                           >
-                            {rsvpLoading ? 'جاري إصدار التذكرة...' : 'أكد حضورك واستلم التذكرة 🎟️'}
+                            {rsvpLoading
+                              ? 'جاري المعالجة...'
+                              : maxCap && totalAttendingCount >= maxCap
+                                ? '⏳ انضم إلى قائمة الانتظار الذكية'
+                                : 'أكد حضورك واستلم التذكرة 🎟️'}
                           </Button>
                         </div>
                       )}

@@ -21,6 +21,7 @@ const Heritage = lazy(() => import('./pages/Heritage'));
 const HeritageMap = lazy(() => import('./pages/HeritageMap'));
 const EventsExplorer = lazy(() => import('./pages/EventsExplorer'));
 const AssociationProfile = lazy(() => import('./pages/AssociationProfile'));
+const AssociationsDirectory = lazy(() => import('./pages/AssociationsDirectory'));
 
 function RouteLoadingFallback() {
   return (
@@ -59,6 +60,7 @@ function AppRoutes({ session, profile, loading }: { session: any, profile: Profi
           } />
 
           <Route path="/events" element={<PageTransition><EventsExplorer /></PageTransition>} />
+          <Route path="/associations" element={<PageTransition><AssociationsDirectory /></PageTransition>} />
           <Route path="/heritage" element={<PageTransition><Heritage /></PageTransition>} />
           <Route path="/map" element={<PageTransition><HeritageMap /></PageTransition>} />
           <Route path="/event/:id" element={<PageTransition><EventDetails userRole={profile?.role || null} /></PageTransition>} />

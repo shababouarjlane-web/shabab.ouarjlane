@@ -214,3 +214,185 @@ export function calculateBadgeFromPoints(points: number): string {
   if (points >= 20) return 'مشارك مبادر';
   return 'عضو جديد';
 }
+
+// ============================================================================
+// FAVORITE EVENTS (❤️ حفظ الفعالية)
+// ============================================================================
+const FAVORITES_STORAGE_KEY = 'ouarjlane_favorite_events_v1';
+
+export function getFavoriteEventIds(): string[] {
+  try {
+    const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function isEventFavorite(eventId: string): boolean {
+  if (!eventId) return false;
+  return getFavoriteEventIds().includes(eventId);
+}
+
+export function toggleFavoriteEvent(eventId: string): boolean {
+  if (!eventId) return false;
+  const current = getFavoriteEventIds();
+  const exists = current.includes(eventId);
+  const next = exists ? current.filter(id => id !== eventId) : [...current, eventId];
+  try {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore storage errors
+  }
+  return !exists;
+}
+
+// ============================================================================
+// HERITAGE ARCHIVE CATEGORIES & COMMUNITY SUGGESTIONS / CONTACT REQUESTS
+// ============================================================================
+export const HERITAGE_CATEGORIES = [
+  'قصور عتيقة',
+  'شخصيات وأعلام',
+  'حرف تقليدية',
+  'مخطوطات ووثائق',
+  'عادات وتقاليد'
+] as const;
+
+export interface HeritageMeta {
+  cleanContent: string;
+  category: string;
+  contributor?: string;
+  status: 'approved' | 'pending' | 'contact_request';
+  contactPhone?: string;
+  contactEmail?: string;
+  requestType?: string;
+}
+
+export function inferHeritageCategory(title = '', content = ''): string {
+  const combined = `${title} ${content}`;
+  if (/قصر|قصبة|سدراتة|بغداد|أجف|عمارة|برج|سوق|مسجد|عتيق/i.test(combined)) return 'قصور عتيقة';
+  if (/شيخ|علامة|عالم|شخصية|أعلام|مؤسس|تاريخي|تاجر|قاضي/i.test(combined)) return 'شخصيات وأعلام';
+  if (/حرف|خياطة|نسيج|سعف|نخيل|فخار|طرز|صناعة|تقليدي/i.test(combined)) return 'حرف تقليدية';
+  if (/مخطوط|وثيقة|رسالة|كتاب|أرشيف|عقد|خزانة/i.test(combined)) return 'مخطوطات ووثائق';
+  if (/عادات|تقاليد|عرس|موسم|فلكلور|احتفال|كرم|شاي|كسكس/i.test(combined)) return 'عادات وتقاليد';
+  return 'قصور عتيقة';
+}
+
+export function packHeritageMeta(
+  cleanContent: string,
+  meta: {
+    category?: string;
+    contributor?: string;
+    status?: 'approved' | 'pending' | 'contact_request';
+    contactPhone?: string;
+    contactEmail?: string;
+    requestType?: string;
+  }
+): string {
+  const body = (cleanContent || '').trim();
+  const payload = {
+    category: meta.category || 'قصور عتيقة',
+    contributor: meta.contributor || '',
+    status: meta.status || 'approved',
+    contactPhone: meta.contactPhone || '',
+    contactEmail: meta.contactEmail || '',
+    requestType: meta.requestType || ''
+  };
+  return `${body}||HMETA||${JSON.stringify(payload)}`;
+}
+
+export function parseHeritageMeta(rawContent?: string | null, title = ''): HeritageMeta {
+  if (!rawContent) {
+    return {
+      cleanContent: '',
+      category: inferHeritageCategory(title, ''),
+      status: 'approved'
+    };
+  }
+  if (rawContent.includes('||HMETA||')) {
+    const [textPart, metaPart] = rawContent.split('||HMETA||');
+    try {
+      const parsed = JSON.parse(metaPart);
+      return {
+        cleanContent: (textPart || '').trim(),
+        category: parsed.category || inferHeritageCategory(title, textPart),
+        contributor: parsed.contributor || '',
+        status: parsed.status || 'approved',
+        contactPhone: parsed.contactPhone || '',
+        contactEmail: parsed.contactEmail || '',
+        requestType: parsed.requestType || ''
+      };
+    } catch {
+      return {
+        cleanContent: (textPart || '').trim(),
+        category: inferHeritageCategory(title, textPart),
+        status: 'approved'
+      };
+    }
+  }
+  return {
+    cleanContent: rawContent.trim(),
+    category: inferHeritageCategory(title, rawContent),
+    status: 'approved'
+  };
+}
+
+// ============================================================================
+// GOOGLE MAPS DIRECTIONS & OUARGLA LOCATION COORDINATES
+// ============================================================================
+export function buildGoogleMapsDirectionsUrl(locationOrCoords: string | [number, number]): string {
+  if (Array.isArray(locationOrCoords)) {
+    const [lat, lng] = locationOrCoords;
+    return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  }
+  const cleanLoc = (locationOrCoords || '').trim();
+  const query = cleanLoc.includes('ورقلة') ? cleanLoc : `${cleanLoc}، ورقلة، الجزائر`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+export function resolveOuarglaLocationCoords(locationText?: string | null, seedIndex = 0): [number, number] {
+  const loc = (locationText || '').trim();
+  if (/القصر|العتيق|سوق الاحد|القصبة|لالا عزيزة|لالا منصورة|الجامع الكبير|قصر ورقلة/i.test(loc)) {
+    return [31.9628 + (seedIndex % 3) * 0.0006, 5.3248 + (seedIndex % 2) * 0.0006];
+  }
+  if (/سدراتة/i.test(loc)) {
+    return [31.8602, 5.3185];
+  }
+  if (/دار الثقافة|مفدي زكرياء|المسرح|المكتبة/i.test(loc)) {
+    return [31.9532, 5.3312];
+  }
+  if (/جامعة|قاصدي مرباح|كلية|القطب الجامعي/i.test(loc)) {
+    return [31.9415, 5.2980];
+  }
+  if (/الرويسات/i.test(loc)) {
+    return [31.9285, 5.3390];
+  }
+  if (/عين البيضاء/i.test(loc)) {
+    return [31.9585, 5.3980];
+  }
+  if (/سيدي خويلد/i.test(loc)) {
+    return [31.9760, 5.4190];
+  }
+  if (/تقرت|تماسين/i.test(loc)) {
+    return [33.1050, 6.0580];
+  }
+  if (/انقوسة|أنقوسة|قصر عجاجة/i.test(loc)) {
+    return [32.1420, 5.3090];
+  }
+  if (/بغداد|أجف|الحجيرة/i.test(loc)) {
+    return [32.5150, 5.5650];
+  }
+  if (/دار الشباب|مركب رياضي|ملعب|قاعة/i.test(loc)) {
+    return [31.9498, 5.3265];
+  }
+  // Default spread nicely around central Ouargla
+  const angle = (seedIndex * 137.5) * (Math.PI / 180);
+  const radius = 0.005 + (seedIndex % 4) * 0.003;
+  return [
+    Number((31.9527 + Math.cos(angle) * radius).toFixed(5)),
+    Number((5.3335 + Math.sin(angle) * radius).toFixed(5))
+  ];
+}
+

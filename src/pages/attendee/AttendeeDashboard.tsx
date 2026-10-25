@@ -25,7 +25,10 @@ import {
   Share2,
   User,
   Phone,
-  Medal
+  Medal,
+  Heart,
+  Hourglass,
+  Building2
 } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -37,7 +40,9 @@ import {
   packUserContact,
   parseUserContact,
   buildGoogleCalendarUrl,
-  buildWhatsAppShareUrl
+  buildWhatsAppShareUrl,
+  getFavoriteEventIds,
+  toggleFavoriteEvent
 } from '../../lib/helpers';
 import {
   DropdownMenu,
@@ -70,6 +75,8 @@ export default function AttendeeDashboard() {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => getFavoriteEventIds());
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
   
   // States for Personalization & Gamification
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -94,6 +101,13 @@ export default function AttendeeDashboard() {
   useEffect(() => {
     myEventsRef.current = myEvents;
   }, [myEvents]);
+
+  const handleToggleFav = (e: React.MouseEvent, eventId: string) => {
+    e.stopPropagation();
+    const added = toggleFavoriteEvent(eventId);
+    setFavoriteIds(getFavoriteEventIds());
+    toast.success(added ? '❤️ تمت إضافة الفعالية إلى المفضلة' : 'تمت إزالة الفعالية من المفضلة');
+  };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,16 +286,16 @@ export default function AttendeeDashboard() {
         
       setPublicEvents(publicData || []);
 
-      // Fetch my RSVPs with rsvpId for unified QR code
+      // Fetch my RSVPs (both attending & waitlist) with rsvpId for unified QR code
       const { data: rsvpData } = await supabase
         .from('rsvps')
-        .select('id, event_id, events(*, associations(id, name))')
+        .select('id, status, event_id, events(*, associations(id, name))')
         .eq('user_id', user.id)
-        .eq('status', 'attending');
+        .in('status', ['attending', 'waitlist']);
 
       const myEventsExtracted = rsvpData
         ?.filter((r: any) => r.events)
-        .map((r: any) => ({ ...r.events, rsvpId: r.id })) || [];
+        .map((r: any) => ({ ...r.events, rsvpId: r.id, rsvpStatus: r.status })) || [];
       myEventsExtracted.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
       
       setMyEvents(myEventsExtracted);
@@ -390,6 +404,25 @@ export default function AttendeeDashboard() {
                 className="h-48 overflow-hidden relative bg-[#fdfbf7] flex items-center justify-center cursor-pointer border-b border-[#dbc397]/40" 
                 onClick={() => navigate(`/event/${event.id}`)}
               >
+                {/* Favorite Button */}
+                <button
+                  type="button"
+                  onClick={(e) => handleToggleFav(e, event.id)}
+                  className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white backdrop-blur-sm flex items-center justify-center shadow-md transition-transform hover:scale-110 z-10 cursor-pointer"
+                  title={favoriteIds.includes(event.id) ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
+                >
+                  <Heart
+                    className={`w-4 h-4 ${favoriteIds.includes(event.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-600'}`}
+                  />
+                </button>
+
+                {event.rsvpStatus === 'waitlist' && (
+                  <div className="absolute top-3 right-3 bg-amber-500/95 text-white px-3 py-1 rounded-full text-[11px] font-black flex items-center gap-1 shadow-md z-10">
+                    <Hourglass className="w-3 h-3" />
+                    <span>في قائمة الانتظار</span>
+                  </div>
+                )}
+
                 {event.cover_image_url ? (
                   <img 
                     src={event.cover_image_url} 
@@ -449,17 +482,28 @@ export default function AttendeeDashboard() {
             {showTicketButton && (
               <div className="px-5 pb-5 pt-0 space-y-2">
                 <div className="flex gap-2 pt-3 border-t border-[#dbc397]/40">
-                  <Button
-                    onClick={(e) => { e.stopPropagation(); setActiveTicketEvent(event); }}
-                    className="flex-1 h-11 bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white font-bold rounded-xl gap-1.5 text-xs cursor-pointer shadow-sm transition-all"
-                  >
-                    <Ticket className="w-4 h-4" />
-                    <span>عرض تذكرتي</span>
-                  </Button>
+                  {event.rsvpStatus === 'waitlist' ? (
+                    <Button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/event/${event.id}`); }}
+                      className="flex-1 h-11 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl gap-1.5 text-xs cursor-pointer shadow-sm transition-all"
+                    >
+                      <Hourglass className="w-4 h-4" />
+                      <span>متابعة ترتيب الانتظار</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={(e) => { e.stopPropagation(); setActiveTicketEvent(event); }}
+                      className="flex-1 h-11 bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white font-bold rounded-xl gap-1.5 text-xs cursor-pointer shadow-sm transition-all"
+                    >
+                      <Ticket className="w-4 h-4" />
+                      <span>عرض تذكرتي</span>
+                    </Button>
+                  )}
                   <Button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      if (!window.confirm('هل أنت متأكد من رغبتك في إلغاء حجز تذكرة هذه الفعالية؟')) return;
+                      const isWL = event.rsvpStatus === 'waitlist';
+                      if (!window.confirm(isWL ? 'هل تود الانسحاب من قائمة الانتظار؟' : 'هل أنت متأكد من رغبتك في إلغاء حجز تذكرة هذه الفعالية؟')) return;
                       try {
                         const { data: { user } } = await supabase.auth.getUser();
                         if (!user) return;
@@ -469,7 +513,27 @@ export default function AttendeeDashboard() {
                           .eq('event_id', event.id)
                           .eq('user_id', user.id);
                         if (error) throw error;
-                        toast.success('تم إلغاء الحجز بنجاح وإخلاء المقعد.');
+
+                        if (!isWL) {
+                          // Auto-promote earliest waitlisted user
+                          const { data: nextInLine } = await supabase
+                            .from('rsvps')
+                            .select('id')
+                            .eq('event_id', event.id)
+                            .eq('status', 'waitlist')
+                            .order('created_at', { ascending: true })
+                            .limit(1)
+                            .maybeSingle();
+
+                          if (nextInLine) {
+                            await supabase
+                              .from('rsvps')
+                              .update({ status: 'attending' })
+                              .eq('id', nextInLine.id);
+                          }
+                        }
+
+                        toast.success(isWL ? 'تم الانسحاب من قائمة الانتظار.' : 'تم إلغاء الحجز بنجاح وإخلاء المقعد.');
                         fetchEvents();
                       } catch {
                         toast.error('فشل إلغاء الحجز.');
@@ -540,6 +604,15 @@ export default function AttendeeDashboard() {
 
           {/* Quick Actions & Settings Gear */}
           <div className="flex items-center gap-2 md:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/associations')}
+              className="border-2 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 h-10 px-3 md:px-4 rounded-xl font-bold cursor-pointer hidden lg:flex items-center gap-1.5 text-xs md:text-sm"
+            >
+              <Building2 className="w-4 h-4 text-[#b87a29]" />
+              <span>دليل الجمعيات</span>
+            </Button>
+
             <Button
               variant="outline"
               onClick={() => navigate('/heritage')}
@@ -800,29 +873,45 @@ export default function AttendeeDashboard() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <PartnerAdsBanner />
                 <div className="mt-8">
-                  <div className="flex justify-between items-center mb-6 pb-2 border-b-2 border-[#dbc397]/40">
+                  <div className="flex flex-wrap justify-between items-center gap-3 mb-6 pb-2 border-b-2 border-[#dbc397]/40">
                     <h2 className="text-xl md:text-2xl font-thmanyah font-bold text-[#301809] flex items-center gap-3">
                       <span>✨ فعاليات بانتظارك في ورقلة</span>
                     </h2>
-                    {userProfile?.interests?.length > 0 && (
-                      <div className="flex items-center gap-2.5 bg-white px-4 py-2 rounded-2xl border-2 border-[#dbc397] shadow-xs">
-                        <span className="text-xs font-bold text-[#723c11]">تصفية بحسب اهتماماتي</span>
-                        <button 
-                          onClick={() => setShowAll(!showAll)}
-                          className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${showAll ? 'bg-slate-200' : 'bg-[#b87a29]'}`}
-                        >
-                          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${showAll ? 'left-1' : 'right-1'}`} />
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setOnlyFavorites(!onlyFavorites)}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-2xl border-2 text-xs font-bold transition-all cursor-pointer ${
+                          onlyFavorites
+                            ? 'bg-rose-50 border-rose-300 text-rose-600 shadow-xs'
+                            : 'bg-white border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
+                        }`}
+                      >
+                        <Heart className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-rose-500 text-rose-500' : 'text-rose-500'}`} />
+                        <span>المفضلة ({favoriteIds.length})</span>
+                      </button>
+
+                      {userProfile?.interests?.length > 0 && (
+                        <div className="flex items-center gap-2.5 bg-white px-4 py-2 rounded-2xl border-2 border-[#dbc397] shadow-xs">
+                          <span className="text-xs font-bold text-[#723c11]">تصفية بحسب اهتماماتي</span>
+                          <button 
+                            onClick={() => setShowAll(!showAll)}
+                            className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${showAll ? 'bg-slate-200' : 'bg-[#b87a29]'}`}
+                          >
+                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${showAll ? 'left-1' : 'right-1'}`} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   <EventCardList 
                     events={publicEvents.filter(e => {
+                      if (onlyFavorites && !favoriteIds.includes(e.id)) return false;
                       if (showAll || !userProfile?.interests?.length) return true;
                       return userProfile.interests.includes(e.category);
                     })} 
-                    emptyMsg={showAll ? "لا توجد فعاليات عامة قادمة حالياً." : "لا توجد فعاليات تطابق اهتماماتك حالياً. جرب إيقاف التصفية أو تعديل اهتماماتك."} 
+                    emptyMsg={onlyFavorites ? "لا توجد فعاليات محفوظة في المفضلة بعد. اضغط على أيقونة ❤️ لحفظ الفعاليات التي تهمك!" : showAll ? "لا توجد فعاليات عامة قادمة حالياً." : "لا توجد فعاليات تطابق اهتماماتك حالياً. جرب إيقاف التصفية أو تعديل اهتماماتك."} 
                   />
                 </div>
               </motion.div>

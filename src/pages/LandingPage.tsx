@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { getFavoriteEventIds, toggleFavoriteEvent, packHeritageMeta } from '../lib/helpers';
 import { useNotifications } from '../hooks/useNotifications';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -25,11 +26,15 @@ import {
   Mail, 
   Lock, 
   ChevronLeft,
+  ChevronDown,
   Loader2,
   Ticket,
   ArrowUpRight,
   CheckCircle2,
-  ArrowUp
+  ArrowUp,
+  Heart,
+  HelpCircle,
+  Send
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -41,7 +46,18 @@ export default function LandingPage() {
   const [stats, setStats] = useState({ users: 0, associations: 0, events: 0, rsvps: 0 });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => getFavoriteEventIds());
   const [loadingEvents, setLoadingEvents] = useState(true);
+
+  // FAQ & Join/Contact Form States
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [contactName, setContactName] = useState('');
+  const [contactOrg, setContactOrg] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSending, setContactSending] = useState(false);
 
   // Login Modal State
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -161,8 +177,67 @@ export default function LandingPage() {
                           (ev.description && ev.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
                           ev.location?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || ev.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesFav = !showFavoritesOnly || favoriteIds.includes(ev.id);
+    return matchesSearch && matchesCategory && matchesFav;
   });
+
+  const faqItems = [
+    {
+      q: 'كيف أحجز تذكرتي لحضور فعالية في منصة تواصل صحراء؟',
+      a: 'اختر الفعالية التي ترغب بحضورها، ثم اضغط على "احجز مقعدك الآن". يمكنك التسجيل بحسابك أو الدخول التجريبي السريع كزائر، وستصدر لك فوراً تذكرة إلكترونية مرفقة برمز استجابة سريع (QR Code) صالحة للدخول.'
+    },
+    {
+      q: 'ماذا يحدث إذا اكتملت المقاعد المتاحة في الفعالية؟',
+      a: 'توفر المنصة نظام "قائمة الانتظار الذكية" (Smart Waitlist). عند امتلاء المقاعد يمكنك الانضمام لقائمة الانتظار بنقرة واحدة ومعرفة ترتيبك، وبمجرد اعتذار أي مشارك يتم ترقية أول اسم في قائمة الانتظار تلقائياً إلى تذكرة مؤكدة!'
+    },
+    {
+      q: 'كيف يمكن لجمعيتنا الانضمام ونشر فعالياتها على المنصة؟',
+      a: 'يمكن لأي جمعية ثقافية، تراثية، شبابية أو علمية في ولاية ورقلة التقدم بطلب اعتماد عبر نموذج "انضمام جمعية" أسفل هذه الصفحة أو من صفحة دليل الجمعيات، ليقوم المشرف العام بتفعيل حساب الجمعية فوراً.'
+    },
+    {
+      q: 'هل يمكن لسكان وباحثي ورقلة المساهمة في إثراء الأرشيف التراثي؟',
+      a: 'نعم! يمكنك زيارة صفحة "الأرشيف التراثي" والضغط على زر "اقترح معلماً أو وثيقة تراثية" لإرسال صور ومعلومات عن القصور العتيقة، الشخصيات، المخطوطات أو الحرف التقليدية ليتم توثيقها باسمك بعد مراجعة الإدارة.'
+    }
+  ];
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactName.trim() || !contactMessage.trim()) {
+      toast.error('يرجى إدخال الاسم ومحتوى الرسالة أو طلب الانضمام.');
+      return;
+    }
+    try {
+      setContactSending(true);
+      const packedContent = packHeritageMeta(contactMessage.trim(), {
+        category: 'contact_request',
+        status: 'contact_request',
+        contributor: contactName.trim(),
+        contactPhone: contactPhone.trim(),
+        contactEmail: contactEmail.trim(),
+        requestType: contactOrg.trim() || 'مبادرة / مراسلة عامة',
+      });
+
+      const { error } = await supabase.from('heritage_archive').insert([
+        {
+          title: contactOrg.trim() ? `طلب انضمام جمعية: ${contactOrg.trim()}` : `رسالة تواصل من: ${contactName.trim()}`,
+          content: packedContent,
+          images: [],
+        }
+      ]);
+      if (error) throw error;
+
+      toast.success('تم إرسال طلبك ورسالتك إلى إدارة المنصة بنجاح! سنتواصل معك قريباً.');
+      setContactName('');
+      setContactOrg('');
+      setContactPhone('');
+      setContactEmail('');
+      setContactMessage('');
+    } catch (err: any) {
+      toast.error('تعذر إرسال الرسالة حالياً: ' + (err.message || 'حاول لاحقاً'));
+    } finally {
+      setContactSending(false);
+    }
+  };
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -292,30 +367,37 @@ export default function LandingPage() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-[#301809]/80">
+          <nav className="hidden md:flex items-center gap-5 text-sm font-semibold text-[#301809]/80">
             <a href="#hero" className="hover:text-[#b87a29] transition-colors">الرئيسية</a>
             <button 
               onClick={() => navigate('/events')} 
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11]"
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer"
             >
               <Calendar className="w-4 h-4 text-[#b87a29]" />
               دليل الفعاليات
             </button>
-            <a href="#heritage-spotlight" className="hover:text-[#b87a29] transition-colors">أصالة سدراتة</a>
+            <button 
+              onClick={() => navigate('/associations')} 
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer"
+            >
+              <Building2 className="w-4 h-4 text-[#b87a29]" />
+              دليل الجمعيات
+            </button>
             <button 
               onClick={() => navigate('/heritage')} 
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11]"
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer"
             >
               <BookOpen className="w-4 h-4 text-[#b87a29]" />
               الأرشيف التراثي
             </button>
             <button
               onClick={() => navigate('/map')}
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11]"
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer"
             >
               <MapPin className="w-4 h-4 text-[#b87a29]" />
               خريطة التراث
             </button>
+            <a href="#faq-contact" className="hover:text-[#b87a29] transition-colors">الأسئلة والانضمام</a>
           </nav>
 
           {/* Header Action Buttons */}
@@ -765,7 +847,7 @@ export default function LandingPage() {
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   selectedCategory === cat.value
                     ? 'bg-gradient-to-r from-[#efa83f] to-[#b87a29] text-white shadow-sm'
                     : 'bg-white/80 text-[#301809] border border-[#dbc397]/50 hover:bg-[#fae1b7]/40'
@@ -774,6 +856,17 @@ export default function LandingPage() {
                 {cat.label}
               </button>
             ))}
+            <button
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                showFavoritesOnly
+                  ? 'bg-red-600 text-white shadow-sm'
+                  : 'bg-white/80 text-red-700 border border-red-200 hover:bg-red-50'
+              }`}
+            >
+              <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-white' : 'fill-red-500 text-red-500'}`} />
+              <span>المفضلة ({favoriteIds.length})</span>
+            </button>
           </div>
 
           {/* Events Grid */}
@@ -821,6 +914,20 @@ export default function LandingPage() {
                       {getCategoryLabel(ev.category)}
                     </div>
 
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const added = toggleFavoriteEvent(ev.id);
+                        setFavoriteIds(getFavoriteEventIds());
+                        toast.success(added ? 'تم حفظ الفعالية في المفضلة ❤️' : 'تمت إزالة الفعالية من المفضلة');
+                      }}
+                      title="حفظ في المفضلة"
+                      className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-md transition-transform active:scale-90 cursor-pointer"
+                    >
+                      <Heart className={`w-4 h-4 ${favoriteIds.includes(ev.id) ? 'fill-red-500 text-red-500' : 'text-[#301809]/70'}`} />
+                    </button>
+
                     <div className="absolute bottom-3 left-3 bg-[#301809]/80 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10px] font-bold text-[#efa83f] border border-[#efa83f]/30">
                       تذكرة مجانية
                     </div>
@@ -865,17 +972,167 @@ export default function LandingPage() {
             </div>
           )}
 
-          {/* View All Events Directory CTA */}
-          <div className="text-center pt-10">
+          {/* View All Events & Associations Directory CTA */}
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-10">
             <Button
               onClick={() => navigate('/events')}
-              className="h-13 px-8 rounded-2xl bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#c98730] hover:to-[#f0b24d] text-white font-bold text-sm md:text-base shadow-glow-amber transition-all inline-flex items-center gap-2.5"
+              className="h-13 px-7 rounded-2xl bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#c98730] hover:to-[#f0b24d] text-white font-bold text-sm shadow-glow-amber transition-all inline-flex items-center gap-2.5 cursor-pointer"
             >
               <Calendar className="w-5 h-5 text-white" />
-              <span>استكشف دليل الفعاليات والبحث المتقدم بالكامل</span>
+              <span>استكشف دليل الفعاليات بالكامل</span>
               <ChevronLeft className="w-4 h-4 text-white" />
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/associations')}
+              className="h-13 px-6 rounded-2xl bg-white hover:bg-[#fae1b7]/40 border-[#dbc397] text-[#301809] font-bold text-sm inline-flex items-center gap-2 cursor-pointer"
+            >
+              <Building2 className="w-4 h-4 text-[#b87a29]" />
+              <span>تصفح دليل الجمعيات المعتمدة</span>
+            </Button>
           </div>
+        </div>
+      </section>
+
+      {/* FAQ & Association Join / Contact Section */}
+      <section id="faq-contact" className="py-16 relative z-10 mx-4 md:mx-auto max-w-7xl mt-10">
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Right Column: Interactive FAQ Accordion */}
+          <div className="lg:col-span-6 space-y-5 text-right">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fae1b7] text-[#723c11] text-xs font-semibold border border-[#d4b174]/50">
+              <HelpCircle className="w-3.5 h-3.5 text-[#b87a29]" />
+              الأسئلة الشائعة
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-thmanyah font-bold text-[#301809]">
+              كل ما تود معرفته عن منصة تواصل صحراء
+            </h2>
+            <p className="text-xs sm:text-sm text-[#723c11]/80 leading-relaxed">
+              إجابات سريعة حول حجز التذاكر الرقمية، نظام قائمة الانتظار الذكية، واعتماد الجمعيات المحلية بولاية ورقلة.
+            </p>
+
+            <div className="space-y-3 pt-2">
+              {faqItems.map((item, idx) => {
+                const isOpen = openFaqIndex === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-2xl bg-white border border-[#dbc397]/60 shadow-xs overflow-hidden transition-all"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      className="w-full p-4 text-right flex items-center justify-between gap-3 font-bold text-sm text-[#301809] hover:bg-[#fae1b7]/20 transition-colors cursor-pointer"
+                    >
+                      <span>{item.q}</span>
+                      <ChevronDown className={`w-4 h-4 text-[#b87a29] shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isOpen && (
+                      <div className="px-4 pb-4 pt-1 text-xs text-[#723c11]/90 leading-relaxed border-t border-[#dbc397]/30 bg-[#fdfbf7]">
+                        {item.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Left Column: Association Join & Direct Contact Form */}
+          <div className="lg:col-span-6">
+            <Card className="rounded-3xl border-2 border-[#dbc397]/70 bg-white shadow-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-[#301809] to-[#723c11] p-6 text-white text-right">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#efa83f]/20 border border-[#efa83f]/40 text-[#efa83f] text-[11px] font-bold mb-2">
+                  <Building2 className="w-3.5 h-3.5" />
+                  بوابة الجمعيات والشركاء
+                </div>
+                <h3 className="text-xl font-thmanyah font-bold">
+                  🏛️ طلب انضمام جمعية أو تواصل مع الإدارة
+                </h3>
+                <p className="text-xs text-[#fae1b7]/80 mt-1">
+                  هل تمثل جمعية أو نادي ثقافي في ورقلة؟ أرسل بياناتك لاعتماد حسابك مجاناً في المنصة.
+                </p>
+              </div>
+              <CardContent className="p-6 text-right">
+                <form onSubmit={handleContactSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-[#301809]">الاسم الكامل للممثل *</Label>
+                      <Input
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        placeholder="مثال: محمد الوارجلاني"
+                        required
+                        className="h-10 rounded-xl border-[#dbc397] text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-[#301809]">اسم الجمعية / الهيئة (اختياري)</Label>
+                      <Input
+                        value={contactOrg}
+                        onChange={(e) => setContactOrg(e.target.value)}
+                        placeholder="مثال: جمعية الأصالة التراثية"
+                        className="h-10 rounded-xl border-[#dbc397] text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-[#301809]">رقم الهاتف / واتساب *</Label>
+                      <Input
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        placeholder="0661XXXXXX"
+                        required
+                        dir="ltr"
+                        className="h-10 rounded-xl border-[#dbc397] text-xs text-right"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-[#301809]">البريد الإلكتروني</Label>
+                      <Input
+                        type="email"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        placeholder="contact@assoc.dz"
+                        dir="ltr"
+                        className="h-10 rounded-xl border-[#dbc397] text-xs text-right"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold text-[#301809]">نبذة عن الجمعية أو محتوى الرسالة *</Label>
+                    <textarea
+                      rows={3}
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      placeholder="اذكر مجال نشاط الجمعية ومقرها في ورقلة أو استفسارك..."
+                      required
+                      className="w-full rounded-xl border border-[#dbc397] bg-[#fdfbf7] p-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#efa83f]"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={contactSending}
+                    className="w-full h-11 rounded-xl bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white font-bold text-xs gap-2 shadow-md cursor-pointer"
+                  >
+                    {contactSending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>إرسال الطلب إلى إدارة المنصة</span>
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+
         </div>
       </section>
 

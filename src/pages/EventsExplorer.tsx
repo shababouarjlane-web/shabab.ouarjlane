@@ -18,9 +18,11 @@ import {
   Layers, 
   Grid, 
   List, 
-  X
+  X,
+  Heart
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getFavoriteEventIds, toggleFavoriteEvent } from '../lib/helpers';
 
 // Helper component for event cover fallback
 const EventImageFallback = ({ src, alt }: { src?: string; alt: string; category?: string }) => {
@@ -51,6 +53,7 @@ const EventImageFallback = ({ src, alt }: { src?: string; alt: string; category?
 
 const CATEGORIES = [
   { id: 'all', label: 'الكل', icon: '✨' },
+  { id: 'favorites', label: 'المفضلة', icon: '❤️' },
   { id: 'Heritage', label: 'تراثي وأصالة', icon: '🏺' },
   { id: 'Religious', label: 'ديني وقرآني', icon: '🕌' },
   { id: 'Educational', label: 'تعليمي وتكويني', icon: '📚' },
@@ -66,6 +69,7 @@ export default function EventsExplorer() {
   const [events, setEvents] = useState<any[]>([]);
   const [associations, setAssociations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => getFavoriteEventIds());
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,6 +82,13 @@ export default function EventsExplorer() {
   useEffect(() => {
     fetchEventsAndAssociations();
   }, []);
+
+  const handleToggleFav = (e: React.MouseEvent, eventId: string) => {
+    e.stopPropagation();
+    const added = toggleFavoriteEvent(eventId);
+    setFavoriteIds(getFavoriteEventIds());
+    toast.success(added ? '❤️ تمت إضافة الفعالية إلى المفضلة' : 'تمت إزالة الفعالية من المفضلة');
+  };
 
   const fetchEventsAndAssociations = async () => {
     setLoading(true);
@@ -121,8 +132,13 @@ export default function EventsExplorer() {
           ev.description?.toLowerCase().includes(query) ||
           ev.associations?.name?.toLowerCase().includes(query);
 
-        // Category
-        const matchesCategory = selectedCategory === 'all' || ev.category === selectedCategory;
+        // Category or Favorites
+        const matchesCategory =
+          selectedCategory === 'all'
+            ? true
+            : selectedCategory === 'favorites'
+              ? favoriteIds.includes(ev.id)
+              : ev.category === selectedCategory;
 
         // Association
         const matchesAssociation = selectedAssociation === 'all' || ev.associations?.id === selectedAssociation;
@@ -159,7 +175,7 @@ export default function EventsExplorer() {
           return a.title?.localeCompare(b.title, 'ar') || 0;
         }
       });
-  }, [events, searchQuery, selectedCategory, selectedAssociation, dateFilter, sortBy]);
+  }, [events, searchQuery, selectedCategory, selectedAssociation, dateFilter, sortBy, favoriteIds]);
 
   const copyEventShareLink = async (e: React.MouseEvent, eventId: string, title: string) => {
     e.stopPropagation();
@@ -237,6 +253,15 @@ export default function EventsExplorer() {
 
           {/* Quick Page Links */}
           <div className="flex items-center gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/associations')}
+              className="hidden md:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-10 px-3.5 text-xs font-bold"
+            >
+              <Building2 className="w-3.5 h-3.5 text-[#b87a29]" />
+              <span>دليل الجمعيات</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -480,6 +505,19 @@ export default function EventsExplorer() {
                 <div className="h-52 relative overflow-hidden bg-slate-100">
                   <EventImageFallback src={ev.cover_image_url} alt={ev.title} category={ev.category} />
                   
+                  {/* Favorite Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => handleToggleFav(e, ev.id)}
+                    className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white backdrop-blur-sm flex items-center justify-center shadow-md transition-transform hover:scale-110 z-10 cursor-pointer"
+                    title={favoriteIds.includes(ev.id) ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
+                  >
+                    <Heart
+                      size={17}
+                      className={favoriteIds.includes(ev.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-600'}
+                    />
+                  </button>
+
                   {/* Category Pill */}
                   {ev.category && (
                     <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-[11px] font-bold border shadow-xs ${getCategoryBadgeColor(ev.category)}`}>
@@ -625,6 +663,15 @@ export default function EventsExplorer() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => handleToggleFav(e, ev.id)}
+                        className="h-9 w-9 p-0 rounded-xl border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 shrink-0"
+                        title={favoriteIds.includes(ev.id) ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
+                      >
+                        <Heart size={14} className={favoriteIds.includes(ev.id) ? 'fill-rose-500 text-rose-500' : 'text-slate-600'} />
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

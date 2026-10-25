@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import L from 'leaflet';
 import { supabase } from '@/lib/supabase';
+import { resolveOuarglaLocationCoords, buildGoogleMapsDirectionsUrl } from '@/lib/helpers';
 import { 
   ArrowRight, 
   MapPin, 
@@ -13,7 +14,10 @@ import {
   RotateCcw, 
   Copy, 
   Check, 
-  X 
+  X,
+  Calendar,
+  Compass,
+  Ticket
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -182,10 +186,14 @@ export default function HeritageMap() {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
+  const eventMarkersRef = useRef<L.Marker[]>([]);
   const ksarPolygonRef = useRef<L.Polygon | null>(null);
   const ksarGlowRef = useRef<L.Polygon | null>(null);
 
   const [selected, setSelected] = useState<Landmark>(LANDMARKS[0]);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [mapEvents, setMapEvents] = useState<any[]>([]);
+  const [layerFilter, setLayerFilter] = useState<'all' | 'landmarks' | 'events'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // ─── التحقق من صلاحيات الأدمن (حساب super_admin أو معامل الرابط ?admin=true) ───
@@ -210,6 +218,23 @@ export default function HeritageMap() {
           }
         });
     });
+
+    // جلب الفعاليات النشطة لإسقاطها على الخريطة التفاعلية
+    supabase
+      .from('events')
+      .select('*, associations(id, name)')
+      .eq('is_public', true)
+      .eq('status', 'active')
+      .order('date', { ascending: true })
+      .then(({ data }) => {
+        if (data) {
+          const enriched = data.map((ev, idx) => {
+            const [lat, lng] = resolveOuarglaLocationCoords(ev.location, idx);
+            return { ...ev, lat, lng };
+          });
+          setMapEvents(enriched);
+        }
+      });
   }, []);
 
   // ─── حالات التحكم بمحيط القصر (تموضع + حجم + دوران) ───────────────────
@@ -301,6 +326,7 @@ export default function HeritageMap() {
       );
 
       marker.on('click', () => {
+        setSelectedEvent(null);
         setSelected(lm);
         setSidebarOpen(true);
       });
@@ -354,6 +380,7 @@ export default function HeritageMap() {
     const ksarLandmark = LANDMARKS.find((lm) => lm.id === 'ksar-atiq');
     ksarPolygon.on('click', () => {
       if (ksarLandmark) {
+        setSelectedEvent(null);
         setSelected(ksarLandmark);
         setSidebarOpen(true);
       }
@@ -367,8 +394,59 @@ export default function HeritageMap() {
     };
   }, []);
 
+  // رسم ماركرات الفعاليات الميدانية وتحديث ظهور الطبقات
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // إزالة ماركرات الفعاليات السابقة
+    eventMarkersRef.current.forEach((m) => m.remove());
+    eventMarkersRef.current = [];
+
+    if (layerFilter === 'all' || layerFilter === 'events') {
+      mapEvents.forEach((ev) => {
+        const marker = L.marker([ev.lat, ev.lng], {
+          icon: createCustomIcon('#10b981'),
+          title: ev.title,
+        }).addTo(map);
+
+        marker.bindTooltip(
+          `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:700;font-size:12px;color:#065f46;padding:4px 8px;border-radius:8px">📅 فعالية: ${ev.title}</div>`,
+          { direction: 'top', permanent: false, opacity: 0.97 }
+        );
+
+        marker.on('click', () => {
+          setSelectedEvent(ev);
+          setSidebarOpen(true);
+        });
+
+        eventMarkersRef.current.push(marker);
+      });
+    }
+
+    // إظهار أو إخفاء المعالم التاريخية ومضلع القصر
+    const showLandmarks = layerFilter === 'all' || layerFilter === 'landmarks';
+    Object.values(markersRef.current).forEach((m) => {
+      if (showLandmarks) {
+        if (!map.hasLayer(m)) m.addTo(map);
+      } else {
+        if (map.hasLayer(m)) m.remove();
+      }
+    });
+    if (ksarPolygonRef.current && ksarGlowRef.current) {
+      if (showLandmarks) {
+        if (!map.hasLayer(ksarPolygonRef.current)) ksarPolygonRef.current.addTo(map);
+        if (!map.hasLayer(ksarGlowRef.current)) ksarGlowRef.current.addTo(map);
+      } else {
+        if (map.hasLayer(ksarPolygonRef.current)) ksarPolygonRef.current.remove();
+        if (map.hasLayer(ksarGlowRef.current)) ksarGlowRef.current.remove();
+      }
+    }
+  }, [mapEvents, layerFilter]);
+
   // التحليق إلى المعلم المحدد
   const flyTo = (lm: Landmark) => {
+    setSelectedEvent(null);
     setSelected(lm);
     setSidebarOpen(true);
     if (lm.id === 'ksar-atiq' && mapRef.current) {
@@ -386,6 +464,13 @@ export default function HeritageMap() {
     } else {
       mapRef.current?.flyTo([lm.lat, lm.lng], 16, { duration: 1.4 });
     }
+  };
+
+  // التحليق إلى الفعالية المحددة
+  const flyToEvent = (ev: any) => {
+    setSelectedEvent(ev);
+    setSidebarOpen(true);
+    mapRef.current?.flyTo([ev.lat, ev.lng], 15, { duration: 1.3 });
   };
 
   // نسخ الإحداثيات المعدلة
@@ -445,6 +530,27 @@ export default function HeritageMap() {
         </div>
 
         <div className="mr-auto flex items-center gap-2">
+          {/* فلاتر الطبقات (الكل / المعالم التراثية / الفعاليات الميدانية) */}
+          <div className="hidden md:flex items-center bg-[#4a2510]/80 p-1 rounded-xl border border-[#efa83f]/25 gap-1">
+            {[
+              { id: 'all', label: 'الكل' },
+              { id: 'landmarks', label: '🏺 المعالم التراثية' },
+              { id: 'events', label: `📅 الفعاليات (${mapEvents.length})` }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setLayerFilter(tab.id as any)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  layerFilter === tab.id
+                    ? 'bg-[#efa83f] text-[#301809] shadow-xs'
+                    : 'text-[#fae1b7]/80 hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {/* زر فتح/إغلاق أداة ضبط المحيط (محصورة للأدمن فقط) */}
           {isAdmin && (
             <Button
@@ -644,11 +750,11 @@ export default function HeritageMap() {
               onClick={() => flyTo(lm)}
               title={lm.nameAr}
               className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 ${
-                selected.id === lm.id
+                !selectedEvent && selected.id === lm.id
                   ? 'border-[#efa83f] bg-[#301809]'
                   : 'border-white/60 bg-[#301809]/80'
               }`}
-              style={{ boxShadow: selected.id === lm.id ? '0 0 16px rgba(239,168,63,0.5)' : undefined }}
+              style={{ boxShadow: !selectedEvent && selected.id === lm.id ? '0 0 16px rgba(239,168,63,0.5)' : undefined }}
             >
               <div
                 className="w-4 h-4 rounded-full"
@@ -669,145 +775,269 @@ export default function HeritageMap() {
             flex flex-col overflow-hidden
           `}
         >
-          {/* رأس الشريط */}
-          <div className="flex-shrink-0 bg-gradient-to-b from-[#301809] to-[#4a2510] px-5 pt-5 pb-6">
-            {/* بادج الفئة */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${selected.badgeColor ?? 'bg-[#efa83f] text-[#301809]'}`}>
-                {selected.badge ?? CATEGORY_LABELS[selected.category]}
-              </span>
-              <span className="text-[10px] text-[#fae1b7]/60 font-medium">
-                {CATEGORY_LABELS[selected.category]}
-              </span>
-            </div>
-
-            {/* الاسم العربي */}
-            <h2 className="text-xl font-bold text-white leading-snug mb-1" style={{ fontFamily: '"Thmanyah Serif Display", serif' }}>
-              {selected.nameAr}
-            </h2>
-
-            {/* الاسم الأمازيغي بالتيفيناغ */}
-            <p className="text-[#efa83f] text-sm font-semibold tracking-wider mb-0.5" dir="ltr">
-              {selected.nameTifinagh}
-            </p>
-            <p className="text-[#fae1b7]/60 text-xs italic" dir="ltr">
-              {selected.nameTranslit}
-            </p>
-          </div>
-
-          {/* صورة المعلم */}
-          <div className="flex-shrink-0 relative h-44 overflow-hidden">
-            <img
-              src={selected.image}
-              alt={selected.nameAr}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fdfbf7]" />
-            {/* زر التحليق */}
-            <button
-              onClick={() => flyTo(selected)}
-              className="absolute bottom-3 left-3 bg-[#efa83f] text-[#301809] font-bold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg hover:bg-[#d4a035] transition-colors"
-            >
-              <ZoomIn className="w-3.5 h-3.5" />
-              تحليق للموقع
-            </button>
-          </div>
-
-          {/* محتوى التفاصيل */}
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-
-            {/* الفترة الزمنية */}
-            <div className="flex items-start gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#fae1b7] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <History className="w-4 h-4 text-[#b87a29]" />
-              </div>
-              <div>
-                <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الحقبة التاريخية</p>
-                <p className="text-sm font-bold text-[#301809]">{selected.period}</p>
-              </div>
-            </div>
-
-            {/* الإحداثيات */}
-            <div className="flex items-start gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#fae1b7] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <MapPin className="w-4 h-4 text-[#b87a29]" />
-              </div>
-              <div>
-                <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الإحداثيات</p>
-                <p className="text-xs font-mono text-[#301809]/70" dir="ltr">
-                  {selected.lat.toFixed(4)}° N, {selected.lng.toFixed(4)}° E
+          {selectedEvent ? (
+            <>
+              {/* رأس الشريط للفعالية الميدانية */}
+              <div className="flex-shrink-0 bg-gradient-to-b from-emerald-900 to-[#301809] px-5 pt-5 pb-6">
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-emerald-500 text-white">
+                    📅 فعالية ميدانية نشطة
+                  </span>
+                  <button
+                    onClick={() => setSelectedEvent(null)}
+                    className="text-[11px] text-[#fae1b7]/80 hover:text-white underline cursor-pointer"
+                  >
+                    العودة للمعالم ←
+                  </button>
+                </div>
+                <h2 className="text-xl font-bold text-white leading-snug mb-1" style={{ fontFamily: '"Thmanyah Serif Display", serif' }}>
+                  {selectedEvent.title}
+                </h2>
+                <p className="text-[#efa83f] text-xs font-bold">
+                  🏛️ تنظيم: {selectedEvent.associations?.name || 'جمعية محلية معتمدة'}
                 </p>
               </div>
-            </div>
 
-            {/* الوصف التاريخي */}
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <BookOpen className="w-3.5 h-3.5 text-[#b87a29]" />
-                <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider">السياق التاريخي</p>
+              <div className="flex-shrink-0 relative h-44 overflow-hidden bg-[#301809]">
+                <img
+                  src={selectedEvent.cover_image_url || '/hero-bg.jpg'}
+                  alt={selectedEvent.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fdfbf7]" />
+                <button
+                  onClick={() => flyToEvent(selectedEvent)}
+                  className="absolute bottom-3 left-3 bg-emerald-600 text-white font-bold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg hover:bg-emerald-700 transition-colors"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                  تحليق لموقع الفعالية
+                </button>
               </div>
-              <p className="text-sm text-[#301809]/80 leading-relaxed">
-                {selected.description}
-              </p>
-            </div>
 
-            {/* زر تصفح وثائق ومقالات المعلم في الأرشيف */}
-            <div className="pt-1">
-              <button
-                onClick={() => navigate('/heritage')}
-                className="w-full bg-[#fae1b7]/40 hover:bg-[#fae1b7]/80 border border-[#dbc397] text-[#301809] font-bold rounded-2xl text-xs py-3.5 px-4 flex items-center justify-between transition-all shadow-sm group"
-              >
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-[#b87a29]" />
-                  <span>تصفح وثائق وسجلات هذا المعلم في الأرشيف</span>
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Calendar className="w-4 h-4 text-emerald-700" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">تاريخ وموعد الانعقاد</p>
+                    <p className="text-sm font-bold text-[#301809]">{selectedEvent.date}</p>
+                  </div>
                 </div>
-                <ArrowRight className="w-4 h-4 rotate-180 text-[#b87a29] group-hover:-translate-x-1 transition-transform" />
-              </button>
-            </div>
 
-            {/* ─ قائمة المعالم مرتبة بدقة ─ */}
-            <div className="border-t border-[#dbc397]/50 pt-4">
-              <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <Star className="w-3 h-3 text-[#efa83f]" />
-                جميع المعالم ({LANDMARKS.length})
-              </p>
-              <div className="space-y-2">
-                {LANDMARKS.map((lm, idx) => (
-                  <button
-                    key={lm.id}
-                    onClick={() => flyTo(lm)}
-                    className={`w-full text-right flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm ${
-                      selected.id === lm.id
-                        ? 'bg-[#301809] text-white shadow-md'
-                        : 'bg-white border border-[#dbc397]/50 text-[#301809] hover:border-[#efa83f]/60 hover:bg-[#fae1b7]/30'
-                    }`}
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#fae1b7] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MapPin className="w-4 h-4 text-[#b87a29]" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الموقع الميداني</p>
+                    <p className="text-xs font-bold text-[#301809]">{selectedEvent.location}</p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-[#301809]/80 leading-relaxed bg-white p-3.5 rounded-xl border border-[#dbc397]/50">
+                  {selectedEvent.description || 'انقر على زر التفاصيل أدناه للاطلاع على برنامج الفعالية وحجز تذكرتك الإلكترونية مجاناً.'}
+                </p>
+
+                <div className="space-y-2.5 pt-1">
+                  <Button
+                    onClick={() => navigate(`/event/${selectedEvent.id}`)}
+                    className="w-full h-11 rounded-xl bg-gradient-to-r from-[#b87a29] to-[#efa83f] text-[#301809] font-black text-xs gap-2 shadow-md cursor-pointer"
                   >
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-[#fae1b7]/40 text-[#723c11]">
-                      {idx + 1}
-                    </div>
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: CATEGORY_COLORS[lm.category] }}
-                    />
-                    <span className="font-semibold flex-1 text-right truncate">{lm.nameAr}</span>
-                    {lm.badge && (
-                      <span
-                        className="text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
-                        style={{
-                          backgroundColor:
-                            selected.id === lm.id ? 'rgba(255,255,255,0.15)' : CATEGORY_COLORS[lm.category] + '22',
-                          color: selected.id === lm.id ? '#fae1b7' : CATEGORY_COLORS[lm.category],
-                        }}
-                      >
-                        {CATEGORY_LABELS[lm.category]}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                    <Ticket className="w-4 h-4" />
+                    عرض تفاصيل الفعالية وحجز تذكرة QR
+                  </Button>
+                  <a
+                    href={buildGoogleMapsDirectionsUrl([selectedEvent.lat, selectedEvent.lng])}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full h-10 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Compass className="w-4 h-4 text-emerald-700" />
+                    🧭 التوجيه عبر Google Maps
+                  </a>
+                </div>
               </div>
-            </div>
+            </>
+          ) : (
+            <>
+              {/* رأس الشريط للمعلم التراثي */}
+              <div className="flex-shrink-0 bg-gradient-to-b from-[#301809] to-[#4a2510] px-5 pt-5 pb-6">
+                {/* بادج الفئة */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${selected.badgeColor ?? 'bg-[#efa83f] text-[#301809]'}`}>
+                    {selected.badge ?? CATEGORY_LABELS[selected.category]}
+                  </span>
+                  <span className="text-[10px] text-[#fae1b7]/60 font-medium">
+                    {CATEGORY_LABELS[selected.category]}
+                  </span>
+                </div>
 
-          </div>
+                {/* الاسم العربي */}
+                <h2 className="text-xl font-bold text-white leading-snug mb-1" style={{ fontFamily: '"Thmanyah Serif Display", serif' }}>
+                  {selected.nameAr}
+                </h2>
+
+                {/* الاسم الأمازيغي بالتيفيناغ */}
+                <p className="text-[#efa83f] text-sm font-semibold tracking-wider mb-0.5" dir="ltr">
+                  {selected.nameTifinagh}
+                </p>
+                <p className="text-[#fae1b7]/60 text-xs italic" dir="ltr">
+                  {selected.nameTranslit}
+                </p>
+              </div>
+
+              {/* صورة المعلم */}
+              <div className="flex-shrink-0 relative h-44 overflow-hidden">
+                <img
+                  src={selected.image}
+                  alt={selected.nameAr}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fdfbf7]" />
+                {/* زر التحليق */}
+                <button
+                  onClick={() => flyTo(selected)}
+                  className="absolute bottom-3 left-3 bg-[#efa83f] text-[#301809] font-bold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg hover:bg-[#d4a035] transition-colors"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                  تحليق للموقع
+                </button>
+              </div>
+
+              {/* محتوى التفاصيل */}
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+
+                {/* الفترة الزمنية */}
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#fae1b7] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <History className="w-4 h-4 text-[#b87a29]" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الحقبة التاريخية</p>
+                    <p className="text-sm font-bold text-[#301809]">{selected.period}</p>
+                  </div>
+                </div>
+
+                {/* الإحداثيات + زر Google Maps */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#fae1b7] flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <MapPin className="w-4 h-4 text-[#b87a29]" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الإحداثيات</p>
+                      <p className="text-xs font-mono text-[#301809]/70" dir="ltr">
+                        {selected.lat.toFixed(4)}° N, {selected.lng.toFixed(4)}° E
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={buildGoogleMapsDirectionsUrl([selected.lat, selected.lng])}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 font-bold text-[11px] flex items-center gap-1.5 transition-colors shrink-0"
+                  >
+                    <Compass className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Google Maps</span>
+                  </a>
+                </div>
+
+                {/* الوصف التاريخي */}
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <BookOpen className="w-3.5 h-3.5 text-[#b87a29]" />
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider">السياق التاريخي</p>
+                  </div>
+                  <p className="text-sm text-[#301809]/80 leading-relaxed">
+                    {selected.description}
+                  </p>
+                </div>
+
+                {/* زر تصفح وثائق ومقالات المعلم في الأرشيف */}
+                <div className="pt-1">
+                  <button
+                    onClick={() => navigate('/heritage')}
+                    className="w-full bg-[#fae1b7]/40 hover:bg-[#fae1b7]/80 border border-[#dbc397] text-[#301809] font-bold rounded-2xl text-xs py-3.5 px-4 flex items-center justify-between transition-all shadow-sm group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-[#b87a29]" />
+                      <span>تصفح وثائق وسجلات هذا المعلم في الأرشيف</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 rotate-180 text-[#b87a29] group-hover:-translate-x-1 transition-transform" />
+                  </button>
+                </div>
+
+                {/* ─ قائمة المعالم مرتبة بدقة ─ */}
+                <div className="border-t border-[#dbc397]/50 pt-4">
+                  <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <Star className="w-3 h-3 text-[#efa83f]" />
+                    المعالم التاريخية ({LANDMARKS.length})
+                  </p>
+                  <div className="space-y-2">
+                    {LANDMARKS.map((lm, idx) => (
+                      <button
+                        key={lm.id}
+                        onClick={() => flyTo(lm)}
+                        className={`w-full text-right flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm ${
+                          !selectedEvent && selected.id === lm.id
+                            ? 'bg-[#301809] text-white shadow-md'
+                            : 'bg-white border border-[#dbc397]/50 text-[#301809] hover:border-[#efa83f]/60 hover:bg-[#fae1b7]/30'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold bg-[#fae1b7]/40 text-[#723c11]">
+                          {idx + 1}
+                        </div>
+                        <div
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: CATEGORY_COLORS[lm.category] }}
+                        />
+                        <span className="font-semibold flex-1 text-right truncate">{lm.nameAr}</span>
+                        {lm.badge && (
+                          <span
+                            className="text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
+                            style={{
+                              backgroundColor:
+                                !selectedEvent && selected.id === lm.id ? 'rgba(255,255,255,0.15)' : CATEGORY_COLORS[lm.category] + '22',
+                              color: !selectedEvent && selected.id === lm.id ? '#fae1b7' : CATEGORY_COLORS[lm.category],
+                            }}
+                          >
+                            {CATEGORY_LABELS[lm.category]}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ─ قائمة الفعاليات الميدانية على الخريطة ─ */}
+                {mapEvents.length > 0 && (
+                  <div className="border-t border-[#dbc397]/50 pt-4">
+                    <p className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                      الفعاليات الميدانية الجارية ({mapEvents.length})
+                    </p>
+                    <div className="space-y-2">
+                      {mapEvents.map((ev) => (
+                        <button
+                          key={ev.id}
+                          onClick={() => flyToEvent(ev)}
+                          className="w-full text-right flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-300/70 text-[#301809] transition-all text-xs cursor-pointer"
+                        >
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                          <div className="flex-1 min-w-0 text-right">
+                            <p className="font-bold truncate">{ev.title}</p>
+                            <p className="text-[10px] text-[#723c11]/70 truncate">📍 {ev.location} • {ev.date}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </>
+          )}
 
           {/* ذيل الشريط */}
           <div className="flex-shrink-0 px-5 py-3 border-t border-[#dbc397]/40 bg-[#fdfbf7] flex items-center justify-between">
