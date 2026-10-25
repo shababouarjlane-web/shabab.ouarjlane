@@ -75,6 +75,7 @@ export default function AdminDashboard() {
   const [associationsDetails, setAssociationsDetails] = useState<any[]>([]);
   const [expandedAssocId, setExpandedAssocId] = useState<string | null>(null);
   const [monthlyStats, setMonthlyStats] = useState<any[]>([]);
+  const [categoryStats, setCategoryStats] = useState<{ name: string; count: number; pct: number }[]>([]);
 
   // Users Management State
   const [usersList, setUsersList] = useState<any[]>([]);
@@ -92,6 +93,7 @@ export default function AdminDashboard() {
   const [isHeritageEditOpen, setIsHeritageEditOpen] = useState(false);
   
   const [newAd, setNewAd] = useState({ partner_name: '', logo_url: '', image_url: '', link: '' });
+  const [editingAdId, setEditingAdId] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [adFile, setAdFile] = useState<File | null>(null);
   const [adUploading, setAdUploading] = useState(false);
@@ -331,24 +333,66 @@ export default function AdminDashboard() {
         storedImageUrl = `${finalImageUrl || ''}||${finalLogoUrl || ''}`;
       }
 
-      const { error } = await supabase.from('partner_ads').insert({
-        partner_name: newAd.partner_name,
-        image_url: storedImageUrl || null,
-        link: newAd.link || null
-      });
+      if (editingAdId) {
+        const { error } = await supabase
+          .from('partner_ads')
+          .update({
+            partner_name: newAd.partner_name,
+            image_url: storedImageUrl || null,
+            link: newAd.link || null,
+          })
+          .eq('id', editingAdId);
+        if (error) throw error;
+        toast.success('تم تحديث بيانات الشريك / الراعي بنجاح!');
+      } else {
+        const { error } = await supabase.from('partner_ads').insert({
+          partner_name: newAd.partner_name,
+          image_url: storedImageUrl || null,
+          link: newAd.link || null,
+        });
+        if (error) throw error;
+        toast.success('تمت إضافة الراعي والشراكة بنجاح');
+      }
 
-      if (error) throw error;
-
-      toast.success('تمت إضافة الراعي والشراكة بنجاح');
       setNewAd({ partner_name: '', logo_url: '', image_url: '', link: '' });
+      setEditingAdId(null);
       setLogoFile(null);
       setAdFile(null);
       fetchHeritageAndAds();
     } catch (error: any) {
-      toast.error(error.message || 'خطأ في إضافة الإعلان');
+      toast.error(error.message || 'خطأ في حفظ الإعلان');
     } finally {
       setAdUploading(false);
     }
+  };
+
+  const handleStartEditAd = (ad: any) => {
+    let adPhoto = ad.image_url || '';
+    let adLogo = '';
+    if (ad.image_url && ad.image_url.includes('||')) {
+      const parts = ad.image_url.split('||');
+      adPhoto = parts[0] || '';
+      adLogo = parts[1] || '';
+    } else if (ad.partner_name?.toLowerCase().includes('ignatex')) {
+      adLogo = '/ignatex-logo.png';
+    }
+    setEditingAdId(ad.id);
+    setNewAd({
+      partner_name: ad.partner_name || '',
+      logo_url: adLogo,
+      image_url: adPhoto,
+      link: ad.link || '',
+    });
+    setLogoFile(null);
+    setAdFile(null);
+    toast.info(`وضع التعديل مفعل للشريك: ${ad.partner_name}`);
+  };
+
+  const handleCancelEditAd = () => {
+    setEditingAdId(null);
+    setNewAd({ partner_name: '', logo_url: '', image_url: '', link: '' });
+    setLogoFile(null);
+    setAdFile(null);
   };
 
   const handleDeleteItem = async (table: string, id: string) => {
@@ -358,6 +402,7 @@ export default function AdminDashboard() {
       toast.error('خطأ في الحذف: ' + error.message);
     } else {
       toast.success('تم الحذف بنجاح');
+      if (editingAdId === id) handleCancelEditAd();
       fetchHeritageAndAds();
       if (table === 'notifications_history') fetchNotificationHistory();
     }
@@ -378,8 +423,8 @@ export default function AdminDashboard() {
         .select('*, users(email), events(*)')
         .gte('events.date', today);
 
-      // Fetch monthly stats (last 6 months)
-      const { data: allEvents } = await supabase.from('events').select('date');
+      // Fetch monthly stats (last 6 months) + category stats
+      const { data: allEvents } = await supabase.from('events').select('date, category');
       const { data: allRsvps } = await supabase.from('rsvps').select('created_at');
 
       const monthMap: Record<string, { events: number; visitors: number }> = {};
@@ -390,11 +435,39 @@ export default function AdminDashboard() {
         monthMap[key] = { events: 0, visitors: 0 };
       }
 
+      const catCounts: Record<string, number> = {
+        Heritage: 0,
+        Cultural: 0,
+        Educational: 0,
+        Religious: 0,
+        Sports: 0,
+      };
+
       allEvents?.forEach((ev: any) => {
-        if (!ev.date) return;
-        const key = ev.date.substring(0, 7); // "YYYY-MM"
-        if (monthMap[key] !== undefined) monthMap[key].events++;
+        if (ev.date) {
+          const key = ev.date.substring(0, 7); // "YYYY-MM"
+          if (monthMap[key] !== undefined) monthMap[key].events++;
+        }
+        if (ev.category && catCounts[ev.category] !== undefined) {
+          catCounts[ev.category]++;
+        }
       });
+
+      const totalEvs = allEvents?.length || 0;
+      const catLabels: Record<string, string> = {
+        Heritage: '🏺 تراثي',
+        Cultural: '🎨 ثقافي',
+        Educational: '📚 تعليمي',
+        Religious: '🕌 ديني',
+        Sports: '⚽ رياضي',
+      };
+      setCategoryStats(
+        Object.entries(catCounts).map(([k, count]) => ({
+          name: catLabels[k] || k,
+          count,
+          pct: totalEvs > 0 ? Math.round((count / totalEvs) * 100) : 0,
+        }))
+      );
 
       allRsvps?.forEach((r: any) => {
         if (!r.created_at) return;
@@ -816,6 +889,36 @@ export default function AdminDashboard() {
             </Card>
           </div>
 
+          {/* Category Distribution Analytics Card */}
+          <Card className="shadow-xl border-2 border-[#dbc397]/60 rounded-3xl bg-white overflow-hidden">
+            <CardHeader className="bg-[#fdfbf7] border-b border-[#dbc397]/40 pb-4">
+              <CardTitle className="text-lg md:text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+                <span>🎯 توزيع الفعاليات المعتمدة حسب المجالات والتصنيفات</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {categoryStats.map((cat) => (
+                  <div key={cat.name} className="p-4 rounded-2xl bg-[#fdfbf7] border-2 border-[#dbc397]/60 space-y-2">
+                    <div className="flex justify-between items-center text-xs font-black text-[#301809]">
+                      <span>{cat.name}</span>
+                      <span className="bg-[#fae1b7] text-[#723c11] px-2 py-0.5 rounded-full border border-[#dbc397]">
+                        {cat.count} فعالية
+                      </span>
+                    </div>
+                    <div className="h-2.5 w-full bg-[#fae1b7]/40 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#301809] via-[#b87a29] to-[#efa83f] rounded-full transition-all duration-700"
+                        style={{ width: `${Math.max(cat.pct, cat.count > 0 ? 12 : 0)}%` }}
+                      />
+                    </div>
+                    <p className="text-[11px] text-[#723c11] font-bold text-left">{cat.pct}% من الإجمالي</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="mt-8">
             <h2 className="text-xl md:text-2xl font-thmanyah font-bold text-[#301809] mb-5 pb-3 border-b-2 border-[#dbc397]/40 flex items-center gap-3">
               <Building2 className="text-[#b87a29]" />
@@ -842,7 +945,19 @@ export default function AdminDashboard() {
                           <p className="text-xs text-[#723c11]/80 font-mono mt-0.5" dir="ltr">{assoc.users?.email}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/association-profile/${assoc.id}`);
+                          }}
+                          className="h-8 px-3 rounded-xl border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/50 text-xs font-bold cursor-pointer"
+                        >
+                          صفحة الجمعية
+                        </Button>
                         <span className="bg-[#fae1b7]/70 text-[#723c11] border border-[#d4b174]/60 px-3 py-1 rounded-full text-xs font-bold shadow-2xs">
                           {assoc.events?.filter((e: any) => e !== null).length || 0} فعالية نشطة
                         </span>
@@ -1316,13 +1431,17 @@ export default function AdminDashboard() {
 
         <TabsContent value="ads" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="shadow-xl border-2 border-[#dbc397] rounded-3xl overflow-hidden bg-white">
+            <Card className={`shadow-xl border-2 ${editingAdId ? 'border-[#efa83f] ring-4 ring-[#efa83f]/20' : 'border-[#dbc397]'} rounded-3xl overflow-hidden bg-white transition-all`}>
                <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 text-center">
                  <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] mx-auto mb-2 text-2xl shadow-sm">
-                   📢
+                   {editingAdId ? '✏️' : '📢'}
                  </div>
-                 <h3 className="text-lg font-black text-[#fae1b7]">إضافة إعلان شريك</h3>
-                 <p className="text-xs text-[#d4b174] mt-1">عرض شعارات ورعاة فعاليات ورقلة</p>
+                 <h3 className="text-lg font-black text-[#fae1b7]">
+                   {editingAdId ? 'تعديل بيانات الشريك / الراعي' : 'إضافة إعلان شريك'}
+                 </h3>
+                 <p className="text-xs text-[#d4b174] mt-1">
+                   {editingAdId ? 'قم بتحديث الشعار أو صورة التخصص أو الرابط ثم اضغط حفظ' : 'عرض شعارات ورعاة فعاليات ورقلة'}
+                 </p>
                </div>
                <CardContent className="p-6">
                   <form onSubmit={handleCreateAd} className="space-y-5 text-right">
@@ -1440,13 +1559,25 @@ export default function AdminDashboard() {
                       />
                     </div>
 
-                    <Button 
-                       type="submit" 
-                       disabled={adUploading} 
-                       className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white mt-4 shadow-lg rounded-xl cursor-pointer transition-all"
-                    >
-                      {adUploading ? "جاري الرفع والنشر..." : "نشر الإعلان والشراكة"}
-                    </Button>
+                    <div className="flex gap-2 mt-4">
+                      {editingAdId && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleCancelEditAd}
+                          className="flex-1 h-12 rounded-xl border-2 border-[#dbc397] text-[#723c11] font-bold cursor-pointer"
+                        >
+                          إلغاء التعديل
+                        </Button>
+                      )}
+                      <Button 
+                         type="submit" 
+                         disabled={adUploading} 
+                         className="flex-1 bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white shadow-lg rounded-xl cursor-pointer transition-all"
+                      >
+                        {adUploading ? "جاري الحفظ..." : editingAdId ? "حفظ تعديلات الشريك" : "نشر الإعلان والشراكة"}
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
              </Card>
@@ -1471,8 +1602,10 @@ export default function AdminDashboard() {
                       adLogo = '/ignatex-logo.png';
                     }
 
+                    const isBeingEdited = editingAdId === ad.id;
+
                     return (
-                      <Card key={ad.id} className="p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-white shadow-sm hover:shadow-md border-2 border-[#dbc397]/60 rounded-3xl relative overflow-hidden transition-all">
+                      <Card key={ad.id} className={`p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-white shadow-sm hover:shadow-md border-2 ${isBeingEdited ? 'border-[#efa83f] bg-[#fae1b7]/15' : 'border-[#dbc397]/60'} rounded-3xl relative overflow-hidden transition-all`}>
                         {/* Dual Previews */}
                         <div className="flex items-center gap-2 shrink-0">
                           {/* Logo Preview */}
@@ -1526,9 +1659,20 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        <Button variant="ghost" onClick={() => handleDeleteItem('partner_ads', ad.id)} className="text-red-500 hover:bg-red-50 p-2 h-10 w-10 rounded-xl cursor-pointer shrink-0 self-end sm:self-center">
-                          <Trash2 size={18} />
-                        </Button>
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                          <Button
+                            variant="outline"
+                            onClick={() => handleStartEditAd(ad)}
+                            className="text-[#301809] border-[#dbc397] hover:bg-[#fae1b7]/50 px-3 h-10 rounded-xl cursor-pointer text-xs font-bold gap-1"
+                            title="تعديل بيانات الشريك"
+                          >
+                            <Edit size={15} className="text-[#b87a29]" />
+                            <span>تعديل</span>
+                          </Button>
+                          <Button variant="ghost" onClick={() => handleDeleteItem('partner_ads', ad.id)} className="text-red-500 hover:bg-red-50 p-2 h-10 w-10 rounded-xl cursor-pointer">
+                            <Trash2 size={18} />
+                          </Button>
+                        </div>
                       </Card>
                     );
                   })

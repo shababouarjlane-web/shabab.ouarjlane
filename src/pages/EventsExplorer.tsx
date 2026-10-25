@@ -498,10 +498,17 @@ export default function EventsExplorer() {
                 <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-4">
                   <div>
                     {ev.associations?.name && (
-                      <p className="text-xs font-bold text-[#b87a29] mb-1.5 flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (ev.association_id) navigate(`/association-profile/${ev.association_id}`);
+                        }}
+                        className="text-xs font-bold text-[#b87a29] hover:text-[#301809] hover:underline mb-1.5 flex items-center gap-1 cursor-pointer"
+                      >
                         <Building2 size={13} />
                         <span>{ev.associations.name}</span>
-                      </p>
+                      </button>
                     )}
                     <h3 className="text-lg font-thmanyah font-bold text-[#301809] group-hover:text-[#b87a29] transition-colors line-clamp-2 leading-snug">
                       {ev.title}
@@ -578,10 +585,17 @@ export default function EventsExplorer() {
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1">
                       {ev.associations?.name && (
-                        <p className="text-xs font-bold text-[#b87a29] flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (ev.association_id) navigate(`/association-profile/${ev.association_id}`);
+                          }}
+                          className="text-xs font-bold text-[#b87a29] hover:text-[#301809] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
                           <Building2 size={13} />
                           <span>{ev.associations.name}</span>
-                        </p>
+                        </button>
                       )}
                       <span className="text-[10px] font-bold bg-[#fae1b7] text-[#723c11] px-2 py-0.5 rounded-md">
                         تذكرة QR مجانية

@@ -32,13 +32,24 @@ import {
   Search,
   Sparkles,
   Ticket,
-  Building2
+  Building2,
+  BarChart3,
+  ExternalLink,
+  Upload,
+  Phone,
+  Globe
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import { useReactToPrint } from 'react-to-print';
 import { PrintableEventReport } from '../../components/PrintableEventReport';
 import { QRCodeSVG } from 'qrcode.react';
+import {
+  parseUserContact,
+  parseAssociationMeta,
+  packAssociationMeta,
+  parseGalleryAndReviews
+} from '../../lib/helpers';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,7 +70,15 @@ export default function AssociationDashboard() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [assocId, setAssocId] = useState<string>('');
   const [assocName, setAssocName] = useState<string>('');
+  const [assocBio, setAssocBio] = useState<string>('');
+  const [assocLogo, setAssocLogo] = useState<string>('');
+  const [assocPhone, setAssocPhone] = useState<string>('');
+  const [assocWebsite, setAssocWebsite] = useState<string>('');
+  const [assocLocation, setAssocLocation] = useState<string>('ورقلة، الجزائر');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Printing State
@@ -189,12 +208,20 @@ export default function AssociationDashboard() {
 
       const { data: assoc } = await supabase
         .from('associations')
-        .select('id, name')
+        .select('id, name, description')
         .eq('manager_id', user.id)
         .single();
 
       if (assoc) {
+        setAssocId(assoc.id);
         setAssocName(assoc.name);
+        const parsed = parseAssociationMeta(assoc.description);
+        setAssocBio(parsed.bio || '');
+        setAssocLogo(parsed.logo_url || '');
+        setAssocPhone(parsed.phone || '');
+        setAssocWebsite(parsed.website || '');
+        setAssocLocation(parsed.location || 'ورقلة، الجزائر');
+
         const { data: eventsData } = await supabase
           .from('events')
           .select('*, rsvps(count)')
@@ -207,6 +234,56 @@ export default function AssociationDashboard() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `assoc_logo_${assocId || Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('event-images').upload(fileName, file);
+      if (error) throw error;
+      const { data: pub } = supabase.storage.from('event-images').getPublicUrl(fileName);
+      if (pub?.publicUrl) {
+        setAssocLogo(pub.publicUrl);
+        toast.success('تم رفع شعار الجمعية بنجاح!');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('تعذر رفع الشعار، تأكد من حجم الصورة.');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleSaveAssocProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assocId) return;
+    setSavingProfile(true);
+    try {
+      const packedDescription = packAssociationMeta(assocBio, {
+        logo_url: assocLogo.trim() || undefined,
+        phone: assocPhone.trim() || undefined,
+        website: assocWebsite.trim() || undefined,
+        location: assocLocation.trim() || undefined,
+      });
+      const { error } = await supabase
+        .from('associations')
+        .update({
+          name: assocName.trim(),
+          description: packedDescription,
+        })
+        .eq('id', assocId);
+      if (error) throw error;
+      toast.success('تم تحديث الملف التعريفي للجمعية بنجاح!');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'فشل حفظ بيانات الجمعية');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -343,7 +420,7 @@ export default function AssociationDashboard() {
                       try {
                         const { data } = await supabase
                           .from('rsvps')
-                          .select('*, users(email)')
+                          .select('*, users(email, full_name)')
                           .eq('event_id', event.id)
                           .eq('status', 'attending');
                         
@@ -364,7 +441,7 @@ export default function AssociationDashboard() {
                       try {
                         const { data } = await supabase
                           .from('rsvps')
-                          .select('id, user_id, users(email)')
+                          .select('id, user_id, users(email, full_name)')
                           .eq('event_id', event.id)
                           .eq('status', 'attending');
                         setCheckedIn(new Set());
@@ -454,8 +531,12 @@ export default function AssociationDashboard() {
           
           {/* Association Brand & Name */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] border border-[#dbc397] flex items-center justify-center text-[#efa83f] font-black text-xl shadow-sm shrink-0">
-              {assocName ? assocName.charAt(0) : '🏛️'}
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] border border-[#dbc397] flex items-center justify-center text-[#efa83f] font-black text-xl shadow-sm shrink-0 overflow-hidden">
+              {assocLogo ? (
+                <img src={assocLogo} alt={assocName} className="w-full h-full object-contain bg-white p-1" />
+              ) : (
+                assocName ? assocName.charAt(0) : '🏛️'
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -481,6 +562,17 @@ export default function AssociationDashboard() {
               <CalendarPlus className="w-4 h-4" />
               <span>إنشاء فعالية جديدة</span>
             </Button>
+
+            {assocId && (
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/association-profile/${assocId}`)}
+                className="border-2 border-[#dbc397] text-[#301809] bg-[#fae1b7]/40 hover:bg-[#fae1b7] h-10 px-3 md:px-4 rounded-xl font-bold cursor-pointer hidden lg:flex items-center gap-1.5 text-xs md:text-sm"
+              >
+                <ExternalLink className="w-4 h-4 text-[#b87a29]" />
+                <span>معاينة صفحة الجمعية</span>
+              </Button>
+            )}
 
             <Button
               variant="outline"
@@ -714,7 +806,7 @@ export default function AssociationDashboard() {
 
         {/* Tabs System */}
         <Tabs defaultValue="active" className="w-full space-y-6" dir="rtl">
-          <TabsList className="bg-white/80 backdrop-blur-md p-1.5 rounded-3xl border-2 border-[#dbc397]/60 shadow-sm h-auto min-h-14 w-full max-w-xl grid grid-cols-3 gap-1.5">
+          <TabsList className="bg-white/80 backdrop-blur-md p-1.5 rounded-3xl border-2 border-[#dbc397]/60 shadow-sm h-auto min-h-14 w-full max-w-4xl grid grid-cols-2 md:grid-cols-5 gap-1.5">
             <TabsTrigger 
               value="active" 
               className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer"
@@ -728,8 +820,20 @@ export default function AssociationDashboard() {
               📦 الأرشيف ({archivedEvents.length})
             </TabsTrigger>
             <TabsTrigger 
-              value="broadcast" 
+              value="analytics" 
               className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer"
+            >
+              📈 الرسوم البيانية
+            </TabsTrigger>
+            <TabsTrigger 
+              value="profile" 
+              className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer"
+            >
+              🏛️ ملف الجمعية والشعار
+            </TabsTrigger>
+            <TabsTrigger 
+              value="broadcast" 
+              className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer col-span-2 md:col-span-1"
             >
               📣 بث تنبيه للهواتف
             </TabsTrigger>
@@ -781,6 +885,228 @@ export default function AssociationDashboard() {
                 {filteredArchivedEvents.map(renderEventCard)}
               </div>
             )}
+          </TabsContent>
+
+          {/* Visual Analytics Tab */}
+          <TabsContent value="analytics" className="mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Chart 1: RSVPs per Event Bar Chart */}
+              <Card className="border-2 border-[#dbc397] rounded-3xl bg-white shadow-md">
+                <CardContent className="p-6 md:p-8">
+                  <h3 className="text-lg font-thmanyah font-bold text-[#301809] flex items-center gap-2 mb-1">
+                    <BarChart3 className="w-5 h-5 text-[#b87a29]" />
+                    <span>معدل الإقبال والحجوزات لكل فعالية</span>
+                  </h3>
+                  <p className="text-xs text-[#723c11] mb-6">مقارنة عدد المسجلين ونسبة امتلاء المقاعد في أبرز فعالياتكم</p>
+
+                  {events.length === 0 ? (
+                    <p className="text-center text-xs text-[#723c11] py-10">لا توجد فعاليات لعرض إحصائياتها بعد.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {events.slice(0, 8).map((ev) => {
+                        const count = ev.rsvps?.[0]?.count || 0;
+                        const maxCap = ev.max_capacity || Math.max(count, 50);
+                        const pct = Math.min(100, Math.round((count / maxCap) * 100));
+                        const { reviews } = parseGalleryAndReviews(ev.gallery_urls);
+                        const avgScore = reviews.length > 0
+                          ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+                          : null;
+                        return (
+                          <div key={ev.id} className="space-y-1.5">
+                            <div className="flex justify-between items-center text-xs font-bold">
+                              <span className="text-[#301809] truncate max-w-[60%]">{ev.title}</span>
+                              <div className="flex items-center gap-2">
+                                {avgScore && (
+                                  <span className="text-[11px] bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
+                                    ⭐ {avgScore}
+                                  </span>
+                                )}
+                                <span className="text-[#723c11]">
+                                  {count} {ev.max_capacity ? `/ ${ev.max_capacity}` : 'مسجل'} ({pct}%)
+                                </span>
+                              </div>
+                            </div>
+                            <div className="h-3 w-full bg-[#fae1b7]/40 rounded-full overflow-hidden border border-[#dbc397]/60">
+                              <div
+                                className="h-full bg-gradient-to-r from-[#301809] via-[#b87a29] to-[#efa83f] rounded-full transition-all duration-700"
+                                style={{ width: `${Math.max(pct, count > 0 ? 8 : 0)}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Chart 2: Events Distribution by Category */}
+              <Card className="border-2 border-[#dbc397] rounded-3xl bg-white shadow-md">
+                <CardContent className="p-6 md:p-8">
+                  <h3 className="text-lg font-thmanyah font-bold text-[#301809] flex items-center gap-2 mb-1">
+                    <Sparkles className="w-5 h-5 text-[#efa83f]" />
+                    <span>توزيع أنشطة الجمعية حسب التصنيف</span>
+                  </h3>
+                  <p className="text-xs text-[#723c11] mb-6">تحليل مجالات تركيز الجمعية وتفاعل الجمهور مع كل فئة</p>
+
+                  {(() => {
+                    const cats = ['Heritage', 'Cultural', 'Educational', 'Religious', 'Sports'];
+                    return (
+                      <div className="space-y-4">
+                        {cats.map((cat) => {
+                          const catEvents = events.filter((e) => e.category === cat);
+                          const catRsvps = catEvents.reduce((acc, ev) => acc + (ev.rsvps?.[0]?.count || 0), 0);
+                          const pct = events.length > 0 ? Math.round((catEvents.length / events.length) * 100) : 0;
+                          return (
+                            <div key={cat} className="p-3.5 rounded-2xl bg-[#fdfbf7] border border-[#dbc397]/60">
+                              <div className="flex justify-between items-center text-xs font-bold mb-2">
+                                <span className="text-[#301809]">{getCategoryLabel(cat)}</span>
+                                <span className="text-[#723c11]">
+                                  {catEvents.length} فعالية • {catRsvps} تذكرة ({pct}%)
+                                </span>
+                              </div>
+                              <div className="h-2.5 w-full bg-[#fae1b7]/40 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-[#b87a29] rounded-full transition-all duration-700"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Association Public Profile & Logo Editor Tab */}
+          <TabsContent value="profile" className="mt-0">
+            <Card className="border-2 border-[#dbc397] rounded-3xl bg-white shadow-xl overflow-hidden max-w-3xl mx-auto">
+              <div className="bg-gradient-to-br from-[#301809] via-[#723c11] to-[#301809] text-white p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-white p-1.5 border-2 border-[#efa83f] flex items-center justify-center shrink-0 overflow-hidden">
+                    {assocLogo ? (
+                      <img src={assocLogo} alt={assocName} className="w-full h-full object-contain" />
+                    ) : (
+                      <Building2 className="w-8 h-8 text-[#b87a29]" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-thmanyah font-bold text-[#fae1b7]">
+                      تخصيص الصفحة التعريفية للجمعية
+                    </h3>
+                    <p className="text-xs text-[#dbc397] mt-1">
+                      تظهر هذه البيانات والشعار في صفحتكم المستقلة أمام كافة زوار المنصة.
+                    </p>
+                  </div>
+                </div>
+                {assocId && (
+                  <Button
+                    type="button"
+                    onClick={() => navigate(`/association-profile/${assocId}`)}
+                    className="bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] font-black rounded-xl h-10 px-4 text-xs gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>فتح صفحة الجمعية</span>
+                  </Button>
+                )}
+              </div>
+
+              <CardContent className="p-6 md:p-8">
+                <form onSubmit={handleSaveAssocProfile} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-[#301809]">اسم الجمعية الرسمي</Label>
+                      <Input
+                        required
+                        value={assocName}
+                        onChange={(e) => setAssocName(e.target.value)}
+                        className="h-11 rounded-xl border-2 border-[#dbc397] bg-[#fdfbf7]"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-[#301809]">المقر / العنوان في ورقلة</Label>
+                      <Input
+                        value={assocLocation}
+                        onChange={(e) => setAssocLocation(e.target.value)}
+                        placeholder="مثال: حي القصر القديم، ورقلة"
+                        className="h-11 rounded-xl border-2 border-[#dbc397] bg-[#fdfbf7]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Logo Upload + URL */}
+                  <div className="space-y-2 p-4 rounded-2xl bg-[#fdfbf7] border-2 border-dashed border-[#dbc397]">
+                    <Label className="text-xs font-bold text-[#301809] block">شعار الجمعية (Logo)</Label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <label className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 h-11 rounded-xl bg-[#fae1b7]/60 hover:bg-[#fae1b7] text-[#301809] border border-[#dbc397] text-xs font-bold transition-colors shrink-0">
+                        {uploadingLogo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-[#b87a29]" />}
+                        <span>{uploadingLogo ? 'جاري رفع الشعار...' : 'رفع شعار من جهازك'}</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={uploadingLogo} />
+                      </label>
+                      <Input
+                        dir="ltr"
+                        value={assocLogo}
+                        onChange={(e) => setAssocLogo(e.target.value)}
+                        placeholder="أو الصق رابط الشعار مباشرة https://..."
+                        className="h-11 rounded-xl border-[#dbc397] bg-white text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold text-[#301809]">نبذة تعريفية عن الجمعية وأهدافها</Label>
+                    <Textarea
+                      rows={4}
+                      value={assocBio}
+                      onChange={(e) => setAssocBio(e.target.value)}
+                      placeholder="اكتب نبذة شاملة عن تاريخ الجمعية، رسالتها، وأبرز مجالات نشاطها في ورقلة..."
+                      className="rounded-xl border-2 border-[#dbc397] bg-[#fdfbf7]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-[#301809] flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-[#b87a29]" />
+                        <span>رقم هاتف التواصل للجمهور</span>
+                      </Label>
+                      <Input
+                        dir="ltr"
+                        value={assocPhone}
+                        onChange={(e) => setAssocPhone(e.target.value)}
+                        placeholder="06XXXXXXXX"
+                        className="h-11 rounded-xl border-2 border-[#dbc397] bg-[#fdfbf7] text-right font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-[#301809] flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-[#b87a29]" />
+                        <span>صفحة فيسبوك أو الموقع الإلكتروني</span>
+                      </Label>
+                      <Input
+                        dir="ltr"
+                        value={assocWebsite}
+                        onChange={(e) => setAssocWebsite(e.target.value)}
+                        placeholder="https://facebook.com/..."
+                        className="h-11 rounded-xl border-2 border-[#dbc397] bg-[#fdfbf7] text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={savingProfile}
+                    className="w-full h-12 rounded-xl bg-gradient-to-r from-[#301809] to-[#723c11] hover:from-[#723c11] hover:to-[#b87a29] text-[#fae1b7] font-black cursor-pointer shadow-lg"
+                  >
+                    {savingProfile ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'حفظ وتحديث الصفحة التعريفية للجمعية'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Broadcast Notification Tab */}
@@ -995,6 +1321,7 @@ export default function AssociationDashboard() {
                 checkinData.rsvps.map((rsvp: any) => {
                   const ticketId = `OUARJLANE::${checkinData.event.id}::${rsvp.id || rsvp.user_id}`;
                   const isChecked = checkedIn.has(rsvp.user_id);
+                  const contact = parseUserContact(rsvp.users?.full_name, rsvp.users?.email);
                   return (
                     <div
                       key={rsvp.user_id}
@@ -1017,9 +1344,16 @@ export default function AssociationDashboard() {
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-[#301809] truncate text-sm">
-                          {rsvp.users?.email?.split('@')[0] || 'مشارك'}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-bold text-[#301809] truncate text-sm">
+                            {contact.name}
+                          </p>
+                          {contact.phone && (
+                            <span dir="ltr" className="text-[11px] font-mono bg-[#fae1b7]/60 text-[#301809] px-2 py-0.5 rounded-md border border-[#dbc397]">
+                              📞 {contact.phone}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-[#723c11]/80 truncate">{rsvp.users?.email}</p>
                         <p className="font-mono text-[10px] text-slate-400 mt-1">
                           #{ticketId.slice(-8).toUpperCase()}

@@ -827,9 +827,16 @@ export default function LandingPage() {
                   </div>
 
                   <CardContent className="p-6 flex-1 flex flex-col text-right">
-                    <span className="text-xs font-semibold text-[#b87a29] mb-1.5 block">
-                      تنظيم: {ev.associations?.name || 'جمعية معتمدة'}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (ev.association_id) navigate(`/association-profile/${ev.association_id}`);
+                      }}
+                      className="text-xs font-bold text-[#b87a29] hover:text-[#301809] hover:underline mb-1.5 w-fit cursor-pointer text-right"
+                    >
+                      🏛️ تنظيم: {ev.associations?.name || 'جمعية معتمدة'}
+                    </button>
                     <h3 className="text-lg font-bold text-[#301809] group-hover:text-[#b87a29] transition-colors line-clamp-1 leading-snug mb-2 font-thmanyah">
                       {ev.title}
                     </h3>

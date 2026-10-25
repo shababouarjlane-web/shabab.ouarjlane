@@ -20,6 +20,7 @@ const EventDetails = lazy(() => import('./pages/EventDetails'));
 const Heritage = lazy(() => import('./pages/Heritage'));
 const HeritageMap = lazy(() => import('./pages/HeritageMap'));
 const EventsExplorer = lazy(() => import('./pages/EventsExplorer'));
+const AssociationProfile = lazy(() => import('./pages/AssociationProfile'));
 
 function RouteLoadingFallback() {
   return (
@@ -61,6 +62,7 @@ function AppRoutes({ session, profile, loading }: { session: any, profile: Profi
           <Route path="/heritage" element={<PageTransition><Heritage /></PageTransition>} />
           <Route path="/map" element={<PageTransition><HeritageMap /></PageTransition>} />
           <Route path="/event/:id" element={<PageTransition><EventDetails userRole={profile?.role || null} /></PageTransition>} />
+          <Route path="/association-profile/:id" element={<PageTransition><AssociationProfile /></PageTransition>} />
 
           <Route path="/admin" element={session && profile?.role === 'super_admin' ? <PageTransition><AdminDashboard /></PageTransition> : (loading ? <RouteLoadingFallback /> : <Navigate to="/" replace />)} />
           <Route path="/association" element={session && profile?.role === 'association' ? <PageTransition><AssociationDashboard /></PageTransition> : (loading ? <RouteLoadingFallback /> : <Navigate to="/" replace />)} />

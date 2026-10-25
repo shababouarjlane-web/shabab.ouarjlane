@@ -21,7 +21,11 @@ import {
   ArrowRight,
   Ticket,
   Sparkles,
-  Loader2
+  Loader2,
+  Share2,
+  User,
+  Phone,
+  Medal
 } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -29,6 +33,12 @@ import PartnerAdsBanner from '../../components/PartnerAdsBanner';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import TicketCard from '../../components/TicketCard';
+import {
+  packUserContact,
+  parseUserContact,
+  buildGoogleCalendarUrl,
+  buildWhatsAppShareUrl
+} from '../../lib/helpers';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,11 +67,15 @@ export default function AttendeeDashboard() {
   const navigate = useNavigate();
   const [publicEvents, setPublicEvents] = useState<any[]>([]);
   const [myEvents, setMyEvents] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   
   // States for Personalization & Gamification
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [savingContact, setSavingContact] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
@@ -235,19 +249,22 @@ export default function AttendeeDashboard() {
       if (!user) return;
       setCurrentUser(user);
 
-      // Fetch User Profile (Interests/Points/Badge)
+      // Fetch User Profile (Full Name/Interests/Points/Badge)
       const { data: profileData } = await supabase
         .from('users')
-        .select('interests, points, badge')
+        .select('full_name, interests, points, badge')
         .eq('id', user.id)
         .single();
       
-      setUserProfile(profileData || { interests: [], points: 0, badge: 'Newcomer' });
+      setUserProfile(profileData || { full_name: '', interests: [], points: 0, badge: 'Newcomer' });
+      const parsedContact = parseUserContact(profileData?.full_name, user.email);
+      setContactName(parsedContact.name);
+      setContactPhone(parsedContact.phone);
 
       // Fetch public events
       const { data: publicData } = await supabase
         .from('events')
-        .select('*, associations(name)')
+        .select('*, associations(id, name)')
         .eq('is_public', true)
         .eq('status', 'active')
         .gte('date', new Date().toISOString().split('T')[0])
@@ -255,22 +272,54 @@ export default function AttendeeDashboard() {
         
       setPublicEvents(publicData || []);
 
-      // Fetch my RSVPs
+      // Fetch my RSVPs with rsvpId for unified QR code
       const { data: rsvpData } = await supabase
         .from('rsvps')
-        .select('event_id, events(*, associations(name))')
+        .select('id, event_id, events(*, associations(id, name))')
         .eq('user_id', user.id)
         .eq('status', 'attending');
 
-      const myEventsExtracted = rsvpData?.map((r: any) => r.events).filter(e => e) || [];
-      myEventsExtracted.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const myEventsExtracted = rsvpData
+        ?.filter((r: any) => r.events)
+        .map((r: any) => ({ ...r.events, rsvpId: r.id })) || [];
+      myEventsExtracted.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
       
       setMyEvents(myEventsExtracted);
+
+      // Fetch Community Leaderboard (top active attendees)
+      const { data: topUsers } = await supabase
+        .from('users')
+        .select('id, full_name, email, points, badge, role')
+        .order('points', { ascending: false })
+        .limit(10);
+
+      setLeaderboard(topUsers || []);
       
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    setSavingContact(true);
+    try {
+      const packed = packUserContact(contactName, contactPhone);
+      const { error } = await supabase
+        .from('users')
+        .update({ full_name: packed })
+        .eq('id', currentUser.id);
+      if (error) throw error;
+      setUserProfile((prev: any) => ({ ...prev, full_name: packed }));
+      toast.success('تم حفظ بياناتك الشخصية (الاسم ورقم الهاتف) للتذاكر بنجاح!');
+    } catch (err) {
+      console.error(err);
+      toast.error('تعذر حفظ البيانات الشخصية');
+    } finally {
+      setSavingContact(false);
     }
   };
 
@@ -371,10 +420,18 @@ export default function AttendeeDashboard() {
                     {event.title}
                   </h3>
                 </div>
-                <p className="text-xs text-[#b87a29] font-bold mb-3 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const assocId = event.association_id || event.associations?.id;
+                    if (assocId) navigate(`/association-profile/${assocId}`);
+                  }}
+                  className="text-xs text-[#b87a29] hover:text-[#301809] hover:underline font-bold mb-3 flex items-center gap-1 cursor-pointer transition-colors"
+                >
                   <span>🏛️ تنظيم:</span>
                   <span>{event.associations?.name || 'جمعية معتمدة'}</span>
-                </p>
+                </button>
                 
                 <div className="space-y-2 mt-2 text-xs text-[#723c11]">
                   <div className="flex items-center gap-2">
@@ -390,7 +447,7 @@ export default function AttendeeDashboard() {
             </div>
 
             {showTicketButton && (
-              <div className="px-5 pb-5 pt-0">
+              <div className="px-5 pb-5 pt-0 space-y-2">
                 <div className="flex gap-2 pt-3 border-t border-[#dbc397]/40">
                   <Button
                     onClick={(e) => { e.stopPropagation(); setActiveTicketEvent(event); }}
@@ -424,6 +481,28 @@ export default function AttendeeDashboard() {
                   >
                     إلغاء
                   </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <a
+                    href={buildGoogleCalendarUrl(event)}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-9 rounded-xl bg-[#fdfbf7] border border-[#dbc397] hover:bg-[#fae1b7]/40 text-[#723c11] text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <CalendarIcon className="w-3.5 h-3.5 text-[#b87a29]" />
+                    <span>إضافة للتقويم</span>
+                  </a>
+                  <a
+                    href={buildWhatsAppShareUrl(event, `${window.location.origin}/event/${event.id}`)}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-9 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>مشاركة واتساب</span>
+                  </a>
                 </div>
               </div>
             )}
@@ -764,9 +843,62 @@ export default function AttendeeDashboard() {
               </motion.div>
             </TabsContent>
 
-            {/* Preferences Tab */}
+            {/* Preferences & Personal Info Tab */}
             <TabsContent value="prefs" key="prefs" className="mt-0 outline-none">
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
+                {/* Personal Ticket Contact Info Card */}
+                <Card className="border-2 border-[#dbc397] shadow-xl rounded-3xl overflow-hidden bg-white">
+                  <CardContent className="p-6 md:p-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div>
+                        <h2 className="text-xl md:text-2xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+                          <User className="w-6 h-6 text-[#b87a29]" />
+                          <span>بياناتي الشخصية على التذاكر</span>
+                        </h2>
+                        <p className="text-xs text-[#723c11] mt-1 font-medium">
+                          تُطبع هذه البيانات على تذاكرك الرسمية وتظهر للجمعيات المنظمة في كشوفات الحضور لتسهيل التواصل معك.
+                        </p>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleSaveContact} className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 items-end">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-[#301809] flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5 text-[#b87a29]" />
+                          <span>الاسم الكامل</span>
+                        </Label>
+                        <Input
+                          value={contactName}
+                          onChange={(e) => setContactName(e.target.value)}
+                          placeholder="أدخل اسمك ولقبك الكامل..."
+                          className="h-11 rounded-xl border-2 border-[#dbc397] bg-[#fdfbf7]"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-[#301809] flex items-center gap-1.5">
+                          <Phone className="w-3.5 h-3.5 text-[#b87a29]" />
+                          <span>رقم الهاتف للتواصل</span>
+                        </Label>
+                        <Input
+                          dir="ltr"
+                          value={contactPhone}
+                          onChange={(e) => setContactPhone(e.target.value)}
+                          placeholder="06XXXXXXXX / 07XXXXXXXX"
+                          className="h-11 rounded-xl border-2 border-[#dbc397] bg-[#fdfbf7] text-right font-mono"
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        disabled={savingContact}
+                        className="h-11 rounded-xl bg-gradient-to-r from-[#301809] to-[#723c11] hover:from-[#723c11] hover:to-[#b87a29] text-[#fae1b7] font-bold cursor-pointer shadow-md"
+                      >
+                        {savingContact ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'حفظ بيانات التذكرة'}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                {/* Category Interests Card */}
                 <Card className="border-2 border-[#dbc397] shadow-xl rounded-3xl overflow-hidden bg-white">
                   <CardContent className="p-8 md:p-12">
                     <div className="text-center mb-10">
@@ -814,9 +946,9 @@ export default function AttendeeDashboard() {
               </motion.div>
             </TabsContent>
 
-            {/* Achievements & Gamification Tab (Preserving beloved Purple/Gold aesthetic) */}
+            {/* Achievements & Gamification Tab (Preserving beloved Purple/Gold aesthetic + Leaderboard) */}
             <TabsContent value="profile" key="profile" className="mt-0 outline-none">
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {/* Points Card (Vibrant Deep Purple & Gold) */}
                   <Card className="col-span-1 md:col-span-2 border-0 shadow-2xl rounded-3xl bg-gradient-to-br from-purple-900 via-indigo-950 to-purple-950 text-white overflow-hidden relative">
@@ -848,7 +980,9 @@ export default function AttendeeDashboard() {
                                   className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.6)]"
                                 />
                              </div>
-                             <p className="text-purple-300 text-xs font-semibold">باقي {100 - ((userProfile?.points || 0) % 100)} نقطة للترقية للمستوى القادم 🚀</p>
+                             <p className="text-purple-300 text-xs font-semibold">
+                               باقي {100 - ((userProfile?.points || 0) % 100)} نقطة للترقية للمستوى القادم 🚀 (+10 نقاط لكل حجز، +5 نقاط لكل تقييم)
+                             </p>
                           </div>
                         </div>
 
@@ -875,8 +1009,8 @@ export default function AttendeeDashboard() {
 
                        <div className="space-y-4">
                           {/* Active Attendee Badge */}
-                          <div className={`p-4 rounded-2xl border-2 flex items-center gap-4 transition-all ${userProfile?.badge === 'Active Attendee' || (userProfile?.points || 0) >= 50 ? 'bg-amber-50 border-amber-300 shadow-xs' : 'bg-slate-50 border-slate-200 grayscale opacity-60'}`}>
-                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md ${userProfile?.badge === 'Active Attendee' || (userProfile?.points || 0) >= 50 ? 'bg-amber-500' : 'bg-slate-400'}`}>
+                          <div className={`p-4 rounded-2xl border-2 flex items-center gap-4 transition-all ${(userProfile?.points || 0) >= 30 || myEvents.length >= 1 ? 'bg-amber-50 border-amber-300 shadow-xs' : 'bg-slate-50 border-slate-200 grayscale opacity-60'}`}>
+                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md ${(userProfile?.points || 0) >= 30 || myEvents.length >= 1 ? 'bg-amber-500' : 'bg-slate-400'}`}>
                                 <CalendarHeart className="w-6 h-6" />
                              </div>
                              <div className="flex-1 min-w-0">
@@ -893,32 +1027,135 @@ export default function AttendeeDashboard() {
                                     className="h-full bg-amber-500 rounded-full"
                                   />
                                 </div>
-                                {userProfile?.badge === 'Active Attendee' && (
-                                  <p className="text-[10px] text-amber-700 font-bold mt-1">✨ تم فتح هذا الوسام!</p>
+                                {((userProfile?.points || 0) >= 30 || myEvents.length >= 1) && (
+                                  <p className="text-[10px] text-amber-700 font-bold mt-1">✨ وسام مفعّل في حسابك!</p>
                                 )}
                              </div>
                           </div>
 
-                          {/* Explorer Badge */}
-                          <div className={`p-4 rounded-2xl border-2 flex items-center gap-4 transition-all opacity-60 grayscale bg-slate-50 border-slate-200`}>
-                             <div className="w-12 h-12 rounded-2xl bg-[#efa83f] flex items-center justify-center text-white shadow-md">
-                                <Compass className="w-6 h-6" />
-                             </div>
-                             <div>
-                                <p className="font-black text-xs text-[#301809]">مكتشف التراث</p>
-                                <p className="text-[10px] text-slate-500 font-semibold">يُفتح بحضور 3 فعاليات تراثية</p>
-                             </div>
-                          </div>
+                          {/* Heritage Explorer Badge */}
+                          {(() => {
+                            const heritageCount = myEvents.filter((e: any) => e.category === 'Heritage').length;
+                            const isUnlocked = heritageCount >= 2 || (userProfile?.points || 0) >= 100;
+                            return (
+                              <div className={`p-4 rounded-2xl border-2 flex items-center gap-4 transition-all ${isUnlocked ? 'bg-[#fae1b7]/40 border-[#b87a29] shadow-xs' : 'opacity-60 grayscale bg-slate-50 border-slate-200'}`}>
+                                 <div className="w-12 h-12 rounded-2xl bg-[#efa83f] flex items-center justify-center text-white shadow-md shrink-0">
+                                    <Compass className="w-6 h-6" />
+                                 </div>
+                                 <div className="flex-1 min-w-0">
+                                    <p className="font-black text-xs text-[#301809]">مكتشف التراث</p>
+                                    <p className="text-[10px] text-[#723c11] font-semibold">
+                                      {isUnlocked ? '✨ تم فتح الوسام! أنت من حماة التراث' : 'يُفتح بحضور فعاليتين تراثيتين أو 100 نقطة'}
+                                    </p>
+                                 </div>
+                              </div>
+                            );
+                          })()}
+
+                          {/* Saharan Ambassador Badge */}
+                          {(() => {
+                            const isUnlocked = (userProfile?.points || 0) >= 200;
+                            return (
+                              <div className={`p-4 rounded-2xl border-2 flex items-center gap-4 transition-all ${isUnlocked ? 'bg-purple-50 border-purple-300 shadow-xs' : 'opacity-60 grayscale bg-slate-50 border-slate-200'}`}>
+                                 <div className="w-12 h-12 rounded-2xl bg-purple-700 flex items-center justify-center text-yellow-300 shadow-md shrink-0">
+                                    <Medal className="w-6 h-6" />
+                                 </div>
+                                 <div className="flex-1 min-w-0">
+                                    <p className="font-black text-xs text-[#301809]">سفير وارجلان</p>
+                                    <p className="text-[10px] text-[#723c11] font-semibold">
+                                      {isUnlocked ? '👑 أعلى وسام مجتمعي في تواصل صحراء' : 'يُفتح عند الوصول إلى 200 نقطة'}
+                                    </p>
+                                 </div>
+                              </div>
+                            );
+                          })()}
                        </div>
                      </div>
 
                      <div className="mt-6 pt-4 border-t border-[#dbc397]/40 text-center">
                        <p className="text-[11px] text-[#723c11] font-semibold">
-                         💡 احضر الفعاليات وأكّد حضورك برمز QR لزيادة نقاطك وفتح أوسمة جديدة
+                         💡 احجز الفعاليات وشارك تقييماتك لزيادة نقاطك وتصدّر لوحة الشرف
                        </p>
                      </div>
                   </Card>
                 </div>
+
+                {/* Community Leaderboard Card */}
+                <Card className="border-2 border-[#dbc397] shadow-xl rounded-3xl bg-white overflow-hidden">
+                  <CardContent className="p-6 md:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[#dbc397]/40">
+                      <div>
+                        <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+                          <Trophy className="w-6 h-6 text-[#efa83f]" />
+                          <span>لوحة شرف رواد وارجلان (أكثر المشاركين تفاعلاً)</span>
+                        </h3>
+                        <p className="text-xs text-[#723c11] mt-0.5">
+                          ترتيب الأعضاء الأكثر حضوراً ومشاركة في الفعاليات الثقافية والتراثية
+                        </p>
+                      </div>
+                      <span className="text-xs font-black bg-[#fae1b7]/60 text-[#301809] px-3 py-1.5 rounded-xl border border-[#dbc397] self-start sm:self-auto">
+                        تحديث مباشر ⚡
+                      </span>
+                    </div>
+
+                    {leaderboard.length === 0 ? (
+                      <p className="text-center text-xs text-[#723c11] py-8">لا توجد بيانات نقاط مسجلة حالياً.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {leaderboard.map((u, idx) => {
+                          const parsed = parseUserContact(u.full_name, u.email);
+                          const isCurrentUser = currentUser?.id === u.id;
+                          return (
+                            <div
+                              key={u.id}
+                              className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all ${
+                                isCurrentUser
+                                  ? 'bg-[#fae1b7]/50 border-[#b87a29] shadow-sm'
+                                  : idx < 3
+                                  ? 'bg-[#fdfbf7] border-[#dbc397]'
+                                  : 'bg-white border-[#dbc397]/40'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div
+                                  className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+                                    idx === 0
+                                      ? 'bg-gradient-to-br from-amber-400 to-yellow-600 text-white shadow-sm'
+                                      : idx === 1
+                                      ? 'bg-gradient-to-br from-slate-300 to-slate-500 text-white'
+                                      : idx === 2
+                                      ? 'bg-gradient-to-br from-amber-700 to-amber-900 text-amber-100'
+                                      : 'bg-[#fae1b7]/60 text-[#723c11]'
+                                  }`}
+                                >
+                                  {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-xs text-[#301809] truncate flex items-center gap-1.5">
+                                    <span>{parsed.name}</span>
+                                    {isCurrentUser && (
+                                      <span className="text-[10px] bg-[#301809] text-[#efa83f] px-2 py-0.5 rounded-full font-black">
+                                        أنت
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p className="text-[10px] text-[#723c11] font-semibold">
+                                    {u.badge || 'عضو مجتمع وارجلان'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-left shrink-0">
+                                <span className="font-black text-sm text-[#301809] bg-[#fae1b7]/70 px-3 py-1 rounded-xl border border-[#dbc397]">
+                                  {u.points || 0} نقطة
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </motion.div>
             </TabsContent>
           </AnimatePresence>
@@ -986,7 +1223,9 @@ export default function AttendeeDashboard() {
         <TicketCard
           event={activeTicketEvent}
           userId={currentUser.id}
-          userName={currentUser.email?.split('@')[0]}
+          rsvpId={activeTicketEvent.rsvpId}
+          userName={contactName || currentUser.email?.split('@')[0]}
+          userPhone={contactPhone}
           onClose={() => setActiveTicketEvent(null)}
         />
       )}
