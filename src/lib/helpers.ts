@@ -268,6 +268,9 @@ export interface HeritageMeta {
   contactPhone?: string;
   contactEmail?: string;
   requestType?: string;
+  lat?: number;
+  lng?: number;
+  period?: string;
 }
 
 export function inferHeritageCategory(title = '', content = ''): string {
@@ -289,6 +292,9 @@ export function packHeritageMeta(
     contactPhone?: string;
     contactEmail?: string;
     requestType?: string;
+    lat?: number;
+    lng?: number;
+    period?: string;
   }
 ): string {
   const body = (cleanContent || '').trim();
@@ -298,7 +304,10 @@ export function packHeritageMeta(
     status: meta.status || 'approved',
     contactPhone: meta.contactPhone || '',
     contactEmail: meta.contactEmail || '',
-    requestType: meta.requestType || ''
+    requestType: meta.requestType || '',
+    ...(typeof meta.lat === 'number' && !isNaN(meta.lat) ? { lat: meta.lat } : {}),
+    ...(typeof meta.lng === 'number' && !isNaN(meta.lng) ? { lng: meta.lng } : {}),
+    ...(meta.period ? { period: meta.period } : {})
   };
   return `${body}||HMETA||${JSON.stringify(payload)}`;
 }
@@ -329,7 +338,10 @@ export function parseHeritageMeta(rawContent?: string | null, title = ''): Herit
         status: parsed.status || 'approved',
         contactPhone: parsed.contactPhone || '',
         contactEmail: parsed.contactEmail || '',
-        requestType: parsed.requestType || ''
+        requestType: parsed.requestType || '',
+        lat: typeof parsed.lat === 'number' ? parsed.lat : undefined,
+        lng: typeof parsed.lng === 'number' ? parsed.lng : undefined,
+        period: parsed.period || undefined
       };
     } catch {
       return {

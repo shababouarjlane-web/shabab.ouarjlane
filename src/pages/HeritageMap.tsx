@@ -6,7 +6,8 @@ import {
   resolveOuarglaLocationCoords, 
   buildGoogleMapsDirectionsUrl,
   HERITAGE_CATEGORIES,
-  packHeritageMeta
+  packHeritageMeta,
+  parseHeritageMeta
 } from '@/lib/helpers';
 import { 
   ArrowRight, 
@@ -222,11 +223,14 @@ export default function HeritageMap() {
   const lallaAzzaGlowRef = useRef<L.Polygon | null>(null);
 
   const [selected, setSelected] = useState<Landmark>(LANDMARKS[0]);
+  const [dynamicLandmarks, setDynamicLandmarks] = useState<Landmark[]>([]);
   const [focusedLandmarkId, setFocusedLandmarkId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [mapEvents, setMapEvents] = useState<any[]>([]);
   const [layerFilter, setLayerFilter] = useState<'all' | 'landmarks' | 'events'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const allLandmarks = [...LANDMARKS, ...dynamicLandmarks];
 
   // ─── التحقق الفعلي من صلاحيات الأدمن المسجل حالياً فقط ───
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -276,6 +280,49 @@ export default function HeritageMap() {
           });
           setMapEvents(enriched);
         }
+      });
+
+    // جلب المعالم المعتمدة من الأدمن لإضافتها ديناميكياً على خريطة التراث
+    supabase
+      .from('heritage_archive')
+      .select('*')
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (!data) return;
+        const coreNames = ['مسجد لالة عزة', 'القصر العتيق', 'سدراتة'];
+        const extra: Landmark[] = [];
+        data.forEach((row: any, idx: number) => {
+          const meta = parseHeritageMeta(row.content, row.title);
+          if (meta.status !== 'approved') return;
+          const titleClean = (row.title || '').trim();
+          if (!titleClean || coreNames.some((cn) => titleClean.includes(cn))) return;
+
+          const [fallbackLat, fallbackLng] = resolveOuarglaLocationCoords(
+            `${titleClean} ${meta.cleanContent}`,
+            idx + 3
+          );
+          const lat = typeof meta.lat === 'number' && !isNaN(meta.lat) ? meta.lat : fallbackLat;
+          const lng = typeof meta.lng === 'number' && !isNaN(meta.lng) ? meta.lng : fallbackLng;
+          const isMosque = /مسجد|جامع|زاوية|مصلى/i.test(titleClean);
+          const isUrban = /قصر|قصبة|باب|سور|حي/i.test(titleClean);
+          const cat: Landmark['category'] = isMosque ? 'mosque' : isUrban ? 'urban' : 'ruins';
+
+          extra.push({
+            id: `dyn-${row.id}`,
+            nameAr: titleClean,
+            nameTifinagh: 'ⵡⴰⵔⴵⵍⴰⵏ',
+            nameTranslit: meta.category || 'معلم تراثي',
+            badge: meta.category || 'معلم موثق',
+            badgeColor: CATEGORY_COLORS[cat],
+            lat,
+            lng,
+            period: meta.period || (meta.contributor ? `توثيق: ${meta.contributor}` : 'تراث وارجلان وسدراتة'),
+            image: row.image_url || '/hero-bg.jpg',
+            description: meta.cleanContent,
+            category: cat,
+          });
+        });
+        setDynamicLandmarks(extra);
       });
   }, []);
 
@@ -572,6 +619,28 @@ export default function HeritageMap() {
     const showLandmarksLayer =
       (layerFilter === 'all' || layerFilter === 'landmarks') && !selectedEvent;
 
+    // التأكد من إنشاء ماركرات للمعالم الديناميكية الجديدة المعتمدة من لوحة الإدارة
+    dynamicLandmarks.forEach((lm) => {
+      if (!markersRef.current[lm.id]) {
+        const color = CATEGORY_COLORS[lm.category];
+        const marker = L.marker([lm.lat, lm.lng], {
+          icon: createCustomIcon(color),
+          title: lm.nameAr,
+        });
+        marker.bindTooltip(
+          `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:700;font-size:13px;color:#301809;padding:4px 8px;border-radius:8px">${lm.nameAr}</div>`,
+          { direction: 'top', permanent: false, opacity: 0.97 }
+        );
+        marker.on('click', () => {
+          setSelectedEvent(null);
+          setSelected(lm);
+          setFocusedLandmarkId(lm.id);
+          setSidebarOpen(true);
+        });
+        markersRef.current[lm.id] = marker;
+      }
+    });
+
     Object.entries(markersRef.current).forEach(([lmId, m]) => {
       const shouldShowThisMarker =
         showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === lmId);
@@ -605,7 +674,7 @@ export default function HeritageMap() {
         if (map.hasLayer(lallaAzzaGlowRef.current)) lallaAzzaGlowRef.current.remove();
       }
     }
-  }, [mapEvents, layerFilter, focusedLandmarkId, selectedEvent]);
+  }, [mapEvents, dynamicLandmarks, layerFilter, focusedLandmarkId, selectedEvent]);
 
   // التحليق إلى المعلم المحدد وإخفاء بقية المعالم
   const flyTo = (lm: Landmark) => {
@@ -637,7 +706,7 @@ export default function HeritageMap() {
     setFocusedLandmarkId(null);
     setSelectedEvent(null);
     if (mapRef.current) {
-      const allBounds = L.latLngBounds(LANDMARKS.map((l) => L.latLng(l.lat, l.lng)));
+      const allBounds = L.latLngBounds(allLandmarks.map((l) => L.latLng(l.lat, l.lng)));
       mapRef.current.fitBounds(allBounds, { padding: [70, 70], animate: true, duration: 1.2 });
     }
   };
@@ -904,7 +973,7 @@ export default function HeritageMap() {
               <span>إظهار جميع المعالم</span>
             </button>
           )}
-          {LANDMARKS.map((lm) => (
+          {allLandmarks.map((lm) => (
             <button
               key={lm.id}
               onClick={() => flyTo(lm)}
@@ -1154,7 +1223,7 @@ export default function HeritageMap() {
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider flex items-center gap-1.5">
                       <Star className="w-3 h-3 text-[#efa83f]" />
-                      المعالم التاريخية ({LANDMARKS.length})
+                      المعالم التاريخية ({allLandmarks.length})
                     </p>
                     {focusedLandmarkId && (
                       <button
@@ -1166,7 +1235,7 @@ export default function HeritageMap() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    {LANDMARKS.map((lm, idx) => (
+                    {allLandmarks.map((lm, idx) => (
                       <button
                         key={lm.id}
                         onClick={() => flyTo(lm)}

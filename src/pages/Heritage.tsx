@@ -11,16 +11,22 @@ import {
   BookOpen,
   Send,
   HelpCircle,
-  Quote
+  Quote,
+  Share2,
+  Copy,
+  Check,
+  Tag
 } from 'lucide-react';
 import UnifiedHeader from '../components/UnifiedHeader';
 import {
   GHOSN_AL_BAN_META,
   SUGGESTED_QUESTIONS,
+  QUICK_TOPIC_CHIPS,
   searchGhosnAlBan,
   type BookSection
 } from '../data/ghosnAlBanKnowledge';
 import { getAllActiveSections } from '../lib/historyReferencesStore';
+import { toast } from 'sonner';
 
 interface ActiveAnswer {
   question: string;
@@ -38,6 +44,7 @@ export default function Heritage() {
   const [activeAnswer, setActiveAnswer] = useState<ActiveAnswer | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [previewSection, setPreviewSection] = useState<BookSection | null>(null);
+  const [copiedAnswer, setCopiedAnswer] = useState(false);
   const answerRef = useRef<HTMLDivElement>(null);
   const lastHandledQParam = useRef<string | null>(null);
 
@@ -75,6 +82,7 @@ export default function Heritage() {
     }
 
     setIsThinking(true);
+    setCopiedAnswer(false);
 
     const grounded = searchGhosnAlBan(q, activeSections);
     const primarySection = grounded.matchedSections[0];
@@ -90,6 +98,31 @@ export default function Heritage() {
         answerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 80);
     }, 200);
+  };
+
+  const buildShareText = (ans: ActiveAnswer) => {
+    const sourceLine = ans.section
+      ? `📚 المصدر: «${ans.section.bookTitle || GHOSN_AL_BAN_META.title}» — ${ans.section.bookAuthor || GHOSN_AL_BAN_META.author} (${ans.section.pages})`
+      : `📚 المصدر: «${GHOSN_AL_BAN_META.title}»`;
+    const quoteLine = ans.section?.verbatimQuote
+      ? `\n\n📜 نص المؤلف في الكتاب:\n«${ans.section.verbatimQuote}»`
+      : '';
+    const linkUrl = `${window.location.origin}/heritage?q=${encodeURIComponent(ans.question)}`;
+    return `❓ *${ans.question}*\n\n${ans.answerText}${quoteLine}\n\n${sourceLine}\n🔗 طالع المرجع والصفحة المصوّرة عبر منصة تواصل صحراء:\n${linkUrl}`;
+  };
+
+  const handleShareWhatsApp = (ans: ActiveAnswer) => {
+    const text = buildShareText(ans);
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleCopyAnswer = (ans: ActiveAnswer) => {
+    const text = buildShareText(ans);
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedAnswer(true);
+      toast.success('تم نسخ الإجابة الموثقة مع المصدر ورقم الصفحة!');
+      setTimeout(() => setCopiedAnswer(false), 2500);
+    });
   };
 
   return (
@@ -150,30 +183,59 @@ export default function Heritage() {
             </form>
           </div>
 
-          {/* Visually Separated Suggested Questions Section */}
-          <div className="bg-white rounded-3xl border border-[#dbc397] shadow-sm p-5 sm:p-6">
-            <p className="text-xs sm:text-sm font-bold text-[#723c11] mb-3.5 flex items-center gap-2">
-              <HelpCircle className="w-4 h-4 text-[#b87a29]" />
-              <span>أسئلة شائعة يمكنك الضغط عليها مباشرة:</span>
-            </p>
-            <div className="flex flex-wrap gap-2.5">
-              {SUGGESTED_QUESTIONS.slice(0, 6).map((sq) => {
-                const isSelected = activeAnswer?.question === sq;
-                return (
-                  <button
-                    key={sq}
-                    type="button"
-                    onClick={() => handleAsk(sq)}
-                    className={`text-right text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#301809] text-[#fae1b7] border-[#301809] shadow-sm'
-                        : 'bg-[#fdfbf7] hover:bg-[#fae1b7]/60 text-[#301809] border-[#dbc397]'
-                    }`}
-                  >
-                    {sq}
-                  </button>
-                );
-              })}
+          {/* Visually Separated Suggested Questions & Quick Topic Chips */}
+          <div className="bg-white rounded-3xl border border-[#dbc397] shadow-sm p-5 sm:p-6 space-y-5">
+            {/* Quick Topic Chips */}
+            <div>
+              <p className="text-xs sm:text-sm font-bold text-[#723c11] mb-3 flex items-center gap-2">
+                <Tag className="w-4 h-4 text-[#b87a29]" />
+                <span>أبرز مواضيع وأبواب المرجع (اضغط للاستكشاف السريع):</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_TOPIC_CHIPS.map((chip) => {
+                  const isSelected = activeAnswer?.question === chip.question;
+                  return (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      onClick={() => handleAsk(chip.question)}
+                      className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#301809] text-[#efa83f] border-[#301809] shadow-sm'
+                          : 'bg-[#fae1b7]/35 hover:bg-[#fae1b7]/80 text-[#301809] border-[#d4b174]'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border-t border-[#f0e2c8] pt-4">
+              <p className="text-xs sm:text-sm font-bold text-[#723c11] mb-3 flex items-center gap-2">
+                <HelpCircle className="w-4 h-4 text-[#b87a29]" />
+                <span>أسئلة شائعة يمكنك الضغط عليها مباشرة:</span>
+              </p>
+              <div className="flex flex-wrap gap-2.5">
+                {SUGGESTED_QUESTIONS.slice(0, 6).map((sq) => {
+                  const isSelected = activeAnswer?.question === sq;
+                  return (
+                    <button
+                      key={sq}
+                      type="button"
+                      onClick={() => handleAsk(sq)}
+                      className={`text-right text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#301809] text-[#fae1b7] border-[#301809] shadow-sm'
+                          : 'bg-[#fdfbf7] hover:bg-[#fae1b7]/60 text-[#301809] border-[#dbc397]'
+                      }`}
+                    >
+                      {sq}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -243,6 +305,40 @@ export default function Heritage() {
                         </p>
                       </div>
                     )}
+
+                    {/* Share & Copy Actions Footer */}
+                    <div className="pt-4 border-t border-[#f0e2c8] flex flex-wrap items-center justify-between gap-2.5">
+                      <span className="text-xs font-bold text-[#723c11]/80">
+                        هل أعجبتك هذه المعلومة الموثقة؟ شاركها مع المهتمين بتراث وارجلان:
+                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleShareWhatsApp(activeAnswer)}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                          <span>مشاركة عبر واتساب</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyAnswer(activeAnswer)}
+                          className="bg-[#fdfbf7] hover:bg-[#fae1b7]/60 text-[#301809] border border-[#dbc397] text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          {copiedAnswer ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <span className="text-emerald-700">تم نسخ النص مع المصدر</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5 text-[#b87a29]" />
+                              <span>نسخ الإجابة مع المصدر</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )

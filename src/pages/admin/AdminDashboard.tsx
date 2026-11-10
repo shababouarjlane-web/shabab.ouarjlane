@@ -98,7 +98,9 @@ export default function AdminDashboard() {
     title: '',
     category: HERITAGE_CATEGORIES[0] as string,
     content: '',
-    image_url: ''
+    image_url: '',
+    lat: '',
+    lng: ''
   });
   const [editingHeritage, setEditingHeritage] = useState<any | null>(null);
   const [isHeritageEditOpen, setIsHeritageEditOpen] = useState(false);
@@ -279,20 +281,24 @@ export default function AdminDashboard() {
 
   const handleCreateHeritage = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedLat = newHeritage.lat.trim() ? parseFloat(newHeritage.lat) : undefined;
+    const parsedLng = newHeritage.lng.trim() ? parseFloat(newHeritage.lng) : undefined;
     const packedContent = packHeritageMeta(newHeritage.content, {
       category: newHeritage.category,
       contributor: 'إدارة المنصة',
-      status: 'approved'
+      status: 'approved',
+      lat: parsedLat,
+      lng: parsedLng
     });
     const { error } = await supabase.from('heritage_archive').insert({
       title: newHeritage.title,
       content: packedContent,
       image_url: newHeritage.image_url || null
     });
-    if (error) toast.error('خطأ في إضافة التراث');
+    if (error) toast.error('خطأ في إضافة المعلم للخريطة');
     else {
-      toast.success('تمت إضافة مادة تراثية جديدة');
-      setNewHeritage({ title: '', category: HERITAGE_CATEGORIES[0], content: '', image_url: '' });
+      toast.success('تمت إضافة المعلم بنجاح وسيظهر فوراً على خريطة التراث! 🗺️');
+      setNewHeritage({ title: '', category: HERITAGE_CATEGORIES[0], content: '', image_url: '', lat: '', lng: '' });
       fetchHeritageAndAds();
     }
   };
@@ -301,10 +307,21 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!editingHeritage) return;
 
+    const parsedLat =
+      editingHeritage.lat !== undefined && String(editingHeritage.lat).trim() !== ''
+        ? parseFloat(String(editingHeritage.lat))
+        : undefined;
+    const parsedLng =
+      editingHeritage.lng !== undefined && String(editingHeritage.lng).trim() !== ''
+        ? parseFloat(String(editingHeritage.lng))
+        : undefined;
+
     const packedContent = packHeritageMeta(editingHeritage.cleanContent ?? editingHeritage.content, {
       category: editingHeritage.category || HERITAGE_CATEGORIES[0],
       contributor: editingHeritage.contributor || 'إدارة المنصة',
-      status: 'approved'
+      status: 'approved',
+      lat: parsedLat,
+      lng: parsedLng
     });
 
     const { error } = await supabase
@@ -316,9 +333,9 @@ export default function AdminDashboard() {
       })
       .eq('id', editingHeritage.id);
 
-    if (error) toast.error('خطأ في تحديث التراث');
+    if (error) toast.error('خطأ في تحديث المعلم');
     else {
-      toast.success('تم تحديث المادة التراثية');
+      toast.success('تم تحديث بيانات المعلم على خريطة التراث');
       setIsHeritageEditOpen(false);
       setEditingHeritage(null);
       fetchHeritageAndAds();
@@ -330,16 +347,18 @@ export default function AdminDashboard() {
     const approvedContent = packHeritageMeta(parsed.cleanContent, {
       category: parsed.category,
       contributor: parsed.contributor || 'مساهم من المجتمع',
-      status: 'approved'
+      status: 'approved',
+      lat: parsed.lat,
+      lng: parsed.lng
     });
     const { error } = await supabase
       .from('heritage_archive')
       .update({ content: approvedContent })
       .eq('id', item.id);
     if (error) {
-      toast.error('تعذر اعتماد المساهمة التراثية');
+      toast.error('تعذر اعتماد المعلم المقترح');
     } else {
-      toast.success('تم اعتماد ونشر المساهمة في الأرشيف التراثي بنجاح! ✅');
+      toast.success('تم اعتماد المعلم وإدراجه على خريطة التراث للزوار بنجاح! 🗺️✅');
       fetchHeritageAndAds();
     }
   };
@@ -843,7 +862,7 @@ export default function AdminDashboard() {
             👥 المستخدمون والأدوار
           </TabsTrigger>
           <TabsTrigger value="heritage" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
-            🏺 الأرشيف التراثي
+            🗺️ معالم الخريطة والمقترحات
           </TabsTrigger>
           <TabsTrigger value="history-refs" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
             📚 مراجع الباحث التاريخي
@@ -1419,7 +1438,7 @@ export default function AdminDashboard() {
             <Card className="border-2 border-amber-300 bg-amber-50/50 rounded-3xl p-6 shadow-md space-y-4">
               <h3 className="text-lg font-thmanyah font-bold text-amber-950 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-600" />
-                <span>مساهمات تراثية مقترحة من الزوار والجمعيات بانتظار الاعتماد ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'pending').length})</span>
+                <span>معالم تاريخية مقترحة من الزوار لإضافتها إلى الخريطة ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'pending').length})</span>
               </h3>
               <div className="space-y-3">
                 {heritageItems
@@ -1435,7 +1454,7 @@ export default function AdminDashboard() {
                             </span>
                             {meta.contributor && (
                               <span className="text-xs font-bold text-[#723c11]">
-                                مساهمة من: {meta.contributor}
+                                اقتراح من: {meta.contributor}
                               </span>
                             )}
                           </div>
@@ -1447,7 +1466,7 @@ export default function AdminDashboard() {
                             onClick={() => handleApproveHeritageSuggestion(item)}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl h-9 px-4 cursor-pointer"
                           >
-                            ✅ اعتماد ونشر بالأرشيف
+                            ✅ اعتماد وإظهار على الخريطة
                           </Button>
                           <Button
                             variant="ghost"
@@ -1470,19 +1489,19 @@ export default function AdminDashboard() {
             <Card className="shadow-xl border-2 border-[#dbc397] rounded-3xl overflow-hidden bg-white">
                <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 text-center">
                  <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] mx-auto mb-2 text-2xl shadow-sm">
-                   🏺
+                   🗺️
                  </div>
-                 <h3 className="text-lg font-black text-[#fae1b7]">إضافة مادة تراثية جديدة</h3>
-                 <p className="text-xs text-[#d4b174] mt-1">توثيق تاريخ ومعالم ورقلة وقصورها العريقة</p>
+                 <h3 className="text-lg font-black text-[#fae1b7]">إضافة معلم تاريخي جديد للخريطة</h3>
+                 <p className="text-xs text-[#d4b174] mt-1">يظهر تلقائياً كمعلم تفاعلي على خريطة التراث للزوار</p>
                </div>
                <CardContent className="p-6">
                  <form onSubmit={handleCreateHeritage} className="space-y-4 text-right">
                    <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">عنوان المعلم أو المادة التراثية</Label>
-                     <Input required value={newHeritage.title} onChange={e => setNewHeritage({...newHeritage, title: e.target.value})} placeholder="مثال: القصر القديم بالرويسات" className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]" />
+                     <Label className="font-bold text-xs text-[#301809]">اسم المعلم التاريخي *</Label>
+                     <Input required value={newHeritage.title} onChange={e => setNewHeritage({...newHeritage, title: e.target.value})} placeholder="مثال: قصر أنقوصة العتيق / باب عمي" className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]" />
                    </div>
                    <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">التصنيف التراثي</Label>
+                     <Label className="font-bold text-xs text-[#301809]">تصنيف المعلم</Label>
                      <select
                        value={newHeritage.category}
                        onChange={e => setNewHeritage({ ...newHeritage, category: e.target.value })}
@@ -1493,24 +1512,63 @@ export default function AdminDashboard() {
                        ))}
                      </select>
                    </div>
-                   <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">المحتوى / الوصف التاريخي</Label>
-                     <Textarea required value={newHeritage.content} onChange={e => setNewHeritage({...newHeritage, content: e.target.value})} placeholder="تفاصيل تاريخية وأصل المادة..." rows={5} className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]" />
+                   <div className="grid grid-cols-2 gap-2.5">
+                     <div className="space-y-1">
+                       <Label className="font-bold text-[11px] text-[#301809]">خط العرض (Lat - اختياري)</Label>
+                       <Input
+                         type="number"
+                         step="any"
+                         dir="ltr"
+                         value={newHeritage.lat}
+                         onChange={e => setNewHeritage({ ...newHeritage, lat: e.target.value })}
+                         placeholder="31.9668"
+                         className="h-10 border-2 border-[#dbc397] rounded-xl text-left font-mono text-xs"
+                       />
+                     </div>
+                     <div className="space-y-1">
+                       <Label className="font-bold text-[11px] text-[#301809]">خط الطول (Lng - اختياري)</Label>
+                       <Input
+                         type="number"
+                         step="any"
+                         dir="ltr"
+                         value={newHeritage.lng}
+                         onChange={e => setNewHeritage({ ...newHeritage, lng: e.target.value })}
+                         placeholder="5.3271"
+                         className="h-10 border-2 border-[#dbc397] rounded-xl text-left font-mono text-xs"
+                       />
+                     </div>
                    </div>
                    <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">رابط الصورة (اختياري)</Label>
+                     <Label className="font-bold text-xs text-[#301809]">الوصف والسياق التاريخي للمعلم *</Label>
+                     <Textarea required value={newHeritage.content} onChange={e => setNewHeritage({...newHeritage, content: e.target.value})} placeholder="تفاصيل تاريخية عن المعلم وموقعه..." rows={4} className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]" />
+                   </div>
+                   <div className="space-y-1.5">
+                     <Label className="font-bold text-xs text-[#301809]">رابط صورة المعلم (اختياري)</Label>
                      <Input value={newHeritage.image_url} onChange={e => setNewHeritage({...newHeritage, image_url: e.target.value})} placeholder="https://..." dir="ltr" className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]" />
                    </div>
-                   <Button type="submit" className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white rounded-xl shadow-md cursor-pointer transition-all">حفظ وتوثيق في الأرشيف</Button>
+                   <Button type="submit" className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white rounded-xl shadow-md cursor-pointer transition-all">إضافة المعلم إلى الخريطة التفاعلية</Button>
                  </form>
                </CardContent>
             </Card>
 
             <div className="lg:col-span-2 space-y-4">
-               <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
-                 <History className="text-[#b87a29]" />
-                 <span>المواد المعتمدة بالأرشيف حالياً ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'approved').length})</span>
-               </h3>
+               <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
+                 <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+                   <History className="text-[#b87a29]" />
+                   <span>المعالم الإضافية المعتمدة على الخريطة ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'approved').length})</span>
+                 </h3>
+                 <Button
+                   type="button"
+                   variant="outline"
+                   onClick={() => navigate('/map')}
+                   className="h-9 rounded-xl border-[#dbc397] text-[#301809] text-xs font-bold cursor-pointer"
+                 >
+                   🗺️ معاينة خريطة التراث
+                 </Button>
+               </div>
+               <div className="bg-[#fae1b7]/35 border border-[#dbc397] rounded-2xl p-3.5 text-xs font-bold text-[#723c11]">
+                 📌 ملاحظة: المعالم الأساسية الـ 3 (مسجد لالة عزة الإباضي، القصر العتيق بوارجلان، المدينة الأثرية سدراتة) مثبتة دائماً على الخريطة مع حدودها الجغرافية، وأي معلم تضيفه أو تعتمده هنا يظهر بجانبها فوراً.
+               </div>
                {heritageItems
                  .filter(item => parseHeritageMeta(item.content, item.title).status === 'approved')
                  .map(item => {
@@ -1532,10 +1590,15 @@ export default function AdminDashboard() {
                          </div>
                        </div>
                        <div className="flex-1 min-w-0">
-                         <div className="flex items-center gap-2 mb-1">
+                         <div className="flex flex-wrap items-center gap-2 mb-1">
                            <span className="bg-[#fae1b7] text-[#723c11] text-[10px] font-black px-2 py-0.5 rounded-md border border-[#dbc397]">
                              {meta.category}
                            </span>
+                           {meta.lat !== undefined && meta.lng !== undefined && (
+                             <span className="text-[10px] font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md" dir="ltr">
+                               📍 {meta.lat.toFixed(4)}, {meta.lng.toFixed(4)}
+                             </span>
+                           )}
                            {meta.contributor && (
                              <span className="text-[10px] text-[#723c11]/70 font-bold">
                                • {meta.contributor}
@@ -1554,7 +1617,9 @@ export default function AdminDashboard() {
                                ...item,
                                cleanContent: meta.cleanContent,
                                category: meta.category,
-                               contributor: meta.contributor
+                               contributor: meta.contributor,
+                               lat: meta.lat ?? '',
+                               lng: meta.lng ?? ''
                              });
                              setIsHeritageEditOpen(true);
                            }} 
@@ -1582,13 +1647,13 @@ export default function AdminDashboard() {
           <Dialog open={isHeritageEditOpen} onOpenChange={setIsHeritageEditOpen}>
             <DialogContent className="sm:max-w-[500px] border-2 border-[#dbc397] rounded-3xl bg-white" dir="rtl">
               <DialogHeader>
-                <DialogTitle className="text-right text-2xl font-thmanyah font-bold text-[#301809]">تعديل مادة تراثية</DialogTitle>
-                <DialogDescription className="sr-only">استخدم هذا النموذج لتعديل تفاصيل المادة التراثية المختارة.</DialogDescription>
+                <DialogTitle className="text-right text-2xl font-thmanyah font-bold text-[#301809]">تعديل بيانات المعلم على الخريطة</DialogTitle>
+                <DialogDescription className="sr-only">استخدم هذا النموذج لتعديل تفاصيل وإحداثيات المعلم التاريخي.</DialogDescription>
               </DialogHeader>
               {editingHeritage && (
                 <form onSubmit={handleUpdateHeritage} className="space-y-4 text-right pt-4">
                   <div className="space-y-1.5">
-                    <Label className="font-bold text-xs text-[#301809]">العنوان</Label>
+                    <Label className="font-bold text-xs text-[#301809]">اسم المعلم</Label>
                     <Input 
                       required 
                       value={editingHeritage.title} 
@@ -1597,7 +1662,7 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="font-bold text-xs text-[#301809]">التصنيف التراثي</Label>
+                    <Label className="font-bold text-xs text-[#301809]">تصنيف المعلم</Label>
                     <select
                       value={editingHeritage.category || HERITAGE_CATEGORIES[0]}
                       onChange={e => setEditingHeritage({ ...editingHeritage, category: e.target.value })}
@@ -1608,13 +1673,39 @@ export default function AdminDashboard() {
                       ))}
                     </select>
                   </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <Label className="font-bold text-[11px] text-[#301809]">خط العرض (Lat)</Label>
+                      <Input
+                        type="number"
+                        step="any"
+                        dir="ltr"
+                        value={editingHeritage.lat ?? ''}
+                        onChange={e => setEditingHeritage({ ...editingHeritage, lat: e.target.value })}
+                        placeholder="31.9668"
+                        className="h-10 border-2 border-[#dbc397] rounded-xl text-left font-mono text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="font-bold text-[11px] text-[#301809]">خط الطول (Lng)</Label>
+                      <Input
+                        type="number"
+                        step="any"
+                        dir="ltr"
+                        value={editingHeritage.lng ?? ''}
+                        onChange={e => setEditingHeritage({ ...editingHeritage, lng: e.target.value })}
+                        placeholder="5.3271"
+                        className="h-10 border-2 border-[#dbc397] rounded-xl text-left font-mono text-xs"
+                      />
+                    </div>
+                  </div>
                   <div className="space-y-1.5">
-                    <Label className="font-bold text-xs text-[#301809]">المحتوى والتفاصيل</Label>
+                    <Label className="font-bold text-xs text-[#301809]">الوصف التاريخي</Label>
                     <Textarea 
                       required 
                       value={editingHeritage.cleanContent ?? editingHeritage.content} 
                       onChange={e => setEditingHeritage({...editingHeritage, cleanContent: e.target.value, content: e.target.value})} 
-                      rows={5} 
+                      rows={4} 
                       className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                     />
                   </div>
@@ -1628,7 +1719,7 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <Button type="submit" className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white mt-4 shadow-lg rounded-xl cursor-pointer transition-all">
-                    حفظ التغييرات
+                    حفظ التغييرات وتحديث الخريطة
                   </Button>
                 </form>
               )}

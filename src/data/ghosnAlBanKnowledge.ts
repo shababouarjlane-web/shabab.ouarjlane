@@ -446,6 +446,33 @@ export const SUGGESTED_QUESTIONS: string[] = [
   'ماذا قال الكتاب عن خزائن المخطوطات بوارجلان وقرية نقوصة والشط؟'
 ];
 
+export interface QuickTopicChip {
+  label: string;
+  question: string;
+}
+
+export const QUICK_TOPIC_CHIPS: QuickTopicChip[] = [
+  { label: '🏛️ حاضرة سدراتة وتخريبها', question: 'ماذا ذكر كتاب غصن البان عن مدينة سدراتة وتاريخ تخريبها؟' },
+  { label: '🏰 أبواب وسور القصر العتيق', question: 'ما هي أبواب القصر العتيق الثمانية بوارجلان كما وثّقها أعزام؟' },
+  { label: '🕌 مسجد لالة عزة ومحرابه', question: 'صف لي المسجد العتيق (مسجد لالة عزة) ومحرابه ومئذنته من الكتاب' },
+  { label: '🚩 الأعراش والرايات الثلاث', question: 'ما هي أعراش وارجلان الثلاثة عشر وما ألوان رايات القصر الثلاث؟' },
+  { label: '💧 العيون والغطاسة', question: 'كيف كان الغطاسة يحفرون العيون القديمة (عيون ذي القرنين) ويقسمون ماءها؟' },
+  { label: '🌴 نقوصة والشط والقرى', question: 'ماذا قال الكتاب عن خزائن المخطوطات بوارجلان وقرية نقوصة والشط؟' },
+  { label: '📜 المشايخ والعلماء', question: 'من هم أبرز علماء ومشايخ سدراتة ووارجلان المذكورين في الكتاب؟' },
+  { label: '⛰️ زيارة جبل العباد والكريمة', question: 'كيف كانت تقام زيارة مشايخ سدراتة إلى جبل العُبّاد وجبل الكريمة؟' }
+];
+
+const LOCAL_SYNONYMS: Array<[RegExp, string]> = [
+  [/لاله عزيزه|لالا عزيزه|لالا عزه|لالة عزيزة|لالا عزة/g, 'لاله عزه المسجد العتيق الجامع الكبير'],
+  [/القصبه|قصبه|قصر ورقله|قصر وارجلان/g, 'القصر العتيق سور ابواب خندق'],
+  [/فقاره|الفقاره|فقارات|عين|عيون|ابار|بئر|ماء|سقي/g, 'العيون الارتوازيه الغطاسه الشريعه ذي القرنين'],
+  [/انقوصه|أنقوصة|انقوسه|نغوسه/g, 'نقوصه صالح بن موسي'],
+  [/عروش|قبائل|بني ابراهيم|بني وقين|بني سيسين|سعيد عتبه|مخادمه/g, 'اعراش وارجلان رايات بنو ابراهيم بنو وقين بنو سيسين'],
+  [/مخطوط|مخطوطات|كتب|مكتبه|خزانه/g, 'خزائن المخطوطات خزانه العزابه باسه ال افلاح'],
+  [/بن غانيه|ابن غانيه|الميورقي|تخريب|خراب/g, 'سدراته يحيي بن اسحاق الميورقي ابن غانيه'],
+  [/محراب|صومعه|مئذنه/g, 'المسجد العتيق محراب مئذنه لاله عزه']
+];
+
 function normalizeArabic(text: string): string {
   return text
     .toLowerCase()
@@ -458,6 +485,16 @@ function normalizeArabic(text: string): string {
     .replace(/[^\u0600-\u06FF0-9a-zA-Z\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function expandWithLocalSynonyms(normQuery: string): string {
+  let expanded = normQuery;
+  for (const [pattern, expansion] of LOCAL_SYNONYMS) {
+    if (pattern.test(normQuery)) {
+      expanded += ' ' + normalizeArabic(expansion);
+    }
+  }
+  return expanded;
 }
 
 const STOP_WORDS = new Set([
@@ -477,9 +514,14 @@ export function searchGhosnAlBan(
 ): GroundedSearchResult {
   const allSections = activeSections && activeSections.length > 0 ? activeSections : BOOK_SECTIONS;
   const normQuery = normalizeArabic(query);
-  const tokens = normQuery
-    .split(' ')
-    .filter((t) => t.length >= 2 && !STOP_WORDS.has(t));
+  const expandedQuery = expandWithLocalSynonyms(normQuery);
+  const tokens = Array.from(
+    new Set(
+      expandedQuery
+        .split(' ')
+        .filter((t) => t.length >= 2 && !STOP_WORDS.has(t))
+    )
+  );
 
   const scored = allSections.map((section) => {
     let score = 0;
