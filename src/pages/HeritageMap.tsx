@@ -318,7 +318,8 @@ export default function HeritageMap() {
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       {
         attribution: 'Esri, Maxar, Earthstar Geographics | تواصل صحراء — وارجلان',
-        maxZoom: 18,
+        maxNativeZoom: 17,
+        maxZoom: 19,
       }
     ).addTo(map);
 
@@ -543,8 +544,7 @@ export default function HeritageMap() {
       const bounds = L.latLngBounds(currentCoords.map(([lat, lng]) => L.latLng(lat, lng)));
       mapRef.current.fitBounds(bounds, { padding: [40, 40], animate: true, duration: 1.2 });
     } else if (lm.id === 'lalla-azza' && mapRef.current) {
-      const bounds = L.latLngBounds(LALLA_AZZA_POLYGON.map(([lat, lng]) => L.latLng(lat, lng)));
-      mapRef.current.fitBounds(bounds, { padding: [80, 80], maxZoom: 18, animate: true, duration: 1.3 });
+      mapRef.current.flyTo([lm.lat, lm.lng], 17, { duration: 1.3 });
     } else {
       mapRef.current?.flyTo([lm.lat, lm.lng], 16, { duration: 1.4 });
     }
