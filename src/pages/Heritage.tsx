@@ -230,10 +230,10 @@ export default function Heritage() {
             <Button
               onClick={() => navigate('/history-assistant')}
               size="sm"
-              className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] border border-[#b87a29]/50 rounded-xl h-9 px-3.5 text-xs font-black gap-1.5 shadow-sm cursor-pointer"
+              className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] border border-[#b87a29]/50 rounded-xl h-9 px-3.5 text-xs font-bold gap-1.5 shadow-sm cursor-pointer whitespace-nowrap"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#efa83f]" />
-              <span>اسأل مرجع غصن البان</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#efa83f] shrink-0" />
+              <span>الباحث التاريخي</span>
             </Button>
             <Button
               onClick={() => setSuggestOpen(true)}

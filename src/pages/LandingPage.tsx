@@ -349,14 +349,14 @@ export default function LandingPage() {
 
       {/* Floating Header */}
       <header className="sticky top-4 z-50 mx-4 md:mx-auto max-w-7xl glass-panel rounded-2xl transition-all duration-300 shadow-sm border border-[#dbc397]/50">
-        <div className="container mx-auto px-6 h-18 flex items-center justify-between">
+        <div className="container mx-auto px-5 h-18 flex items-center justify-between gap-4">
           
           {/* Logo & Brand Identity */}
-          <div className="flex items-center gap-3 cursor-pointer py-1" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#301809] to-[#b87a29] flex items-center justify-center text-white font-bold text-lg shadow-sm">
+          <div className="flex items-center gap-3 cursor-pointer py-1 shrink-0" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#301809] to-[#b87a29] flex items-center justify-center text-white font-bold text-lg shadow-sm shrink-0">
               ص
             </div>
-            <div className="flex flex-col text-right">
+            <div className="flex flex-col text-right whitespace-nowrap">
               <span className="text-xl font-bold text-[#301809] leading-tight">
                 تواصل صحراء
               </span>
@@ -367,48 +367,48 @@ export default function LandingPage() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-5 text-sm font-semibold text-[#301809]/80">
-            <a href="#hero" className="hover:text-[#b87a29] transition-colors">الرئيسية</a>
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-5 text-sm font-semibold text-[#301809]/80 whitespace-nowrap">
+            <a href="#hero" className="hover:text-[#b87a29] transition-colors whitespace-nowrap">الرئيسية</a>
             <button 
               onClick={() => navigate('/events')} 
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer"
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
             >
-              <Calendar className="w-4 h-4 text-[#b87a29]" />
+              <Calendar className="w-4 h-4 text-[#b87a29] shrink-0" />
               دليل الفعاليات
             </button>
             <button 
               onClick={() => navigate('/associations')} 
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer"
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
             >
-              <Building2 className="w-4 h-4 text-[#b87a29]" />
+              <Building2 className="w-4 h-4 text-[#b87a29] shrink-0" />
               دليل الجمعيات
             </button>
             <button 
               onClick={() => navigate('/heritage')} 
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer"
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
             >
-              <BookOpen className="w-4 h-4 text-[#b87a29]" />
+              <BookOpen className="w-4 h-4 text-[#b87a29] shrink-0" />
               الأرشيف التراثي
             </button>
             <button
               onClick={() => navigate('/history-assistant')}
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#301809] bg-[#fae1b7]/70 hover:bg-[#fae1b7] px-2.5 py-1 rounded-lg border border-[#d4b174]/60 cursor-pointer font-bold"
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
             >
-              <Sparkles className="w-4 h-4 text-[#b87a29]" />
-              الباحث التاريخي (غصن البان)
+              <Sparkles className="w-4 h-4 text-[#b87a29] shrink-0" />
+              الباحث التاريخي
             </button>
             <button
               onClick={() => navigate('/map')}
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer"
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
             >
-              <MapPin className="w-4 h-4 text-[#b87a29]" />
+              <MapPin className="w-4 h-4 text-[#b87a29] shrink-0" />
               خريطة التراث
             </button>
-            <a href="#faq-contact" className="hover:text-[#b87a29] transition-colors">الأسئلة والانضمام</a>
+            <a href="#faq-contact" className="hover:text-[#b87a29] transition-colors whitespace-nowrap">الأسئلة والانضمام</a>
           </nav>
 
           {/* Header Action Buttons */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 shrink-0">
             {/* Notifications Toggle */}
             <Button 
               variant="ghost" 
@@ -510,10 +510,10 @@ export default function LandingPage() {
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/history-assistant')} 
-                className="h-13 py-3.5 px-5 rounded-xl bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] border border-[#b87a29] font-bold text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="h-13 py-3.5 px-5 rounded-xl bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] border border-[#b87a29] font-bold text-base shadow-sm transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
               >
                 <Sparkles className="w-4 h-4 text-[#efa83f]" />
-                <span>اسأل تاريخ وارجلان (غصن البان)</span>
+                <span>الباحث التاريخي</span>
               </Button>
             </div>
 
