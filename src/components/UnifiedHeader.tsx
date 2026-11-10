@@ -46,7 +46,7 @@ export default function UnifiedHeader({ rightSlot }: UnifiedHeaderProps) {
     { path: '/', label: 'الرئيسية', icon: Home },
     { path: '/events', label: 'دليل الفعاليات', icon: Calendar },
     { path: '/associations', label: 'دليل الجمعيات', icon: Building2 },
-    { path: '/heritage', label: 'الأرشيف التراثي', icon: BookOpen },
+    { path: '/heritage', label: 'الباحث التاريخي', icon: BookOpen },
     { path: '/map', label: 'خريطة التراث', icon: MapPin }
   ];
 

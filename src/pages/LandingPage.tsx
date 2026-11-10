@@ -395,7 +395,7 @@ export default function LandingPage() {
                 className="h-13 py-3.5 px-6 rounded-xl bg-white hover:bg-[#fae1b7]/30 text-[#723c11] border border-[#d4b174] font-bold text-base shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               >
                 <BookOpen className="w-4 h-4 text-[#b87a29]" />
-                <span>تصفح الأرشيف والباحث التاريخي</span>
+                <span>الباحث التاريخي</span>
               </Button>
             </div>
 
@@ -596,7 +596,7 @@ export default function LandingPage() {
                   className="bg-white/15 hover:bg-white/25 border border-[#efa83f]/60 text-[#fae1b7] font-bold px-5 py-5 rounded-xl text-sm flex items-center gap-2 transition-all shadow-sm cursor-pointer"
                 >
                   <BookOpen className="w-4 h-4 text-[#efa83f]" />
-                  <span>الأرشيف والباحث التاريخي</span>
+                  <span>اسأل الباحث التاريخي</span>
                 </Button>
               </div>
             </div>

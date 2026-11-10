@@ -1073,7 +1073,7 @@ export default function HeritageMap() {
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-[#efa83f] shrink-0" />
-                      <span>📖 اقرأ ما ذُكر عن «{selected.nameAr}» في المراجع والأرشيف</span>
+                      <span>📖 اقرأ ما ذُكر عن «{selected.nameAr}» في المراجع</span>
                     </div>
                     <ArrowRight className="w-4 h-4 rotate-180 text-[#efa83f] group-hover:-translate-x-1 transition-transform shrink-0" />
                   </button>
