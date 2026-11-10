@@ -94,6 +94,14 @@ function computeTransformedPolygon(
   });
 }
 
+// الإحداثيات الدقيقة لمحيط مسجد لالة عزة الإباضي (المربع الذهبي)
+const LALLA_AZZA_POLYGON: [number, number][] = [
+  [31.966461, 5.327037],
+  [31.966318, 5.326621],
+  [31.966580, 5.326393],
+  [31.966751, 5.326867],
+];
+
 // المعالم التاريخية (الترتيب: 1. مسجد لالة عزة، 2. القصر العتيق، 3. مدينة سدراتة)
 const LANDMARKS: Landmark[] = [
   {
@@ -103,13 +111,14 @@ const LANDMARKS: Landmark[] = [
     nameTranslit: 'Tajmegida n Lalla Azza',
     badge: 'المسجد الإباضي الجامع',
     badgeColor: 'bg-[#b87a29] text-white',
-    lat: 31.966643,
-    lng: 5.326884,
+    lat: 31.966528,
+    lng: 5.326730,
     period: 'العهد الرستمي المتأخر — القصر العتيق',
     image: '/hero-bg.jpg',
     description:
       'المسجد التاريخي الجامع في قلب القصر العتيق بوارجلان، بُني كامتداد روحي وحضاري بعد سقوط العاصمة الأولى تيهرت وتأسيس سدراتة. يشتهر ببابه الخشبي العتيق المحفور بعبارة: "بادروا بالصلاة قبل الموت وبادروا بالتوبة قبل الفوت"، وأعمدته اللولبية الفريدة وزجاجه الملون الذي يعكس فن العمارة الإباضية الزناتية الأصيلة.',
     category: 'mosque',
+    polygon: LALLA_AZZA_POLYGON,
   },
   {
     id: 'ksar-atiq',
@@ -191,6 +200,8 @@ export default function HeritageMap() {
   const eventMarkersRef = useRef<L.Marker[]>([]);
   const ksarPolygonRef = useRef<L.Polygon | null>(null);
   const ksarGlowRef = useRef<L.Polygon | null>(null);
+  const lallaAzzaPolygonRef = useRef<L.Polygon | null>(null);
+  const lallaAzzaGlowRef = useRef<L.Polygon | null>(null);
 
   const [selected, setSelected] = useState<Landmark>(LANDMARKS[0]);
   const [focusedLandmarkId, setFocusedLandmarkId] = useState<string | null>(null);
@@ -391,6 +402,46 @@ export default function HeritageMap() {
       }
     });
 
+    // ── رسم مربع محيط مسجد لالة عزة الإباضي ────────────────────────────
+    const lallaAzzaPolygon = L.polygon(LALLA_AZZA_POLYGON, {
+      color: '#efa83f',
+      weight: 3.5,
+      opacity: 0.98,
+      fillColor: '#efa83f',
+      fillOpacity: 0.22,
+      lineJoin: 'round',
+    }).addTo(map);
+
+    const lallaAzzaGlow = L.polygon(LALLA_AZZA_POLYGON, {
+      color: '#b87a29',
+      weight: 10,
+      opacity: 0.32,
+      fillOpacity: 0,
+      lineJoin: 'round',
+      interactive: false,
+    }).addTo(map);
+
+    lallaAzzaPolygonRef.current = lallaAzzaPolygon;
+    lallaAzzaGlowRef.current = lallaAzzaGlow;
+
+    lallaAzzaPolygon.bindTooltip(
+      `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:800;font-size:13px;color:#301809;padding:6px 12px;border-radius:10px;border:2px solid #b87a29">
+        🕌 محيط مسجد لالة عزة الإباضي
+        <div style="font-size:10px;color:#723c11;font-weight:600;margin-top:2px">ⵜⴰⵎⵣⴳⵉⴷⴰ ⵏ ⵍⴰⵍⵍⴰ ⵄⵣⵣⴰ</div>
+      </div>`,
+      { direction: 'top', sticky: true, opacity: 0.97 }
+    );
+
+    const lallaAzzaLandmark = LANDMARKS.find((lm) => lm.id === 'lalla-azza');
+    lallaAzzaPolygon.on('click', () => {
+      if (lallaAzzaLandmark) {
+        setSelectedEvent(null);
+        setSelected(lallaAzzaLandmark);
+        setFocusedLandmarkId(lallaAzzaLandmark.id);
+        setSidebarOpen(true);
+      }
+    });
+
     mapRef.current = map;
 
     return () => {
@@ -434,7 +485,7 @@ export default function HeritageMap() {
       });
     }
 
-    // إظهار أو إخفاء المعالم التاريخية ومضلع القصر حسب الاختيار
+    // إظهار أو إخفاء المعالم التاريخية ومضلع القصر ومربع مسجد لالة عزة حسب الاختيار
     const showLandmarksLayer =
       (layerFilter === 'all' || layerFilter === 'landmarks') && !selectedEvent;
 
@@ -459,6 +510,18 @@ export default function HeritageMap() {
         if (map.hasLayer(ksarGlowRef.current)) ksarGlowRef.current.remove();
       }
     }
+
+    if (lallaAzzaPolygonRef.current && lallaAzzaGlowRef.current) {
+      const shouldShowLallaAzzaPolygon =
+        showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === 'lalla-azza');
+      if (shouldShowLallaAzzaPolygon) {
+        if (!map.hasLayer(lallaAzzaPolygonRef.current)) lallaAzzaPolygonRef.current.addTo(map);
+        if (!map.hasLayer(lallaAzzaGlowRef.current)) lallaAzzaGlowRef.current.addTo(map);
+      } else {
+        if (map.hasLayer(lallaAzzaPolygonRef.current)) lallaAzzaPolygonRef.current.remove();
+        if (map.hasLayer(lallaAzzaGlowRef.current)) lallaAzzaGlowRef.current.remove();
+      }
+    }
   }, [mapEvents, layerFilter, focusedLandmarkId, selectedEvent]);
 
   // التحليق إلى المعلم المحدد وإخفاء بقية المعالم
@@ -479,6 +542,9 @@ export default function HeritageMap() {
       );
       const bounds = L.latLngBounds(currentCoords.map(([lat, lng]) => L.latLng(lat, lng)));
       mapRef.current.fitBounds(bounds, { padding: [40, 40], animate: true, duration: 1.2 });
+    } else if (lm.id === 'lalla-azza' && mapRef.current) {
+      const bounds = L.latLngBounds(LALLA_AZZA_POLYGON.map(([lat, lng]) => L.latLng(lat, lng)));
+      mapRef.current.fitBounds(bounds, { padding: [80, 80], maxZoom: 18, animate: true, duration: 1.3 });
     } else {
       mapRef.current?.flyTo([lm.lat, lm.lng], 16, { duration: 1.4 });
     }
