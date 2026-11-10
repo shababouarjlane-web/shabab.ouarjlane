@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import { supabase } from '@/lib/supabase';
 import { resolveOuarglaLocationCoords, buildGoogleMapsDirectionsUrl } from '@/lib/helpers';
@@ -212,25 +212,35 @@ export default function HeritageMap() {
   const [layerFilter, setLayerFilter] = useState<'all' | 'landmarks' | 'events'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // ─── التحقق من صلاحيات الأدمن (حساب super_admin أو معامل الرابط ?admin=true) ───
-  const location = useLocation();
-  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
-    const params = new URLSearchParams(location.search);
-    return params.get('admin') === 'true' || localStorage.getItem('is_heritage_admin') === 'true';
-  });
+  // ─── التحقق الفعلي من صلاحيات الأدمن المسجل حالياً فقط ───
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
+    localStorage.removeItem('is_heritage_admin');
+    const demoRole = localStorage.getItem('demo_role');
+    if (demoRole === 'super_admin') {
+      setIsAdmin(true);
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) {
+        if (demoRole !== 'super_admin') {
+          setIsAdmin(false);
+          setShowControls(false);
+        }
+        return;
+      }
       supabase
         .from('users')
         .select('role')
-        .eq('id', user.id)
+        .eq('id', session.user.id)
         .maybeSingle()
         .then(({ data }) => {
           if (data?.role === 'super_admin') {
             setIsAdmin(true);
-            localStorage.setItem('is_heritage_admin', 'true');
+          } else {
+            setIsAdmin(false);
+            setShowControls(false);
           }
         });
     });
