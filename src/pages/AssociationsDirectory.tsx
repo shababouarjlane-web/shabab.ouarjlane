@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { parseAssociationMeta, packHeritageMeta } from '@/lib/helpers';
 import {
   Building2, Search, MapPin, Phone, Globe, Calendar,
-  CheckCircle2, Sparkles, ArrowRight, ExternalLink, PlusCircle, Send
+  CheckCircle2, Sparkles, ExternalLink, PlusCircle, Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import UnifiedHeader from '@/components/UnifiedHeader';
 
 export default function AssociationsDirectory() {
   const navigate = useNavigate();
@@ -131,57 +132,18 @@ export default function AssociationsDirectory() {
 
   return (
     <div className="min-h-screen bg-[#fdfbf7] font-sans text-[#301809]" dir="rtl">
-      {/* Top Navbar */}
-      <nav className="sticky top-0 z-50 bg-[#301809]/95 backdrop-blur-md border-b border-[#b87a29]/30 text-[#fae1b7] px-4 md:px-8 h-20 flex items-center justify-between shadow-lg">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-          <img
-            src="/logo.png"
-            alt="تواصل صحراء"
-            className="h-12 w-auto object-contain rounded-xl bg-[#fdfbf7] p-1 border border-[#b87a29]"
-          />
-          <div>
-            <h1 className="font-extrabold text-lg text-[#fae1b7] leading-tight">دليل الجمعيات المعتمدة</h1>
-            <p className="text-xs text-[#efa83f] font-medium">النسيج الجمعوي والثقافي لولاية ورقلة</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/events')}
-            className="text-[#fae1b7] hover:text-[#efa83f] hover:bg-white/5 font-bold text-sm hidden sm:flex"
-          >
-            الفعاليات
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/heritage')}
-            className="text-[#fae1b7] hover:text-[#efa83f] hover:bg-white/5 font-bold text-sm hidden sm:flex"
-          >
-            الأرشيف التراثي
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/map')}
-            className="text-[#fae1b7] hover:text-[#efa83f] hover:bg-white/5 font-bold text-sm hidden sm:flex"
-          >
-            الخريطة التفاعلية
-          </Button>
+      {/* Unified Top Navbar */}
+      <UnifiedHeader
+        rightSlot={
           <Button
             onClick={() => setJoinOpen(true)}
-            className="bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] hover:text-white font-black rounded-xl text-xs sm:text-sm gap-1.5"
+            className="bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white font-black rounded-xl h-10 px-3.5 text-xs gap-1.5 shadow-sm cursor-pointer whitespace-nowrap"
           >
-            <PlusCircle className="w-4 h-4" /> طلب انضمام جمعية
+            <PlusCircle className="w-3.5 h-3.5 shrink-0" />
+            <span>طلب انضمام جمعية</span>
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/')}
-            className="border-[#b87a29]/50 bg-transparent text-[#fae1b7] hover:bg-[#b87a29] hover:text-white rounded-xl gap-1.5 font-bold text-xs sm:text-sm"
-          >
-            الرئيسية <ArrowRight className="w-4 h-4 rotate-180" />
-          </Button>
-        </div>
-      </nav>
+        }
+      />
 
       {/* Hero Section */}
       <header className="relative bg-gradient-to-br from-[#301809] via-[#4a2610] to-[#723c11] text-white py-14 px-4 overflow-hidden border-b-4 border-[#b87a29]">

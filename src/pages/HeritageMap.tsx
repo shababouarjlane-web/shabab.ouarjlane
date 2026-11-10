@@ -17,9 +17,11 @@ import {
   X,
   Calendar,
   Compass,
-  Ticket
+  Ticket,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import UnifiedHeader from '@/components/UnifiedHeader';
 import { toast } from 'sonner';
 
 // ─── بيانات المعالم التاريخية ──────────────────────────────────────────
@@ -608,96 +610,65 @@ export default function HeritageMap() {
   return (
     <div className="h-screen w-full flex flex-col bg-[#fdfbf7] overflow-hidden" dir="rtl">
 
-      {/* ── شريط العنوان ─────────────────────────────────────── */}
-      <header className="flex-shrink-0 h-14 bg-[#301809] flex items-center gap-3 px-4 shadow-lg z-50">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(-1)}
-          className="text-[#fae1b7] hover:bg-[#4a2510] rounded-xl h-9 w-9"
-        >
-          <ArrowRight className="w-5 h-5" />
-        </Button>
+      {/* ── الشريط العلوي الموحّد ─────────────────────────────────────── */}
+      <UnifiedHeader
+        rightSlot={
+          <div className="flex items-center gap-2">
+            {/* فلاتر الطبقات */}
+            <div className="hidden xl:flex items-center bg-[#fae1b7]/50 p-1 rounded-xl border border-[#dbc397] gap-1">
+              {[
+                { id: 'all', label: 'الكل' },
+                { id: 'landmarks', label: '🏺 المعالم' },
+                { id: 'events', label: `📅 الفعاليات (${mapEvents.length})` }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setLayerFilter(tab.id as any)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    layerFilter === tab.id
+                      ? 'bg-[#301809] text-[#fae1b7] shadow-xs'
+                      : 'text-[#723c11] hover:text-[#301809]'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center">
-            <MapPin className="w-4 h-4 text-[#efa83f]" />
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-sm leading-none">خريطة تراث وارجلان</h1>
-            <p className="text-[#fae1b7]/60 text-[10px]">ⵜⴰⵡⵉⵍⴰ ⵏ ⵡⴰⵔⴵⵍⴰⵏ</p>
-          </div>
-        </div>
-
-        <div className="mr-auto flex items-center gap-2">
-          {/* فلاتر الطبقات (الكل / المعالم التراثية / الفعاليات الميدانية) */}
-          <div className="hidden md:flex items-center bg-[#4a2510]/80 p-1 rounded-xl border border-[#efa83f]/25 gap-1">
-            {[
-              { id: 'all', label: 'الكل' },
-              { id: 'landmarks', label: '🏺 المعالم التراثية' },
-              { id: 'events', label: `📅 الفعاليات (${mapEvents.length})` }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setLayerFilter(tab.id as any)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                  layerFilter === tab.id
-                    ? 'bg-[#efa83f] text-[#301809] shadow-xs'
-                    : 'text-[#fae1b7]/80 hover:text-white'
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const next = !showControls;
+                  setShowControls(next);
+                  if (next) {
+                    const ksar = LANDMARKS.find((l) => l.id === 'ksar-atiq');
+                    if (ksar) flyTo(ksar);
+                  }
+                }}
+                className={`rounded-xl text-xs h-9 px-3 flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                  showControls
+                    ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
+                    : 'text-[#301809] bg-[#fae1b7]/70 hover:bg-[#fae1b7] border border-[#dbc397]'
                 }`}
               >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+                <Sliders className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{showControls ? 'إخفاء أداة المحيط' : 'ضبط المحيط'}</span>
+              </Button>
+            )}
 
-          {/* زر فتح/إغلاق أداة ضبط المحيط (محصورة للأدمن فقط) */}
-          {isAdmin && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={() => {
-                const next = !showControls;
-                setShowControls(next);
-                if (next) {
-                  const ksar = LANDMARKS.find((l) => l.id === 'ksar-atiq');
-                  if (ksar) flyTo(ksar);
-                }
-              }}
-              className={`rounded-xl text-xs h-8 px-3 flex items-center gap-1.5 transition-all ${
-                showControls
-                  ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
-                  : 'text-[#fae1b7]/90 bg-[#4a2510]/80 hover:bg-[#4a2510] hover:text-white border border-[#efa83f]/30'
-              }`}
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/40 rounded-xl text-xs h-9 px-3 font-bold whitespace-nowrap cursor-pointer"
             >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>{showControls ? 'إخفاء أداة المحيط' : 'ضبط محيط القصر'}</span>
-              <span className="text-[9px] bg-red-500/30 text-red-200 px-1.5 py-0.5 rounded font-mono">أدمن</span>
+              {sidebarOpen ? 'إخفاء اللوحة' : 'إظهار اللوحة'}
             </Button>
-          )}
-
-          {/* زر الانتقال المباشر للأرشيف التراثي */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/heritage')}
-            className="text-[#fae1b7]/80 hover:text-white hover:bg-[#4a2510] rounded-xl text-xs h-8 px-3 flex items-center gap-1.5"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-[#efa83f]" />
-            <span className="hidden sm:inline">الأرشيف التراثي</span>
-          </Button>
-
-          {/* زر عرض/إخفاء الشريط الجانبي */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-[#fae1b7]/80 hover:text-white hover:bg-[#4a2510] rounded-xl text-xs h-8 px-3"
-          >
-            {sidebarOpen ? 'إخفاء التفاصيل' : 'إظهار التفاصيل'}
-          </Button>
-        </div>
-      </header>
+          </div>
+        }
+      />
 
       {/* ── جسم الصفحة ───────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden relative">
@@ -1078,11 +1049,28 @@ export default function HeritageMap() {
                   </p>
                 </div>
 
-                {/* زر تصفح وثائق ومقالات المعلم في الأرشيف */}
-                <div className="pt-1">
+                {/* أزرار الربط التفاعلي بالباحث التاريخي والأرشيف */}
+                <div className="pt-1 space-y-2.5">
+                  <button
+                    onClick={() =>
+                      navigate(
+                        `/history-assistant?q=${encodeURIComponent(
+                          `ماذا ذكر كتاب غصن البان عن ${selected.nameAr}؟`
+                        )}`
+                      )
+                    }
+                    className="w-full bg-gradient-to-r from-[#301809] to-[#4a2510] hover:from-[#4a2510] hover:to-[#301809] border border-[#efa83f] text-[#fae1b7] font-bold rounded-2xl text-xs py-3.5 px-4 flex items-center justify-between transition-all shadow-md group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#efa83f] shrink-0" />
+                      <span>📖 اقرأ ما ذُكر عن «{selected.nameAr}» في المراجع</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 rotate-180 text-[#efa83f] group-hover:-translate-x-1 transition-transform shrink-0" />
+                  </button>
+
                   <button
                     onClick={() => navigate('/heritage')}
-                    className="w-full bg-[#fae1b7]/40 hover:bg-[#fae1b7]/80 border border-[#dbc397] text-[#301809] font-bold rounded-2xl text-xs py-3.5 px-4 flex items-center justify-between transition-all shadow-sm group"
+                    className="w-full bg-[#fae1b7]/40 hover:bg-[#fae1b7]/80 border border-[#dbc397] text-[#301809] font-bold rounded-2xl text-xs py-3 px-4 flex items-center justify-between transition-all shadow-sm group cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4 text-[#b87a29]" />

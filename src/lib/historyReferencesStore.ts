@@ -1,3 +1,4 @@
+import { supabase } from '@/lib/supabase';
 import {
   BOOK_SECTIONS,
   GHOSN_AL_BAN_META,
@@ -6,6 +7,7 @@ import {
 
 export interface ReferenceBookRecord {
   id: string;
+  dbRowId?: string;
   title: string;
   author: string;
   fileType: 'builtin' | 'pdf-text' | 'pdf-scanned' | 'word' | 'image-ocr' | 'text';
@@ -35,7 +37,7 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-export function getDeletedBuiltinIds(): Set<string> {
+export function getDeletedBuiltinIdsLocal(): Set<string> {
   try {
     const raw = localStorage.getItem(DELETED_BUILTIN_KEY);
     if (!raw) return new Set();
@@ -45,7 +47,7 @@ export function getDeletedBuiltinIds(): Set<string> {
   }
 }
 
-export function setDeletedBuiltinIds(ids: Set<string>) {
+export function setDeletedBuiltinIdsLocal(ids: Set<string>) {
   localStorage.setItem(DELETED_BUILTIN_KEY, JSON.stringify(Array.from(ids)));
 }
 
@@ -57,7 +59,87 @@ export function setAdminOcrApiKey(key: string) {
   localStorage.setItem(GEMINI_KEY_STORAGE, key.trim());
 }
 
-export async function getUploadedBooks(): Promise<ReferenceBookRecord[]> {
+// ── Cloud Sync for Deleted Built-in IDs (via heritage_archive) ────────────
+async function fetchCloudDeletedBuiltinIds(): Promise<{ rowId?: string; ids: Set<string> }> {
+  try {
+    const { data, error } = await supabase
+      .from('heritage_archive')
+      .select('id, content')
+      .like('content', 'HREF_DELETED::%')
+      .limit(1);
+
+    if (error || !data || data.length === 0) {
+      return { ids: getDeletedBuiltinIdsLocal() };
+    }
+    const row = data[0];
+    const jsonStr = (row.content as string).slice('HREF_DELETED::'.length);
+    const parsed = JSON.parse(jsonStr);
+    const set = new Set<string>(Array.isArray(parsed) ? parsed : []);
+    setDeletedBuiltinIdsLocal(set);
+    return { rowId: row.id, ids: set };
+  } catch {
+    return { ids: getDeletedBuiltinIdsLocal() };
+  }
+}
+
+async function saveCloudDeletedBuiltinIds(ids: Set<string>): Promise<void> {
+  setDeletedBuiltinIdsLocal(ids);
+  try {
+    const { data } = await supabase
+      .from('heritage_archive')
+      .select('id')
+      .like('content', 'HREF_DELETED::%')
+      .limit(1);
+
+    const payload = `HREF_DELETED::${JSON.stringify(Array.from(ids))}`;
+    if (data && data.length > 0) {
+      await supabase
+        .from('heritage_archive')
+        .update({ content: payload })
+        .eq('id', data[0].id);
+    } else {
+      await supabase.from('heritage_archive').insert({
+        title: '__SYSTEM_HREF_DELETED__',
+        content: payload,
+        image_url: null
+      });
+    }
+  } catch {
+    // Fallback to localStorage already done
+  }
+}
+
+export function getDeletedBuiltinIds(): Set<string> {
+  return getDeletedBuiltinIdsLocal();
+}
+
+// ── Upload DataURL Image to Supabase Storage (Bucket: events) ─────────────
+async function uploadPageImageToCloud(dataUrl: string, bookId: string, pageNum: number): Promise<string> {
+  if (!dataUrl || !dataUrl.startsWith('data:image/')) {
+    return dataUrl || '/book-ref/spread_1.jpg';
+  }
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const filePath = `book-refs/${bookId}-page-${pageNum}-${Date.now()}.jpg`;
+    const { error } = await supabase.storage.from('events').upload(filePath, blob, {
+      contentType: 'image/jpeg',
+      upsert: true
+    });
+    if (!error) {
+      const { data } = supabase.storage.from('events').getPublicUrl(filePath);
+      if (data?.publicUrl) {
+        return data.publicUrl;
+      }
+    }
+  } catch {
+    // Fallback to dataUrl if storage upload fails
+  }
+  return dataUrl;
+}
+
+// ── Local IndexedDB Helpers ───────────────────────────────────────────────
+async function getLocalUploadedBooks(): Promise<ReferenceBookRecord[]> {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -76,41 +158,147 @@ export async function getUploadedBooks(): Promise<ReferenceBookRecord[]> {
   }
 }
 
+async function saveLocalBook(book: ReferenceBookRecord): Promise<void> {
+  try {
+    const db = await openDB();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_BOOKS, 'readwrite');
+      const store = tx.objectStore(STORE_BOOKS);
+      const req = store.put(book);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+    // Ignore IndexedDB error
+  }
+}
+
+async function deleteLocalBook(bookId: string): Promise<void> {
+  try {
+    const db = await openDB();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_BOOKS, 'readwrite');
+      const store = tx.objectStore(STORE_BOOKS);
+      const req = store.delete(bookId);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+    // Ignore
+  }
+}
+
+// ── Cloud + Local Unified Reference Books CRUD ───────────────────────────
+export async function getUploadedBooks(): Promise<ReferenceBookRecord[]> {
+  const localBooks = await getLocalUploadedBooks();
+  try {
+    const { data, error } = await supabase
+      .from('heritage_archive')
+      .select('id, title, content, created_at')
+      .like('content', 'HREF_BOOK::%')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      return localBooks;
+    }
+
+    const cloudBooks: ReferenceBookRecord[] = [];
+    for (const row of data) {
+      try {
+        const jsonPart = (row.content as string).slice('HREF_BOOK::'.length);
+        const parsed = JSON.parse(jsonPart) as ReferenceBookRecord;
+        parsed.dbRowId = row.id;
+        cloudBooks.push(parsed);
+      } catch {
+        // Ignore malformed row
+      }
+    }
+
+    // Merge cloudBooks and any local-only books
+    const byId = new Map<string, ReferenceBookRecord>();
+    for (const cb of cloudBooks) {
+      byId.set(cb.id, cb);
+    }
+    for (const lb of localBooks) {
+      if (!byId.has(lb.id)) {
+        byId.set(lb.id, lb);
+      }
+    }
+
+    return Array.from(byId.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  } catch {
+    return localBooks;
+  }
+}
+
 export async function saveUploadedBook(book: ReferenceBookRecord): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_BOOKS, 'readwrite');
-    const store = tx.objectStore(STORE_BOOKS);
-    const req = store.put(book);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
+  await saveLocalBook(book);
+
+  try {
+    const payload = `HREF_BOOK::${JSON.stringify(book)}`;
+    if (book.dbRowId) {
+      await supabase
+        .from('heritage_archive')
+        .update({
+          title: book.title,
+          content: payload
+        })
+        .eq('id', book.dbRowId);
+    } else {
+      const { data } = await supabase
+        .from('heritage_archive')
+        .insert({
+          title: book.title,
+          content: payload,
+          image_url: null
+        })
+        .select('id')
+        .maybeSingle();
+
+      if (data?.id) {
+        book.dbRowId = data.id;
+        await saveLocalBook(book);
+      }
+    }
+  } catch {
+    // Already saved locally
+  }
 }
 
 export async function deleteUploadedBook(bookId: string): Promise<void> {
   if (bookId === GHOSN_AL_BAN_META.id) {
-    const deleted = getDeletedBuiltinIds();
-    deleted.add(GHOSN_AL_BAN_META.id);
-    setDeletedBuiltinIds(deleted);
+    const { ids } = await fetchCloudDeletedBuiltinIds();
+    ids.add(GHOSN_AL_BAN_META.id);
+    await saveCloudDeletedBuiltinIds(ids);
     return;
   }
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_BOOKS, 'readwrite');
-    const store = tx.objectStore(STORE_BOOKS);
-    const req = store.delete(bookId);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
+
+  const all = await getUploadedBooks();
+  const target = all.find((b) => b.id === bookId);
+  await deleteLocalBook(bookId);
+
+  try {
+    if (target?.dbRowId) {
+      await supabase.from('heritage_archive').delete().eq('id', target.dbRowId);
+    } else {
+      await supabase
+        .from('heritage_archive')
+        .delete()
+        .like('content', `%${bookId}%`);
+    }
+  } catch {
+    // Ignore cloud delete error
+  }
 }
 
 export async function deleteSingleSection(bookId: string, sectionId: string): Promise<void> {
   if (bookId === GHOSN_AL_BAN_META.id) {
-    const deleted = getDeletedBuiltinIds();
-    deleted.add(sectionId);
-    setDeletedBuiltinIds(deleted);
+    const { ids } = await fetchCloudDeletedBuiltinIds();
+    ids.add(sectionId);
+    await saveCloudDeletedBuiltinIds(ids);
     return;
   }
+
   const books = await getUploadedBooks();
   const target = books.find((b) => b.id === bookId);
   if (!target) return;
@@ -122,13 +310,24 @@ export async function deleteSingleSection(bookId: string, sectionId: string): Pr
   }
 }
 
-export function restoreBuiltinGhosnAlBan(): void {
+export async function restoreBuiltinGhosnAlBan(): Promise<void> {
   localStorage.removeItem(DELETED_BUILTIN_KEY);
+  try {
+    await supabase
+      .from('heritage_archive')
+      .delete()
+      .like('content', 'HREF_DELETED::%');
+  } catch {
+    // Ignore
+  }
 }
 
 export async function getAllReferenceBooks(): Promise<ReferenceBookRecord[]> {
-  const uploaded = await getUploadedBooks();
-  const deletedIds = getDeletedBuiltinIds();
+  const [uploaded, deletedInfo] = await Promise.all([
+    getUploadedBooks(),
+    fetchCloudDeletedBuiltinIds()
+  ]);
+  const deletedIds = deletedInfo.ids;
 
   const result: ReferenceBookRecord[] = [...uploaded];
 
@@ -330,7 +529,7 @@ export async function processDroppedReferenceFile(
       throw new Error('لم يتم العثور على نص داخل ملف Word.');
     }
 
-    onStatus('جاري تقسيم النص وفهرسة الفقرات...', 75);
+    onStatus('جاري تقسيم النص وفهرسة الفقرات ورفعه للسحابة...', 75);
     const chunks: Array<{ label: string; pageLabel: string; text: string }> = [];
     const paragraphs = fullText.split(/\n{2,}/).filter((p) => p.trim().length > 20);
     let currentChunk = '';
@@ -369,7 +568,7 @@ export async function processDroppedReferenceFile(
       sections
     };
     await saveUploadedBook(record);
-    onStatus('اكتملت فهرسة ملف Word بنجاح!', 100);
+    onStatus('اكتملت فهرسة ملف Word ومزامنته عبر السحابة!', 100);
     return record;
   }
 
@@ -377,7 +576,6 @@ export async function processDroppedReferenceFile(
   if (ext === 'pdf') {
     onStatus('جاري فتح ملف PDF وفحص الصفحات...', 10);
     const pdfjsLib = await import('pdfjs-dist');
-    // Set workerSrc to matching CDN version
     pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
     const arrayBuffer = await file.arrayBuffer();
@@ -389,7 +587,7 @@ export async function processDroppedReferenceFile(
     const pagesToProcess = Math.min(totalPages, maxOcrPages);
 
     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-      const pct = Math.min(95, Math.round((pageNum / totalPages) * 85) + 10);
+      const pct = Math.min(90, Math.round((pageNum / totalPages) * 80) + 10);
       onStatus(`جاري معالجة الصفحة ${pageNum} من ${totalPages}...`, pct);
 
       const page = await pdfDoc.getPage(pageNum);
@@ -399,18 +597,17 @@ export async function processDroppedReferenceFile(
         .join(' ')
         .trim();
 
-      // Render page preview image for pages we index
-      let pageImageUrl: string | undefined;
+      let pageDataUrl: string | undefined;
       if (pageNum <= pagesToProcess || extractedText.length >= 25) {
         try {
-          const viewport = page.getViewport({ scale: 1.35 });
+          const viewport = page.getViewport({ scale: 1.25 });
           const canvas = document.createElement('canvas');
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           const ctx = canvas.getContext('2d');
           if (ctx) {
             await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
-            pageImageUrl = canvas.toDataURL('image/jpeg', 0.65);
+            pageDataUrl = canvas.toDataURL('image/jpeg', 0.6);
           }
         } catch {
           // Ignore canvas failure
@@ -418,28 +615,31 @@ export async function processDroppedReferenceFile(
       }
 
       if (extractedText.length >= 25) {
+        const cloudImgUrl = pageDataUrl
+          ? await uploadPageImageToCloud(pageDataUrl, bookId, pageNum)
+          : undefined;
         blocks.push({
           label: `${bookTitle} - صفحة ${pageNum}`,
           pageLabel: `ص ${pageNum}`,
           text: extractedText,
-          pageImage: pageImageUrl
+          pageImage: cloudImgUrl
         });
-      } else if (pageNum <= pagesToProcess && pageImageUrl) {
-        // Scanned page -> Perform OCR!
+      } else if (pageNum <= pagesToProcess && pageDataUrl) {
         scannedPagesCount++;
         onStatus(
           `صفحة مصوّرة (${pageNum}/${pagesToProcess}): جاري استخراج النص العربي بالـ OCR...`,
           pct
         );
-        const ocrText = await performArabicOcrOnDataUrl(pageImageUrl, (subMsg) => {
+        const ocrText = await performArabicOcrOnDataUrl(pageDataUrl, (subMsg) => {
           onStatus(`صفحة ${pageNum}: ${subMsg}`, pct);
         });
         if (ocrText.trim().length >= 15) {
+          const cloudImgUrl = await uploadPageImageToCloud(pageDataUrl, bookId, pageNum);
           blocks.push({
             label: `${bookTitle} - صفحة ${pageNum}`,
             pageLabel: `ص ${pageNum}`,
             text: ocrText.trim(),
-            pageImage: pageImageUrl
+            pageImage: cloudImgUrl
           });
         }
       }
@@ -449,6 +649,7 @@ export async function processDroppedReferenceFile(
       throw new Error('لم يتمكن النظام من استخراج نصوص كافية من هذا الملف.');
     }
 
+    onStatus('جاري حفظ المرجع ومزامنته على سحابة Supabase لجميع الزوار...', 95);
     const sections = buildSectionsFromBlocks(bookId, bookTitle, bookAuthor, blocks);
     const record: ReferenceBookRecord = {
       id: bookId,
@@ -461,7 +662,7 @@ export async function processDroppedReferenceFile(
       sections
     };
     await saveUploadedBook(record);
-    onStatus('اكتملت فهرسة ملف PDF بنجاح!', 100);
+    onStatus('اكتملت فهرسة ملف PDF ومزامنته لجميع الزوار!', 100);
     return record;
   }
 
@@ -483,12 +684,15 @@ export async function processDroppedReferenceFile(
       throw new Error('لم يتم العثور على نص عربي واضح في الصورة.');
     }
 
+    onStatus('جاري رفع الوثيقة إلى سحابة Supabase...', 88);
+    const cloudImgUrl = await uploadPageImageToCloud(imageDataUrl, bookId, 1);
+
     const sections = buildSectionsFromBlocks(bookId, bookTitle, bookAuthor, [
       {
         label: bookTitle,
         pageLabel: 'ص 1 (وثيقة مصوّرة)',
         text: ocrText.trim(),
-        pageImage: imageDataUrl
+        pageImage: cloudImgUrl
       }
     ]);
 
@@ -503,12 +707,12 @@ export async function processDroppedReferenceFile(
       sections
     };
     await saveUploadedBook(record);
-    onStatus('اكتملت فهرسة الصورة بنجاح!', 100);
+    onStatus('اكتملت فهرسة الصورة ومزامنتها لجميع الزوار!', 100);
     return record;
   }
 
   // 4. Plain Text / Markdown (.txt, .md)
-  onStatus('جاري قراءة الملف النصي وفهرسته...', 40);
+  onStatus('جاري قراءة الملف النصي وفهرسته على السحابة...', 40);
   const rawText = (await file.text()).trim();
   if (!rawText) {
     throw new Error('الملف النصي فارغ.');
@@ -551,6 +755,6 @@ export async function processDroppedReferenceFile(
     sections
   };
   await saveUploadedBook(record);
-  onStatus('اكتملت فهرسة الملف النصي بنجاح!', 100);
+  onStatus('اكتملت فهرسة الملف النصي ومزامنته لجميع الزوار!', 100);
   return record;
 }

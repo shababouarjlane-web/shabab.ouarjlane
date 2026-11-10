@@ -122,7 +122,7 @@ export default function AdminHistoryRefsTab() {
   };
 
   const handleRestoreDefault = async () => {
-    restoreBuiltinGhosnAlBan();
+    await restoreBuiltinGhosnAlBan();
     toast.success('تمت استعادة جميع أبواب كتاب «غصن البان في تاريخ وارجلان» الافتراضية.');
     await loadBooks();
   };

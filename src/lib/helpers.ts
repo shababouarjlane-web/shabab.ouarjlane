@@ -264,7 +264,7 @@ export interface HeritageMeta {
   cleanContent: string;
   category: string;
   contributor?: string;
-  status: 'approved' | 'pending' | 'contact_request';
+  status: 'approved' | 'pending' | 'contact_request' | 'history_reference';
   contactPhone?: string;
   contactEmail?: string;
   requestType?: string;
@@ -309,6 +309,13 @@ export function parseHeritageMeta(rawContent?: string | null, title = ''): Herit
       cleanContent: '',
       category: inferHeritageCategory(title, ''),
       status: 'approved'
+    };
+  }
+  if (rawContent.startsWith('HREF_BOOK::') || rawContent.startsWith('HREF_DELETED::')) {
+    return {
+      cleanContent: '',
+      category: 'مخطوطات ووثائق',
+      status: 'history_reference'
     };
   }
   if (rawContent.includes('||HMETA||')) {

@@ -11,10 +11,8 @@ import {
   Search, 
   Share2, 
   Ticket, 
-  ArrowRight, 
   Sparkles, 
   Building2, 
-  BookOpen, 
   Layers, 
   Grid, 
   List, 
@@ -23,6 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getFavoriteEventIds, toggleFavoriteEvent } from '../lib/helpers';
+import UnifiedHeader from '../components/UnifiedHeader';
 
 // Helper component for event cover fallback
 const EventImageFallback = ({ src, alt }: { src?: string; alt: string; category?: string }) => {
@@ -221,74 +220,8 @@ export default function EventsExplorer() {
   return (
     <div className="min-h-screen bg-[#fdfbf7] text-[#301809] font-sans selection:bg-[#efa83f]/20" dir="rtl">
       
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-[#fdfbf7]/90 backdrop-blur-md border-b border-[#dbc397]/50 shadow-xs">
-        <div className="container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
-          
-          {/* Logo & Breadcrumb */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 p-2 rounded-xl text-[#723c11] hover:bg-[#fae1b7]/40 transition-colors"
-              title="العودة للرئيسية"
-            >
-              <ArrowRight className="w-5 h-5 text-[#b87a29]" />
-              <span className="text-sm font-bold hidden sm:inline">الرئيسية</span>
-            </button>
-            <div className="h-5 w-px bg-[#dbc397]" />
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#301809] to-[#723c11] flex items-center justify-center text-[#efa83f] font-black text-lg shadow-sm">
-                و
-              </div>
-              <div>
-                <h1 className="text-base sm:text-lg font-thmanyah font-bold leading-tight text-[#301809]">
-                  دليل فعاليات وارجلان
-                </h1>
-                <p className="text-[10px] text-[#723c11] font-semibold tracking-wider">
-                  ⵜⴰⵎⵙⵉⵔⵜ ⵏ ⵡⴰⵔⴵⵍⴰⵏ · استكشف وشارك
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Page Links */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/associations')}
-              className="hidden md:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-10 px-3.5 text-xs font-bold"
-            >
-              <Building2 className="w-3.5 h-3.5 text-[#b87a29]" />
-              <span>دليل الجمعيات</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/map')}
-              className="hidden md:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-10 px-3.5 text-xs font-bold"
-            >
-              <MapPin className="w-3.5 h-3.5 text-[#b87a29]" />
-              <span>خريطة التراث</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/heritage')}
-              className="hidden md:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-10 px-3.5 text-xs font-bold"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-[#b87a29]" />
-              <span>الأرشيف</span>
-            </Button>
-            <Button
-              onClick={() => navigate('/login')}
-              className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] rounded-xl h-10 px-4 text-xs font-bold shadow-sm transition-all"
-            >
-              دخول الحساب
-            </Button>
-          </div>
-        </div>
-      </header>
+      {/* Unified Top Navbar */}
+      <UnifiedHeader />
 
       {/* Hero Banner with Search */}
       <section className="bg-gradient-to-b from-[#fae1b7]/30 via-[#fdfbf7] to-[#fdfbf7] pt-10 pb-8 border-b border-[#dbc397]/30">

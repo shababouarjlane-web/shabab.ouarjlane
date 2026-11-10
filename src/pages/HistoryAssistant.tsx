@@ -1,17 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   BookOpen,
   Send,
   Quote,
   Eye,
-  ArrowRight,
   X,
   HelpCircle,
   Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import UnifiedHeader from '@/components/UnifiedHeader';
 import {
   GHOSN_AL_BAN_META,
   SUGGESTED_QUESTIONS,
@@ -27,19 +27,31 @@ interface ActiveAnswer {
 }
 
 export default function HistoryAssistant() {
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [activeSections, setActiveSections] = useState<BookSection[]>([]);
   const [activeAnswer, setActiveAnswer] = useState<ActiveAnswer | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [previewSection, setPreviewSection] = useState<BookSection | null>(null);
   const answerRef = useRef<HTMLDivElement>(null);
+  const didAutoAskRef = useRef(false);
 
   useEffect(() => {
     getAllActiveSections().then((secs) => {
       setActiveSections(secs);
+      const qParam = searchParams.get('q')?.trim();
+      if (qParam && !didAutoAskRef.current) {
+        didAutoAskRef.current = true;
+        setQuery(qParam);
+        const grounded = searchGhosnAlBan(qParam, secs);
+        setActiveAnswer({
+          question: qParam,
+          answerText: grounded.synthesizedAnswer,
+          section: grounded.matchedSections[0]
+        });
+      }
     });
-  }, []);
+  }, [searchParams]);
 
   const handleAsk = (questionText?: string) => {
     const q = (questionText ?? query).trim();
@@ -49,7 +61,6 @@ export default function HistoryAssistant() {
       setQuery(questionText);
     }
 
-    // If the exact same question is already displayed, just scroll to the answer without duplicating
     if (activeAnswer && activeAnswer.question === q) {
       answerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
@@ -75,23 +86,8 @@ export default function HistoryAssistant() {
 
   return (
     <div className="min-h-screen bg-[#fdfbf7] text-[#301809] flex flex-col" dir="rtl">
-      {/* ── Simple Clean Header ───────────────────────────────────────── */}
-      <header className="sticky top-0 z-30 bg-[#301809] text-[#fae1b7] border-b border-[#723c11] shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-[#fae1b7] transition-colors cursor-pointer"
-              title="العودة للرئيسية"
-            >
-              <ArrowRight className="w-5 h-5" />
-            </button>
-            <h1 className="font-thmanyah font-bold text-base sm:text-lg text-white">
-              اسأل عن تاريخ وارجلان وسدراتة
-            </h1>
-          </div>
-        </div>
-      </header>
+      {/* ── Unified Site Header ───────────────────────────────────────── */}
+      <UnifiedHeader />
 
       {/* ── Main Centered Content ─────────────────────────────────────── */}
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8 flex flex-col gap-6">
@@ -102,9 +98,9 @@ export default function HistoryAssistant() {
             <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/60 flex items-center justify-center text-[#efa83f] shrink-0 shadow-sm">
               <BookOpen className="w-6 h-6" />
             </div>
-            <h2 className="font-thmanyah font-bold text-2xl sm:text-3xl text-white tracking-wide">
+            <h1 className="font-thmanyah font-bold text-2xl sm:text-3xl text-white tracking-wide">
               الباحث التاريخي لوارجلان وسدراتة
-            </h2>
+            </h1>
           </div>
 
           <form

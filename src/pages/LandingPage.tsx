@@ -8,12 +8,12 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent } from '../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
+import UnifiedHeader from '../components/UnifiedHeader';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { 
   Calendar, 
   MapPin, 
-  Users, 
   Bell, 
   BellOff, 
   LogIn, 
@@ -21,7 +21,6 @@ import {
   Building2, 
   Search, 
   BookOpen, 
-  TrendingUp, 
   Sparkles, 
   Mail, 
   Lock, 
@@ -30,7 +29,6 @@ import {
   Loader2,
   Ticket,
   ArrowUpRight,
-  CheckCircle2,
   ArrowUp,
   Heart,
   HelpCircle,
@@ -74,30 +72,11 @@ export default function LandingPage() {
   // Partner Ads State
   const [ads, setAds] = useState<any[]>([]);
 
-  // Logged in user state
-  const [currentSession, setCurrentSession] = useState<any>(null);
-  const [userRole, setUserRole] = useState<'super_admin' | 'association' | 'attendee' | null>(null);
-
   // Scroll to Top State
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     fetchPublicData();
-
-    // Check if user is currently logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setCurrentSession(session);
-      if (session?.user) {
-        supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle()
-          .then(({ data }) => {
-            if (data?.role) setUserRole(data.role);
-          });
-      }
-    });
 
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 350);
@@ -347,121 +326,33 @@ export default function LandingPage() {
         <div className="absolute bottom-[-10%] right-[20%] w-[650px] h-[650px] bg-[#723c11]/8 rounded-full filter blur-[160px] animate-blob animation-delay-4000" />
       </div>
 
-      {/* Floating Header */}
-      <header className="sticky top-4 z-50 mx-4 md:mx-auto max-w-7xl glass-panel rounded-2xl transition-all duration-300 shadow-sm border border-[#dbc397]/50">
-        <div className="container mx-auto px-5 h-18 flex items-center justify-between gap-4">
-          
-          {/* Logo & Brand Identity */}
-          <div className="flex items-center gap-3 cursor-pointer py-1 shrink-0" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#301809] to-[#b87a29] flex items-center justify-center text-white font-bold text-lg shadow-sm shrink-0">
-              ص
-            </div>
-            <div className="flex flex-col text-right whitespace-nowrap">
-              <span className="text-xl font-bold text-[#301809] leading-tight">
-                تواصل صحراء
-              </span>
-              <span className="text-[11px] text-[#723c11]/70 font-medium">
-                بوابة وارجلان (ورقلة) وحوض سدراتة
-              </span>
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-4 xl:gap-5 text-sm font-semibold text-[#301809]/80 whitespace-nowrap">
-            <a href="#hero" className="hover:text-[#b87a29] transition-colors whitespace-nowrap">الرئيسية</a>
-            <button 
-              onClick={() => navigate('/events')} 
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
-            >
-              <Calendar className="w-4 h-4 text-[#b87a29] shrink-0" />
-              دليل الفعاليات
-            </button>
-            <button 
-              onClick={() => navigate('/associations')} 
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
-            >
-              <Building2 className="w-4 h-4 text-[#b87a29] shrink-0" />
-              دليل الجمعيات
-            </button>
-            <button 
-              onClick={() => navigate('/heritage')} 
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
-            >
-              <BookOpen className="w-4 h-4 text-[#b87a29] shrink-0" />
-              الأرشيف التراثي
-            </button>
-            <button
-              onClick={() => navigate('/history-assistant')}
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
-            >
-              <Sparkles className="w-4 h-4 text-[#b87a29] shrink-0" />
-              الباحث التاريخي
-            </button>
-            <button
-              onClick={() => navigate('/map')}
-              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer whitespace-nowrap"
-            >
-              <MapPin className="w-4 h-4 text-[#b87a29] shrink-0" />
-              خريطة التراث
-            </button>
-            <a href="#faq-contact" className="hover:text-[#b87a29] transition-colors whitespace-nowrap">الأسئلة والانضمام</a>
-          </nav>
-
-          {/* Header Action Buttons */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            {/* Notifications Toggle */}
-            <Button 
-              variant="ghost" 
-              onClick={isSubscribed ? unsubscribe : subscribe}
-              disabled={notifLoading}
-              className={`h-11 w-11 p-0 rounded-xl border transition-all flex items-center justify-center ${
-                isSubscribed 
-                  ? 'border-[#efa83f] text-[#723c11] bg-[#fae1b7]/70 hover:bg-[#fae1b7]' 
-                  : 'border-[#dbc397] text-[#723c11] bg-white/80 hover:bg-[#fae1b7]/40'
-              }`}
-              title={isSubscribed ? 'تعطيل الإشعارات' : 'تفعيل إشعارات الفعاليات'}
-            >
-              {notifLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#b87a29]" />
-              ) : isSubscribed ? (
-                <Bell className="w-4 h-4 text-[#efa83f] fill-[#efa83f]" />
-              ) : (
-                <BellOff className="w-4 h-4 text-[#723c11]/60" />
-              )}
-            </Button>
-
-            {/* Login / Auth Button or User Dashboard Shortcut */}
-            {currentSession ? (
-              <Button 
-                onClick={() => {
-                  const dest = userRole === 'super_admin' ? '/admin' : userRole === 'association' ? '/association' : '/attendee';
-                  navigate(dest);
-                }}
-                className="h-11 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
-              >
-                <User className="w-4 h-4 text-white" />
-                <span>
-                  {userRole === 'super_admin' ? 'لوحة الإدارة 🛡️' : userRole === 'association' ? 'لوحة الجمعية 🏛️' : 'حسابي وتذاكري 🎟'}
-                </span>
-              </Button>
+      {/* Unified Site Header */}
+      <UnifiedHeader
+        rightSlot={
+          <Button
+            variant="ghost"
+            onClick={isSubscribed ? unsubscribe : subscribe}
+            disabled={notifLoading}
+            className={`h-10 sm:h-11 w-10 sm:w-11 p-0 rounded-xl border transition-all flex items-center justify-center cursor-pointer ${
+              isSubscribed
+                ? 'border-[#efa83f] text-[#723c11] bg-[#fae1b7]/70 hover:bg-[#fae1b7]'
+                : 'border-[#dbc397] text-[#723c11] bg-white/80 hover:bg-[#fae1b7]/40'
+            }`}
+            title={isSubscribed ? 'تعطيل الإشعارات' : 'تفعيل إشعارات الفعاليات'}
+          >
+            {notifLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin text-[#b87a29]" />
+            ) : isSubscribed ? (
+              <Bell className="w-4 h-4 text-[#efa83f] fill-[#efa83f]" />
             ) : (
-              <Button 
-                onClick={() => {
-                  setIsSignUp(false);
-                  setIsLoginOpen(true);
-                }}
-                className="h-11 px-5 rounded-xl bg-[#301809] hover:bg-[#723c11] text-white text-sm font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
-              >
-                <LogIn className="w-4 h-4 text-[#efa83f]" />
-                <span>تسجيل الدخول</span>
-              </Button>
+              <BellOff className="w-4 h-4 text-[#723c11]/60" />
             )}
-          </div>
-        </div>
-      </header>
+          </Button>
+        }
+      />
 
-      {/* Hero Section */}
-      <section id="hero" className="relative pt-12 pb-16 md:py-24 z-10">
+      {/* Hero Section (Compact & Focused) */}
+      <section id="hero" className="relative pt-8 pb-10 md:py-14 z-10">
         <div className="container mx-auto px-6 grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           
           {/* Hero Copy (Text Column) */}
@@ -517,28 +408,24 @@ export default function LandingPage() {
               </Button>
             </div>
 
-            {/* Clean Notification Banner Card */}
-            <div className="bg-white/90 backdrop-blur border border-[#dbc397]/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-xl shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#fae1b7] flex items-center justify-center text-[#723c11] shrink-0">
-                  <Bell className="w-5 h-5 text-[#b87a29]" />
-                </div>
-                <div className="text-right">
-                  <h4 className="font-bold text-sm text-[#301809]">تنبيهات الفعاليات الفورية على هاتفك</h4>
-                  <p className="text-xs text-[#723c11]/70 mt-0.5">كن أول من يعلم بمواعيد المهرجانات والنشاطات المجتمعية.</p>
-                </div>
+            {/* Compact Inline Stats Strip */}
+            <div className="grid grid-cols-4 gap-2.5 max-w-xl pt-2">
+              <div className="bg-white/90 border border-[#dbc397]/60 rounded-2xl p-3 text-center shadow-xs">
+                <div className="text-xl sm:text-2xl font-thmanyah font-bold text-[#301809]">{stats.users}</div>
+                <div className="text-[11px] font-semibold text-[#723c11]/80">مشارك</div>
               </div>
-              <Button 
-                onClick={subscribe}
-                disabled={isSubscribed}
-                className={`text-xs font-semibold h-10 px-4 rounded-xl shrink-0 transition-all ${
-                  isSubscribed 
-                    ? 'bg-[#fae1b7] text-[#723c11] border border-[#d4b174]' 
-                    : 'bg-[#301809] hover:bg-[#723c11] text-white shadow-sm'
-                }`}
-              >
-                {isSubscribed ? 'الإشعارات مفعلة ✓' : 'تفعيل التنبيهات 🔔'}
-              </Button>
+              <div className="bg-white/90 border border-[#dbc397]/60 rounded-2xl p-3 text-center shadow-xs">
+                <div className="text-xl sm:text-2xl font-thmanyah font-bold text-[#301809]">{stats.associations}</div>
+                <div className="text-[11px] font-semibold text-[#723c11]/80">جمعية</div>
+              </div>
+              <div className="bg-white/90 border border-[#dbc397]/60 rounded-2xl p-3 text-center shadow-xs">
+                <div className="text-xl sm:text-2xl font-thmanyah font-bold text-[#301809]">{stats.events}</div>
+                <div className="text-[11px] font-semibold text-[#723c11]/80">فعالية</div>
+              </div>
+              <div className="bg-white/90 border border-[#dbc397]/60 rounded-2xl p-3 text-center shadow-xs">
+                <div className="text-xl sm:text-2xl font-thmanyah font-bold text-[#301809]">{stats.rsvps}</div>
+                <div className="text-[11px] font-semibold text-[#723c11]/80">تذكرة حضور</div>
+              </div>
             </div>
           </motion.div>
 
@@ -684,62 +571,8 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* Community Stats Section */}
-      <section id="stats" className="py-16 relative z-10">
-        <div className="container mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fae1b7]/60 text-[#723c11] text-xs font-semibold border border-[#d4b174]/40">
-              <TrendingUp className="w-3.5 h-3.5 text-[#efa83f]" />
-              أرقام ونمو المجتمع
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-thmanyah font-bold text-[#301809]">
-              حيوية متجددة وتفاعل مستمر
-            </h2>
-            <p className="text-[#723c11]/80 text-sm md:text-base font-normal">
-              إحصائيات حية تعكس عمق التفاعل بين الجمعيات والمشاركين في وارجلان (ورقلة) ومحيط حوض سدراتة.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-            
-            <div className="p-6 rounded-2xl glass-card text-center space-y-2.5 border border-[#dbc397]/50">
-              <div className="w-12 h-12 rounded-xl bg-[#fae1b7] flex items-center justify-center mx-auto text-[#723c11]">
-                <Users className="w-6 h-6" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-thmanyah font-bold text-[#301809]">{stats.users}</div>
-              <div className="text-xs font-medium text-[#723c11]/80">مشارك مسجل بالمنصة</div>
-            </div>
-
-            <div className="p-6 rounded-2xl glass-card text-center space-y-2.5 border border-[#dbc397]/50">
-              <div className="w-12 h-12 rounded-xl bg-[#fae1b7] flex items-center justify-center mx-auto text-[#b87a29]">
-                <Building2 className="w-6 h-6" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-thmanyah font-bold text-[#301809]">{stats.associations}</div>
-              <div className="text-xs font-medium text-[#723c11]/80">جمعية محلية معتمدة</div>
-            </div>
-
-            <div className="p-6 rounded-2xl glass-card text-center space-y-2.5 border border-[#dbc397]/50">
-              <div className="w-12 h-12 rounded-xl bg-[#fae1b7] flex items-center justify-center mx-auto text-[#723c11]">
-                <Calendar className="w-6 h-6" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-thmanyah font-bold text-[#301809]">{stats.events}</div>
-              <div className="text-xs font-medium text-[#723c11]/80">فعالية منشورة ومنظمة</div>
-            </div>
-
-            <div className="p-6 rounded-2xl glass-card text-center space-y-2.5 border border-[#dbc397]/50">
-              <div className="w-12 h-12 rounded-xl bg-[#fae1b7] flex items-center justify-center mx-auto text-[#efa83f]">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <div className="text-3xl sm:text-4xl font-thmanyah font-bold text-[#301809]">{stats.rsvps}</div>
-              <div className="text-xs font-medium text-[#723c11]/80">تذكرة وتأكيد حضور</div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
       {/* Heritage Spotlight Feature Section */}
-      <section id="heritage-spotlight" className="py-10 relative z-10 mx-4 md:mx-auto max-w-7xl">
+      <section id="heritage-spotlight" className="py-6 relative z-10 mx-4 md:mx-auto max-w-7xl">
         <div className="rounded-3xl bg-gradient-to-br from-[#301809] via-[#4a2711] to-[#723c11] text-white p-8 md:p-12 relative overflow-hidden shadow-xl border border-[#d4b174]/30">
           
           <div className="grid lg:grid-cols-12 gap-8 items-center relative z-10">
@@ -761,18 +594,25 @@ export default function LandingPage() {
 
               <div className="flex flex-wrap gap-3 pt-1">
                 <Button 
-                  onClick={() => navigate('/heritage')}
-                  className="bg-gradient-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-[#301809] font-bold px-6 py-5 rounded-xl text-sm shadow-glow-amber transition-all"
+                  onClick={() => navigate('/map')}
+                  className="bg-gradient-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-[#301809] font-bold px-5 py-5 rounded-xl text-sm shadow-glow-amber flex items-center gap-2 transition-all cursor-pointer"
                 >
-                  استكشف الأرشيف التراثي
-                  <ArrowUpRight className="w-4 h-4 mr-1" />
+                  <MapPin className="w-4 h-4" />
+                  <span>خريطة المعالم التفاعلية</span>
                 </Button>
                 <Button 
-                  onClick={() => navigate('/map')}
-                  className="bg-white/10 hover:bg-white/20 border border-[#efa83f]/40 text-white font-bold px-5 py-5 rounded-xl text-sm flex items-center gap-2 transition-all shadow-sm"
+                  onClick={() => navigate('/history-assistant')}
+                  className="bg-white/15 hover:bg-white/25 border border-[#efa83f]/60 text-[#fae1b7] font-bold px-5 py-5 rounded-xl text-sm flex items-center gap-2 transition-all shadow-sm cursor-pointer"
                 >
-                  <MapPin className="w-4 h-4 text-[#efa83f]" />
-                  خريطة المعالم التفاعلية
+                  <Sparkles className="w-4 h-4 text-[#efa83f]" />
+                  <span>اسأل الباحث التاريخي</span>
+                </Button>
+                <Button 
+                  onClick={() => navigate('/heritage')}
+                  className="bg-white/10 hover:bg-white/20 border border-[#efa83f]/40 text-white font-bold px-5 py-5 rounded-xl text-sm flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+                >
+                  <BookOpen className="w-4 h-4 text-[#efa83f]" />
+                  <span>الأرشيف التراثي</span>
                 </Button>
               </div>
             </div>
@@ -899,7 +739,7 @@ export default function LandingPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEvents.map((ev) => (
+              {filteredEvents.slice(0, 3).map((ev) => (
                 <Card 
                   key={ev.id}
                   className="group overflow-hidden rounded-2xl border border-[#dbc397]/40 glass-card flex flex-col h-[490px] cursor-pointer hover:border-[#efa83f]/70"
@@ -1152,72 +992,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Structured, Balanced Footer */}
-      <footer className="bg-[#301809] text-white pt-16 pb-12 relative overflow-hidden mt-20 border-t border-[#d4b174]/30">
-        
-        <div className="container mx-auto px-6 relative z-10 space-y-12">
-          
-          {/* Quote Section at Top of Footer */}
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center mx-auto text-[#efa83f] shadow-sm">
-              <BookOpen className="w-5 h-5" />
+      {/* Compact Footer */}
+      <footer className="bg-[#301809] text-white py-8 relative overflow-hidden mt-12 border-t border-[#d4b174]/30">
+        <div className="container mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#fae1b7]/80 max-w-6xl">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#efa83f] text-[#301809] font-bold flex items-center justify-center text-sm">
+              ص
             </div>
-            <p className="text-xl sm:text-2xl font-thmanyah font-bold text-[#fae1b7] leading-relaxed">
-              "من ليس له ماضٍ، ليس له حاضر ولا مستقبل"
-            </p>
+            <span className="font-bold text-sm text-white">تواصل صحراء</span>
+            <span className="text-[#fae1b7]/50">•</span>
+            <span>"من ليس له ماضٍ، ليس له حاضر ولا مستقبل"</span>
           </div>
-
-          <div className="w-full h-px bg-[#d4b174]/20 max-w-4xl mx-auto" />
-
-          {/* 3-Column Structured Footer Content */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-right max-w-5xl mx-auto text-sm">
-            
-            {/* Column 1: Platform About */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-[#efa83f] text-[#301809] font-bold flex items-center justify-center text-sm">
-                  ص
-                </div>
-                <span className="font-bold text-base text-white">تواصل صحراء</span>
-              </div>
-              <p className="text-xs text-[#fae1b7]/70 leading-relaxed font-normal">
-                منصة رقمية موحدة لربط جمعيات وارجلان (ورقلة) وحوض سدراتة، وإتاحة الفعاليات العامة والأرشيف التراثي في متناول الجميع.
-              </p>
-            </div>
-
-            {/* Column 2: Navigation Links */}
-            <div className="space-y-2.5">
-              <h5 className="font-bold text-xs uppercase tracking-wider text-[#efa83f]">روابط سريعة</h5>
-              <ul className="space-y-1.5 text-xs text-[#fae1b7]/80">
-                <li><a href="#hero" className="hover:text-white transition-colors">الصفحة الرئيسية</a></li>
-                <li><a href="#events" className="hover:text-white transition-colors">دليل الفعاليات والأخبار</a></li>
-                <li><button onClick={() => navigate('/heritage')} className="hover:text-white transition-colors">الأرشيف التراثي لسدراتة</button></li>
-                <li><a href="#stats" className="hover:text-white transition-colors">إحصائيات المجتمع</a></li>
-              </ul>
-            </div>
-
-            {/* Column 3: Portals */}
-            <div className="space-y-2.5">
-              <h5 className="font-bold text-xs uppercase tracking-wider text-[#efa83f]">بوابات الحسابات</h5>
-              <ul className="space-y-1.5 text-xs text-[#fae1b7]/80">
-                <li><button onClick={() => { setLoginTab('attendee'); setIsLoginOpen(true); }} className="hover:text-white transition-colors">بوابة المشاركين والزوار</button></li>
-                <li><button onClick={() => { setLoginTab('admin'); setIsLoginOpen(true); }} className="hover:text-white transition-colors">بوابة الجمعيات والمشرفين</button></li>
-                <li><span className="text-[#fae1b7]/50">وارجلان (ورقلة) • الجزائر</span></li>
-              </ul>
-            </div>
-
-          </div>
-
-          <div className="w-full h-px bg-[#d4b174]/15 max-w-5xl mx-auto" />
-
-          {/* Bottom Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-[#fae1b7]/60 max-w-5xl mx-auto gap-3">
-            <p>© {new Date().getFullYear()} جميع الحقوق محفوظة لمنصة تواصل صحراء.</p>
-            <span className="text-[11px] font-semibold text-[#efa83f]/90 tracking-wide">
-              Sahara Gather Connect • Ouargla & Sedrata
-            </span>
-          </div>
-
+          <p className="text-[#fae1b7]/60">
+            © {new Date().getFullYear()} جميع الحقوق محفوظة لمنصة تواصل صحراء — وارجلان (ورقلة) وسدراتة
+          </p>
         </div>
       </footer>
 

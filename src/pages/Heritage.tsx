@@ -20,10 +20,10 @@ import {
   Send,
   Share2,
   User,
-  Building2,
   Sparkles,
   Tag
 } from 'lucide-react';
+import UnifiedHeader from '../components/UnifiedHeader';
 import {
   Dialog,
   DialogContent,
@@ -195,84 +195,19 @@ export default function Heritage() {
       {/* Dynamic Background Pattern */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/sandpaper.png")' }} />
 
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-[#fdfbf7]/95 backdrop-blur-md border-b border-[#dbc397]/50 shadow-xs">
-        <div className="container mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
-
-          {/* Back to Home Button */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 p-2 px-3 rounded-xl text-[#723c11] hover:bg-[#fae1b7]/40 transition-colors group"
-              title="العودة للصفحة الرئيسية"
-            >
-              <ArrowRight className="w-5 h-5 text-[#b87a29] group-hover:-translate-x-0.5 transition-transform" />
-              <span className="text-sm font-bold text-[#301809]">الرئيسية</span>
-            </button>
-            <div className="h-5 w-px bg-[#dbc397]" />
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#301809] to-[#723c11] flex items-center justify-center text-[#efa83f] font-black text-base shadow-sm">
-                ت
-              </div>
-              <div className="hidden sm:block">
-                <h2 className="text-sm font-thmanyah font-bold leading-tight text-[#301809]">
-                  الأرشيف التراثي لوارجلان
-                </h2>
-                <p className="text-[10px] text-[#723c11]/80 font-semibold tracking-wider">
-                  سجل ذاكرة الواحات وسدراتة
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Page Links */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button
-              onClick={() => navigate('/history-assistant')}
-              size="sm"
-              className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] border border-[#b87a29]/50 rounded-xl h-9 px-3.5 text-xs font-bold gap-1.5 shadow-sm cursor-pointer whitespace-nowrap"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#efa83f] shrink-0" />
-              <span>الباحث التاريخي</span>
-            </Button>
-            <Button
-              onClick={() => setSuggestOpen(true)}
-              size="sm"
-              className="bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white rounded-xl h-9 px-3.5 text-xs font-black gap-1.5 shadow-sm cursor-pointer"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>اقترح معلماً تراثياً</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/associations')}
-              className="hidden md:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-9 px-3.5 text-xs font-bold"
-            >
-              <Building2 className="w-3.5 h-3.5 text-[#b87a29]" />
-              <span>دليل الجمعيات</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/events')}
-              className="hidden sm:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-9 px-3.5 text-xs font-bold"
-            >
-              <Calendar className="w-3.5 h-3.5 text-[#b87a29]" />
-              <span>دليل الفعاليات</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/map')}
-              className="flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-9 px-3.5 text-xs font-bold"
-            >
-              <MapPin className="w-3.5 h-3.5 text-[#b87a29]" />
-              <span>خريطة التراث</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      {/* Unified Top Navbar */}
+      <UnifiedHeader
+        rightSlot={
+          <Button
+            onClick={() => setSuggestOpen(true)}
+            size="sm"
+            className="bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white rounded-xl h-10 px-3.5 text-xs font-black gap-1.5 shadow-sm cursor-pointer whitespace-nowrap"
+          >
+            <PlusCircle className="w-3.5 h-3.5 shrink-0" />
+            <span>اقترح معلماً تراثياً</span>
+          </Button>
+        }
+      />
 
       {/* Hero Section */}
       <div className="relative h-[450px] flex items-center justify-center overflow-hidden">
@@ -551,12 +486,21 @@ export default function Heritage() {
 
               {/* Modal Footer (Action Panel) */}
               <div className="p-6 border-t bg-white flex flex-wrap justify-between items-center gap-3 px-8 shrink-0" dir="rtl">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <Button
                     onClick={() => shareArticleWhatsApp(selectedItem)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl gap-2 h-11 px-5"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl gap-2 h-11 px-5 cursor-pointer"
                   >
                     <Share2 className="w-4 h-4" /> مشاركة عبر واتساب
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      navigate(`/history-assistant?q=${encodeURIComponent(`ماذا ذكر كتاب غصن البان عن ${selectedItem.title}؟`)}`);
+                    }}
+                    className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] font-bold rounded-xl gap-2 h-11 px-5 cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4 text-[#efa83f]" /> اسأل الباحث التاريخي عنه
                   </Button>
                 </div>
                 <Button
