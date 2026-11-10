@@ -355,7 +355,7 @@ export function buildGoogleMapsDirectionsUrl(locationOrCoords: string | [number,
 export function resolveOuarglaLocationCoords(locationText?: string | null, seedIndex = 0): [number, number] {
   const loc = (locationText || '').trim();
   if (/القصر|العتيق|سوق الاحد|القصبة|لالا عزيزة|لالا منصورة|الجامع الكبير|قصر ورقلة/i.test(loc)) {
-    return [31.9628 + (seedIndex % 3) * 0.0006, 5.3248 + (seedIndex % 2) * 0.0006];
+    return [31.966825 + (seedIndex % 3) * 0.0003, 5.327198 + (seedIndex % 2) * 0.0003];
   }
   if (/سدراتة|سدراته|V8V6\+X9R/i.test(loc)) {
     return [31.894988, 5.310891];

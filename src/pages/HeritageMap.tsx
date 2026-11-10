@@ -41,28 +41,28 @@ interface Landmark {
   polygon?: [number, number][];
 }
 
-// مركز القصر العتيق الافتراضي
-const KSAR_CENTER = [31.9655, 5.3284] as const;
+// مركز القصر العتيق المعتمد
+const KSAR_CENTER = [31.9661, 5.3270] as const;
 
-// الإحداثيات الأساسية لمحيط القصر العتيق الكامل (الدائرة الحمراء)
+// الإحداثيات المعتمدة لمحيط القصر العتيق الكامل (الدائرة الحمراء المضبوطة بدقة فوق القمر الصناعي)
 const DEFAULT_KSAR_POLYGON: [number, number][] = [
-  [31.9712, 5.3280], // شمال القصر
-  [31.9708, 5.3300],
-  [31.9700, 5.3318],
-  [31.9688, 5.3333],
-  [31.9670, 5.3340], // شرق القصر
-  [31.9650, 5.3340],
-  [31.9632, 5.3332],
-  [31.9616, 5.3315],
-  [31.9604, 5.3294], // جنوب-شرق
-  [31.9596, 5.3270], // أقصى جنوب القصر
-  [31.9602, 5.3248],
-  [31.9616, 5.3234], // جنوب-غرب
-  [31.9636, 5.3226],
-  [31.9658, 5.3225], // غرب القصر
-  [31.9680, 5.3232],
-  [31.9698, 5.3248], // شمال-غرب
-  [31.9708, 5.3265],
+  [31.970313, 5.328037], // شمال القصر
+  [31.969671, 5.329096],
+  [31.968774, 5.329951],
+  [31.967639, 5.330545],
+  [31.966208, 5.330546], // شرق القصر
+  [31.964754, 5.330102],
+  [31.963586, 5.329243],
+  [31.962722, 5.327912],
+  [31.962218, 5.326441], // جنوب-شرق
+  [31.962058, 5.324886], // أقصى جنوب القصر
+  [31.962880, 5.323757],
+  [31.964143, 5.323264], // جنوب-غرب
+  [31.965737, 5.323250],
+  [31.967353, 5.323681], // غرب القصر
+  [31.968829, 5.324572],
+  [31.969857, 5.325890], // شمال-غرب
+  [31.970285, 5.327087],
 ];
 
 // دالة حساب الإحداثيات المعدلة حسب التحريك والتكبير والدوران
@@ -127,8 +127,8 @@ const LANDMARKS: Landmark[] = [
     nameTranslit: 'Aghram Aqbur',
     badge: 'المحيط التاريخي للقصر',
     badgeColor: 'bg-red-600 text-white',
-    lat: 31.9655,
-    lng: 5.3284,
+    lat: 31.966825,
+    lng: 5.327198,
     period: 'ما قبل الإسلام — القرون الوسطى وما بعدها',
     image: '/hero-bg.jpg',
     description:
@@ -254,23 +254,23 @@ export default function HeritageMap() {
   // ─── حالات التحكم بمحيط القصر (تموضع + حجم + دوران) ───────────────────
   const [showControls, setShowControls] = useState(false);
   const [offsetLat, setOffsetLat] = useState<number>(() => {
-    const v = localStorage.getItem('ksar_offsetLat');
+    const v = localStorage.getItem('ksar_v2_offsetLat');
     return v !== null ? parseFloat(v) : 0;
   });
   const [offsetLng, setOffsetLng] = useState<number>(() => {
-    const v = localStorage.getItem('ksar_offsetLng');
+    const v = localStorage.getItem('ksar_v2_offsetLng');
     return v !== null ? parseFloat(v) : 0;
   });
   const [scaleLat, setScaleLat] = useState<number>(() => {
-    const v = localStorage.getItem('ksar_scaleLat');
+    const v = localStorage.getItem('ksar_v2_scaleLat');
     return v !== null ? parseFloat(v) : 1;
   });
   const [scaleLng, setScaleLng] = useState<number>(() => {
-    const v = localStorage.getItem('ksar_scaleLng');
+    const v = localStorage.getItem('ksar_v2_scaleLng');
     return v !== null ? parseFloat(v) : 1;
   });
   const [rotation, setRotation] = useState<number>(() => {
-    const v = localStorage.getItem('ksar_rotation');
+    const v = localStorage.getItem('ksar_v2_rotation');
     return v !== null ? parseFloat(v) : 0;
   });
   const [copied, setCopied] = useState(false);
@@ -295,11 +295,11 @@ export default function HeritageMap() {
     }
 
     // حفظ في localStorage للاحتفاظ بالإعدادات
-    localStorage.setItem('ksar_offsetLat', String(offsetLat));
-    localStorage.setItem('ksar_offsetLng', String(offsetLng));
-    localStorage.setItem('ksar_scaleLat', String(scaleLat));
-    localStorage.setItem('ksar_scaleLng', String(scaleLng));
-    localStorage.setItem('ksar_rotation', String(rotation));
+    localStorage.setItem('ksar_v2_offsetLat', String(offsetLat));
+    localStorage.setItem('ksar_v2_offsetLng', String(offsetLng));
+    localStorage.setItem('ksar_v2_scaleLat', String(scaleLat));
+    localStorage.setItem('ksar_v2_scaleLng', String(scaleLng));
+    localStorage.setItem('ksar_v2_rotation', String(rotation));
   }, [offsetLat, offsetLng, scaleLat, scaleLng, rotation]);
 
   // تهيئة الخريطة
@@ -592,12 +592,17 @@ export default function HeritageMap() {
     setScaleLat(1);
     setScaleLng(1);
     setRotation(0);
+    localStorage.removeItem('ksar_v2_offsetLat');
+    localStorage.removeItem('ksar_v2_offsetLng');
+    localStorage.removeItem('ksar_v2_scaleLat');
+    localStorage.removeItem('ksar_v2_scaleLng');
+    localStorage.removeItem('ksar_v2_rotation');
     localStorage.removeItem('ksar_offsetLat');
     localStorage.removeItem('ksar_offsetLng');
     localStorage.removeItem('ksar_scaleLat');
     localStorage.removeItem('ksar_scaleLng');
     localStorage.removeItem('ksar_rotation');
-    toast.info('تمت إعادة ضبط المحيط إلى الإحداثيات الافتراضية');
+    toast.info('تمت إعادة ضبط المحيط إلى الإحداثيات المعتمدة');
   };
 
   return (
