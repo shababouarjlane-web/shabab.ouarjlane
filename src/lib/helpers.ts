@@ -357,8 +357,8 @@ export function resolveOuarglaLocationCoords(locationText?: string | null, seedI
   if (/القصر|العتيق|سوق الاحد|القصبة|لالا عزيزة|لالا منصورة|الجامع الكبير|قصر ورقلة/i.test(loc)) {
     return [31.9628 + (seedIndex % 3) * 0.0006, 5.3248 + (seedIndex % 2) * 0.0006];
   }
-  if (/سدراتة/i.test(loc)) {
-    return [31.8602, 5.3185];
+  if (/سدراتة|سدراته|V8V6\+X9R/i.test(loc)) {
+    return [31.894988, 5.310891];
   }
   if (/دار الثقافة|مفدي زكرياء|المسرح|المكتبة/i.test(loc)) {
     return [31.9532, 5.3312];

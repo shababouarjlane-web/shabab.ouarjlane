@@ -32,6 +32,7 @@ interface Landmark {
   badgeColor?: string;
   lat: number;
   lng: number;
+  plusCode?: string;
   period: string;
   image: string;
   description: string;
@@ -128,13 +129,14 @@ const LANDMARKS: Landmark[] = [
   },
   {
     id: 'sedrata',
-    nameAr: 'مدينة سدراتة الأثرية',
+    nameAr: 'المدينة الأثرية سدراتة',
     nameTifinagh: 'ⵉⵙⴷⵔⴰⵜⵏ',
     nameTranslit: 'Isedraten',
     badge: 'العاصمة الرستمية الثانية',
     badgeColor: 'bg-[#efa83f] text-[#301809]',
-    lat: 31.8720,
-    lng: 5.2850,
+    lat: 31.894988,
+    lng: 5.310891,
+    plusCode: 'V8V6+X9R، ورقلة',
     period: 'القرن 10 — 13م (العهد الرستمي الإباضي)',
     image: '/hero-bg.jpg',
     description:
@@ -926,10 +928,15 @@ export default function HeritageMap() {
                       <MapPin className="w-4 h-4 text-[#b87a29]" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الإحداثيات</p>
+                      <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الإحداثيات والموقع</p>
                       <p className="text-xs font-mono text-[#301809]/70" dir="ltr">
                         {selected.lat.toFixed(4)}° N, {selected.lng.toFixed(4)}° E
                       </p>
+                      {selected.plusCode && (
+                        <p className="text-[11px] font-bold text-[#b87a29] mt-0.5">
+                          📍 {selected.plusCode}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <a
