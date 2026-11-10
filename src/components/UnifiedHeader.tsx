@@ -4,7 +4,6 @@ import {
   Calendar,
   Building2,
   BookOpen,
-  Sparkles,
   MapPin,
   LogIn,
   User,
@@ -48,12 +47,12 @@ export default function UnifiedHeader({ rightSlot }: UnifiedHeaderProps) {
     { path: '/events', label: 'دليل الفعاليات', icon: Calendar },
     { path: '/associations', label: 'دليل الجمعيات', icon: Building2 },
     { path: '/heritage', label: 'الأرشيف التراثي', icon: BookOpen },
-    { path: '/history-assistant', label: 'الباحث التاريخي', icon: Sparkles },
     { path: '/map', label: 'خريطة التراث', icon: MapPin }
   ];
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
+    if (path === '/heritage' && location.pathname.startsWith('/history-assistant')) return true;
     return location.pathname.startsWith(path);
   };
 

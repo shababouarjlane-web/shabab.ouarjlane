@@ -176,7 +176,7 @@ export default function AdminHistoryRefsTab() {
           </Button>
           <Button
             type="button"
-            onClick={() => navigate('/history-assistant')}
+            onClick={() => navigate('/heritage')}
             className="h-10 rounded-xl bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] font-black text-xs gap-1.5 cursor-pointer shadow-sm"
           >
             <ExternalLink className="w-3.5 h-3.5" />

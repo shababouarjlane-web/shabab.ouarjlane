@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -21,7 +21,9 @@ import {
   Share2,
   User,
   Sparkles,
-  Tag
+  Tag,
+  HelpCircle,
+  Quote
 } from 'lucide-react';
 import UnifiedHeader from '../components/UnifiedHeader';
 import {
@@ -37,6 +39,19 @@ import {
   packHeritageMeta
 } from '../lib/helpers';
 import { useToast } from '../hooks/use-toast';
+import {
+  GHOSN_AL_BAN_META,
+  SUGGESTED_QUESTIONS,
+  searchGhosnAlBan,
+  type BookSection
+} from '../data/ghosnAlBanKnowledge';
+import { getAllActiveSections } from '../lib/historyReferencesStore';
+
+interface ActiveAnswer {
+  question: string;
+  answerText: string;
+  section?: BookSection;
+}
 
 // Helper component for professional gradient fallback
 const ImageWithFallback = ({ src, alt, className }: { src?: string, alt: string, className?: string }) => {
@@ -63,11 +78,22 @@ const ImageWithFallback = ({ src, alt, className }: { src?: string, alt: string,
 
 export default function Heritage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('الكل');
+
+  // Historical Assistant State (Top of /heritage)
+  const [assistantQuery, setAssistantQuery] = useState('');
+  const [activeSections, setActiveSections] = useState<BookSection[]>([]);
+  const [activeAnswer, setActiveAnswer] = useState<ActiveAnswer | null>(null);
+  const [isThinking, setIsThinking] = useState(false);
+  const [previewSection, setPreviewSection] = useState<BookSection | null>(null);
+  const assistantCardRef = useRef<HTMLDivElement>(null);
+  const answerRef = useRef<HTMLDivElement>(null);
+  const lastHandledQParam = useRef<string | null>(null);
 
   // Article Reading Modal State
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
@@ -86,6 +112,57 @@ export default function Heritage() {
   useEffect(() => {
     fetchHeritage();
   }, []);
+
+  useEffect(() => {
+    getAllActiveSections().then((secs) => {
+      setActiveSections(secs);
+      const qParam = searchParams.get('q')?.trim();
+      if (qParam && lastHandledQParam.current !== qParam) {
+        lastHandledQParam.current = qParam;
+        setAssistantQuery(qParam);
+        const grounded = searchGhosnAlBan(qParam, secs);
+        setActiveAnswer({
+          question: qParam,
+          answerText: grounded.synthesizedAnswer,
+          section: grounded.matchedSections[0]
+        });
+        setTimeout(() => {
+          answerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
+      }
+    });
+  }, [searchParams]);
+
+  const handleAsk = (questionText?: string) => {
+    const q = (questionText ?? assistantQuery).trim();
+    if (!q) return;
+
+    if (questionText) {
+      setAssistantQuery(questionText);
+    }
+
+    if (activeAnswer && activeAnswer.question === q) {
+      answerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    setIsThinking(true);
+
+    const grounded = searchGhosnAlBan(q, activeSections);
+    const primarySection = grounded.matchedSections[0];
+
+    setTimeout(() => {
+      setActiveAnswer({
+        question: q,
+        answerText: grounded.synthesizedAnswer,
+        section: primarySection
+      });
+      setIsThinking(false);
+      setTimeout(() => {
+        answerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 80);
+    }, 200);
+  };
 
   const fetchHeritage = async () => {
     try {
@@ -210,7 +287,7 @@ export default function Heritage() {
       />
 
       {/* Hero Section */}
-      <div className="relative h-[450px] flex items-center justify-center overflow-hidden">
+      <div className="relative h-[370px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
             src="/hero-bg.jpg"
@@ -223,36 +300,231 @@ export default function Heritage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#301809]/80 via-transparent to-[#faf9f6]" />
         </div>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl">
-          <div className="inline-flex items-center gap-2 bg-[#efa83f]/20 backdrop-blur-md px-4 py-2 rounded-full border border-[#efa83f]/40 text-[#efa83f] mb-6 animate-in fade-in slide-in-from-top-4 duration-1000">
+        <div className="relative z-10 text-center px-4 max-w-4xl -mt-6">
+          <div className="inline-flex items-center gap-2 bg-[#efa83f]/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-[#efa83f]/40 text-[#efa83f] mb-4">
             <BookOpen className="w-4 h-4" />
-            <span className="text-sm font-black tracking-wider uppercase">سجل الذاكرة الجماعية</span>
+            <span className="text-xs sm:text-sm font-black tracking-wider uppercase">المراجع التاريخية وسجل الذاكرة الجماعية</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black text-white mb-5 drop-shadow-2xl tracking-tight">
-            الأرشيف التراثي لوارجلان (ورقلة)
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-2xl tracking-tight">
+            الأرشيف التراثي والباحث التاريخي
           </h1>
-          <p className="text-lg md:text-2xl text-[#fae1b7] font-medium leading-relaxed drop-shadow-md mb-6">
-            نافذتكم على كنوز حوض سدراتة.. نحفظ التاريخ لنلهم المستقبل.
+          <p className="text-base sm:text-xl text-[#fae1b7] font-medium leading-relaxed drop-shadow-md">
+            اسأل المراجع التاريخية الموثقة لوارجلان وسدراتة أو تصفح سجلات ووثائق الأرشيف التراثي.
           </p>
-          <Button
-            onClick={() => setSuggestOpen(true)}
-            className="bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] hover:text-white font-black px-6 py-5 rounded-2xl text-sm shadow-xl gap-2 cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4" /> شارك في إثراء الأرشيف (اقترح معلماً أو وثيقة تاريخية)
-          </Button>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 md:px-8 -mt-20 relative z-20 pb-20">
-        {/* Search Bar & Category Filter Pills */}
-        <div className="mb-10 space-y-4">
+      <div className="container mx-auto px-4 md:px-8 -mt-16 relative z-20 pb-20">
+        {/* ══════════════════════════════════════════════════════════════════
+            1. الباحث التاريخي لوارجلان وسدراتة (مُدمج في أعلى الأرشيف)
+        ══════════════════════════════════════════════════════════════════ */}
+        <div ref={assistantCardRef} className="max-w-4xl mx-auto mb-14 space-y-5">
+          {/* Prominent Search Box Card (Title + Input + Search Button ONLY) */}
+          <div className="bg-gradient-to-br from-[#301809] via-[#43230e] to-[#301809] rounded-3xl border-2 border-[#efa83f] shadow-2xl p-6 sm:p-8 space-y-5">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/60 flex items-center justify-center text-[#efa83f] shrink-0 shadow-sm">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <h2 className="font-thmanyah font-bold text-2xl sm:text-3xl text-white tracking-wide">
+                الباحث التاريخي لوارجلان وسدراتة
+              </h2>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAsk();
+              }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+            >
+              <div className="relative flex-1">
+                <Search className="w-5 h-5 text-[#723c11]/60 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Input
+                  type="search"
+                  name="historical-reference-question"
+                  autoComplete="off"
+                  value={assistantQuery}
+                  onChange={(e) => setAssistantQuery(e.target.value)}
+                  placeholder="اكتب سؤالك هنا... (مثال: متى تأسست سدراتة؟ أو ما هي أبواب قصر وارجلان؟)"
+                  className="w-full h-14 rounded-2xl border-2 border-[#fae1b7] bg-white text-[#301809] text-sm sm:text-base font-semibold placeholder:text-[#723c11]/55 focus-visible:ring-2 focus-visible:ring-[#efa83f] pr-12 pl-4 shadow-inner"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={!assistantQuery.trim() || isThinking}
+                className="h-14 px-7 rounded-2xl bg-gradient-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f3b557] hover:to-[#c98730] text-[#301809] font-black text-base gap-2 shrink-0 cursor-pointer shadow-lg transition-all"
+              >
+                <Send className="w-4 h-4" />
+                <span>ابحث في المرجع</span>
+              </Button>
+            </form>
+          </div>
+
+          {/* Visually Separated Suggested Questions Section */}
+          <div className="bg-white rounded-3xl border border-[#dbc397] shadow-sm p-5 sm:p-6">
+            <p className="text-xs sm:text-sm font-bold text-[#723c11] mb-3.5 flex items-center gap-2">
+              <HelpCircle className="w-4 h-4 text-[#b87a29]" />
+              <span>أسئلة شائعة يمكنك الضغط عليها مباشرة:</span>
+            </p>
+            <div className="flex flex-wrap gap-2.5">
+              {SUGGESTED_QUESTIONS.slice(0, 6).map((sq) => {
+                const isSelected = activeAnswer?.question === sq;
+                return (
+                  <button
+                    key={sq}
+                    type="button"
+                    onClick={() => handleAsk(sq)}
+                    className={`text-right text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#301809] text-[#fae1b7] border-[#301809] shadow-sm'
+                        : 'bg-[#fdfbf7] hover:bg-[#fae1b7]/60 text-[#301809] border-[#dbc397]'
+                    }`}
+                  >
+                    {sq}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Single Active Answer Area (Never Duplicates!) */}
+          <div ref={answerRef}>
+            {isThinking ? (
+              <div className="bg-white border border-[#dbc397] rounded-3xl p-6 flex items-center gap-3 text-sm font-bold text-[#723c11] shadow-sm">
+                <div className="w-3 h-3 rounded-full bg-[#efa83f] animate-ping" />
+                جاري استخراج الإجابة الموثقة من المرجع...
+              </div>
+            ) : (
+              activeAnswer && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                  {/* Question Pill + Close Answer */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="bg-[#301809] text-[#fae1b7] rounded-2xl px-4 py-2.5 text-sm font-bold shadow-sm">
+                      سؤالك: {activeAnswer.question}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveAnswer(null)}
+                      className="text-xs font-bold text-[#723c11] hover:text-red-700 bg-white border border-[#dbc397] px-3 py-1.5 rounded-xl flex items-center gap-1 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>إغلاق الإجابة</span>
+                    </button>
+                  </div>
+
+                  {/* Answer Card */}
+                  <div className="bg-white border-2 border-[#dbc397] rounded-3xl p-6 sm:p-7 shadow-md space-y-5">
+                    {/* Source Attribution + Chapter Title + Page Scan Button */}
+                    {activeAnswer.section && (
+                      <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[#f0e2c8]">
+                        <div className="space-y-1">
+                          <span className="inline-block text-xs font-bold text-[#723c11] bg-[#fae1b7]/60 px-3 py-1 rounded-lg border border-[#d4b174]">
+                            المصدر المعتمد: «{activeAnswer.section.bookTitle || GHOSN_AL_BAN_META.title}» — {activeAnswer.section.bookAuthor || GHOSN_AL_BAN_META.author} ({activeAnswer.section.pages})
+                          </span>
+                          <h3 className="font-thmanyah font-bold text-lg text-[#301809] pt-1">
+                            {activeAnswer.section.chapterTitle}
+                          </h3>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewSection(activeAnswer.section!)}
+                          className="text-xs font-bold text-[#301809] bg-[#fdfbf7] hover:bg-[#301809] hover:text-[#fae1b7] px-3.5 py-2 rounded-xl border border-[#b87a29] flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                        >
+                          <Eye className="w-4 h-4 text-[#b87a29]" />
+                          <span>معاينة الصفحة الأصلية ({activeAnswer.section.pages})</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Answer Body */}
+                    <div className="text-sm sm:text-base text-[#301809] leading-relaxed whitespace-pre-line">
+                      {activeAnswer.answerText}
+                    </div>
+
+                    {/* Verbatim Quote from Book */}
+                    {activeAnswer.section && (
+                      <div className="bg-[#fdfbf7] border-r-4 border-[#b87a29] rounded-2xl p-4 space-y-1.5">
+                        <span className="text-xs font-bold text-[#723c11] flex items-center gap-1.5">
+                          <Quote className="w-3.5 h-3.5 text-[#b87a29]" />
+                          نص المؤلف في الكتاب ({activeAnswer.section.pages}):
+                        </span>
+                        <p className="text-xs sm:text-sm font-thmanyah text-[#301809] leading-loose">
+                          «{activeAnswer.section.verbatimQuote}»
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            2. شريط الخريطة التفاعلية للأقمار الصناعية
+        ══════════════════════════════════════════════════════════════════ */}
+        <div
+          onClick={() => navigate('/map')}
+          className="cursor-pointer mb-14 rounded-3xl bg-gradient-to-r from-[#301809] via-[#4a2711] to-[#723c11] p-6 md:p-8 border border-[#efa83f]/40 shadow-xl relative overflow-hidden group hover:border-[#efa83f]/80 hover:shadow-glow-amber transition-all duration-300"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#efa83f]/15 via-transparent to-transparent pointer-events-none" />
+
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2.5 text-right">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efa83f]/20 border border-[#efa83f]/40 text-[#efa83f] text-xs font-semibold">
+                <span className="w-2 h-2 rounded-full bg-[#efa83f] animate-ping" />
+                <span>خريطة تفاعلية حية • ⵜⴰⵡⵉⵍⴰ ⵏ ⵡⴰⵔⴵⵍⴰⵏ</span>
+              </div>
+              <h3 className="text-xl md:text-3xl font-bold text-white font-thmanyah leading-snug">
+                استكشف المعالم الأثرية والفعاليات الميدانية لـ وارجلان وسدراتة من الفضاء
+              </h3>
+              <p className="text-sm md:text-base text-[#fae1b7]/80 max-w-2xl leading-relaxed">
+                تجوّل عبر صور الأقمار الصناعية العالية الدقة: طالع المحيط التاريخي للقصر العتيق، موقع مسجد لالة عزة الإباضي، والفعاليات الجارية مع التوجيه المباشر عبر Google Maps.
+              </p>
+            </div>
+
+            <Button
+              className="bg-gradient-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-[#301809] font-bold px-7 py-6 rounded-2xl text-base shadow-glow-amber group-hover:scale-105 transition-all shrink-0 flex items-center gap-2.5 self-stretch lg:self-auto justify-center"
+            >
+              <MapPin className="w-5 h-5 text-[#301809]" />
+              <span>فتح خريطة المعالم والفعاليات</span>
+              <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
+            </Button>
+          </div>
+        </div>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            3. سجل المقالات والوثائق والصور التراثية (الأرشيف المجتمعي)
+        ══════════════════════════════════════════════════════════════════ */}
+        <div className="mb-10 space-y-5">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 max-w-4xl mx-auto">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-thmanyah font-bold text-[#301809]">
+                سجل المقالات والوثائق التراثية المعتمدة
+              </h2>
+              <p className="text-xs sm:text-sm text-[#723c11]/80 mt-1">
+                تصفح مساهمات الباحثين والجمعيات أو شاركنا بتوثيق معلم أو وثيقة تاريخية جديدة.
+              </p>
+            </div>
+            <Button
+              onClick={() => setSuggestOpen(true)}
+              className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] font-bold px-5 py-3 rounded-2xl text-xs sm:text-sm shadow-md gap-2 cursor-pointer shrink-0"
+            >
+              <PlusCircle className="w-4 h-4 text-[#efa83f]" />
+              <span>شارك في إثراء الأرشيف</span>
+            </Button>
+          </div>
+
           <div className="relative group max-w-4xl mx-auto">
-            <Search className="absolute right-5 top-1/2 -translate-y-1/2 h-6 w-6 text-[#b87a29] transition-colors group-focus-within:text-[#efa83f]" />
+            <Search className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-[#b87a29] transition-colors group-focus-within:text-[#efa83f]" />
             <Input
-              placeholder="ابحث في سجلات التراث... (مثال: قصور، سدراتة، حرف تقليدية، مخطوطات، لالة عزيزة)"
+              type="search"
+              name="heritage-archive-filter-query"
+              autoComplete="off"
+              placeholder="فلترة بطاقات الأرشيف التراثي... (مثال: قصور عتيقة، شخصيات، مخطوطات)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-white/95 backdrop-blur-md shadow-xl border-2 border-[#dbc397]/70 focus-visible:ring-[#efa83f] focus-visible:border-[#b87a29] h-16 pr-16 pl-14 rounded-2xl text-base md:text-lg font-bold placeholder:text-[#301809]/40"
+              className="bg-white/95 backdrop-blur-md shadow-md border-2 border-[#dbc397]/70 focus-visible:ring-[#efa83f] focus-visible:border-[#b87a29] h-14 pr-14 pl-12 rounded-2xl text-sm md:text-base font-bold placeholder:text-[#301809]/45"
             />
             {searchQuery && (
               <button
@@ -285,37 +557,6 @@ export default function Heritage() {
                 </button>
               );
             })}
-          </div>
-        </div>
-
-        {/* Interactive Satellite Heritage Map Banner */}
-        <div
-          onClick={() => navigate('/map')}
-          className="cursor-pointer mb-12 rounded-3xl bg-gradient-to-r from-[#301809] via-[#4a2711] to-[#723c11] p-6 md:p-8 border border-[#efa83f]/40 shadow-xl relative overflow-hidden group hover:border-[#efa83f]/80 hover:shadow-glow-amber transition-all duration-300"
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#efa83f]/15 via-transparent to-transparent pointer-events-none" />
-
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
-            <div className="space-y-2.5 text-right">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efa83f]/20 border border-[#efa83f]/40 text-[#efa83f] text-xs font-semibold">
-                <span className="w-2 h-2 rounded-full bg-[#efa83f] animate-ping" />
-                <span>خريطة تفاعلية حية • ⵜⴰⵡⵉⵍⴰ ⵏ ⵡⴰⵔⴵⵍⴰⵏ</span>
-              </div>
-              <h3 className="text-xl md:text-3xl font-bold text-white font-thmanyah leading-snug">
-                استكشف المعالم الأثرية والفعاليات الميدانية لـ وارجلان وسدراتة من الفضاء
-              </h3>
-              <p className="text-sm md:text-base text-[#fae1b7]/80 max-w-2xl leading-relaxed">
-                تجوّل عبر صور الأقمار الصناعية العالية الدقة: طالع المحيط التاريخي للقصر العتيق، موقع مسجد لالة عزة الإباضي، والفعاليات الجارية مع التوجيه المباشر عبر Google Maps.
-              </p>
-            </div>
-
-            <Button
-              className="bg-gradient-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-[#301809] font-bold px-7 py-6 rounded-2xl text-base shadow-glow-amber group-hover:scale-105 transition-all shrink-0 flex items-center gap-2.5 self-stretch lg:self-auto justify-center"
-            >
-              <MapPin className="w-5 h-5 text-[#301809]" />
-              <span>فتح خريطة المعالم والفعاليات</span>
-              <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
-            </Button>
           </div>
         </div>
 
@@ -423,6 +664,44 @@ export default function Heritage() {
         )}
       </div>
 
+      {/* Modal: Original Book Page Scan Lightbox */}
+      {previewSection && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setPreviewSection(null)}
+        >
+          <div
+            className="bg-[#fdfbf7] rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden border-2 border-[#b87a29] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-[#301809] text-[#fae1b7] px-5 py-3.5 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-[#efa83f] block">
+                  نسخة مصوّرة من الكتاب الأصلي • {previewSection.pages}
+                </span>
+                <h3 className="font-thmanyah font-bold text-sm sm:text-base text-white">
+                  {previewSection.chapterTitle}
+                </h3>
+              </div>
+              <button
+                onClick={() => setPreviewSection(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center bg-[#1e120a]">
+              <img
+                src={previewSection.spreadImage}
+                alt={previewSection.chapterTitle}
+                className="max-w-full h-auto rounded-xl shadow-lg border border-[#723c11]"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Article Details Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-[3rem] border-none bg-white shadow-2xl animate-in zoom-in-95 duration-300">
@@ -495,8 +774,10 @@ export default function Heritage() {
                   </Button>
                   <Button
                     onClick={() => {
+                      const qText = `ماذا ذكر كتاب غصن البان عن ${selectedItem.title}؟`;
                       setIsDialogOpen(false);
-                      navigate(`/history-assistant?q=${encodeURIComponent(`ماذا ذكر كتاب غصن البان عن ${selectedItem.title}؟`)}`);
+                      assistantCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      handleAsk(qText);
                     }}
                     className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] font-bold rounded-xl gap-2 h-11 px-5 cursor-pointer"
                   >

@@ -1059,12 +1059,12 @@ export default function HeritageMap() {
                   </p>
                 </div>
 
-                {/* أزرار الربط التفاعلي بالباحث التاريخي والأرشيف */}
-                <div className="pt-1 space-y-2.5">
+                {/* زر الربط الموحد بالباحث التاريخي والأرشيف التراثي */}
+                <div className="pt-1">
                   <button
                     onClick={() =>
                       navigate(
-                        `/history-assistant?q=${encodeURIComponent(
+                        `/heritage?q=${encodeURIComponent(
                           `ماذا ذكر كتاب غصن البان عن ${selected.nameAr}؟`
                         )}`
                       )
@@ -1073,20 +1073,9 @@ export default function HeritageMap() {
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-[#efa83f] shrink-0" />
-                      <span>📖 اقرأ ما ذُكر عن «{selected.nameAr}» في المراجع</span>
+                      <span>📖 اقرأ ما ذُكر عن «{selected.nameAr}» في المراجع والأرشيف</span>
                     </div>
                     <ArrowRight className="w-4 h-4 rotate-180 text-[#efa83f] group-hover:-translate-x-1 transition-transform shrink-0" />
-                  </button>
-
-                  <button
-                    onClick={() => navigate('/heritage')}
-                    className="w-full bg-[#fae1b7]/40 hover:bg-[#fae1b7]/80 border border-[#dbc397] text-[#301809] font-bold rounded-2xl text-xs py-3 px-4 flex items-center justify-between transition-all shadow-sm group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-[#b87a29]" />
-                      <span>تصفح وثائق وسجلات هذا المعلم في الأرشيف</span>
-                    </div>
-                    <ArrowRight className="w-4 h-4 rotate-180 text-[#b87a29] group-hover:-translate-x-1 transition-transform" />
                   </button>
                 </div>
 
