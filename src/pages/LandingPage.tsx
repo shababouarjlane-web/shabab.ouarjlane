@@ -391,6 +391,13 @@ export default function LandingPage() {
               الأرشيف التراثي
             </button>
             <button
+              onClick={() => navigate('/history-assistant')}
+              className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#301809] bg-[#fae1b7]/70 hover:bg-[#fae1b7] px-2.5 py-1 rounded-lg border border-[#d4b174]/60 cursor-pointer font-bold"
+            >
+              <Sparkles className="w-4 h-4 text-[#b87a29]" />
+              الباحث التاريخي (غصن البان)
+            </button>
+            <button
               onClick={() => navigate('/map')}
               className="hover:text-[#b87a29] transition-colors flex items-center gap-1.5 text-[#723c11] cursor-pointer"
             >
@@ -494,10 +501,19 @@ export default function LandingPage() {
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/heritage')} 
-                className="h-13 py-3.5 px-6 rounded-xl bg-white hover:bg-[#fae1b7]/30 text-[#723c11] border border-[#d4b174] font-bold text-base shadow-sm transition-all flex items-center gap-2"
+                className="h-13 py-3.5 px-6 rounded-xl bg-white hover:bg-[#fae1b7]/30 text-[#723c11] border border-[#d4b174] font-bold text-base shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               >
                 <BookOpen className="w-4 h-4 text-[#b87a29]" />
                 <span>تصفح السجل التراثي</span>
+              </Button>
+
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/history-assistant')} 
+                className="h-13 py-3.5 px-5 rounded-xl bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] border border-[#b87a29] font-bold text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-[#efa83f]" />
+                <span>اسأل تاريخ وارجلان (غصن البان)</span>
               </Button>
             </div>
 

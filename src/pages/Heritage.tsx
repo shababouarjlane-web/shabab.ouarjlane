@@ -228,6 +228,14 @@ export default function Heritage() {
           {/* Quick Page Links */}
           <div className="flex items-center gap-2 sm:gap-3">
             <Button
+              onClick={() => navigate('/history-assistant')}
+              size="sm"
+              className="bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] border border-[#b87a29]/50 rounded-xl h-9 px-3.5 text-xs font-black gap-1.5 shadow-sm cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#efa83f]" />
+              <span>اسأل مرجع غصن البان</span>
+            </Button>
+            <Button
               onClick={() => setSuggestOpen(true)}
               size="sm"
               className="bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white rounded-xl h-9 px-3.5 text-xs font-black gap-1.5 shadow-sm cursor-pointer"
