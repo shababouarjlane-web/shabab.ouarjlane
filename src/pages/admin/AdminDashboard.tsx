@@ -57,6 +57,7 @@ import {
   packHeritageMeta,
   parseHeritageMeta
 } from '../../lib/helpers';
+import AdminHistoryRefsTab from '../../components/admin/AdminHistoryRefsTab';
 
 interface DashboardStats {
   total_users: number;
@@ -834,7 +835,7 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-8">
-        <TabsList className="bg-white/80 backdrop-blur-md p-1.5 rounded-3xl border-2 border-[#dbc397]/60 shadow-sm h-auto min-h-14 w-full max-w-4xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5">
+        <TabsList className="bg-white/80 backdrop-blur-md p-1.5 rounded-3xl border-2 border-[#dbc397]/60 shadow-sm h-auto min-h-14 w-full max-w-5xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
           <TabsTrigger value="overview" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
             📊 إحصائيات ومنظمات
           </TabsTrigger>
@@ -843,6 +844,9 @@ export default function AdminDashboard() {
           </TabsTrigger>
           <TabsTrigger value="heritage" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
             🏺 الأرشيف التراثي
+          </TabsTrigger>
+          <TabsTrigger value="history-refs" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
+            📚 مراجع الباحث التاريخي
           </TabsTrigger>
           <TabsTrigger value="ads" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
             📢 إدارة الإعلانات
@@ -1630,6 +1634,10 @@ export default function AdminDashboard() {
               )}
             </DialogContent>
           </Dialog>
+        </TabsContent>
+
+        <TabsContent value="history-refs" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <AdminHistoryRefsTab />
         </TabsContent>
 
         <TabsContent value="ads" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

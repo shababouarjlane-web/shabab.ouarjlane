@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
@@ -18,6 +18,7 @@ import {
   searchGhosnAlBan,
   type BookSection
 } from '@/data/ghosnAlBanKnowledge';
+import { getAllActiveSections } from '@/lib/historyReferencesStore';
 
 interface ActiveAnswer {
   question: string;
@@ -28,10 +29,17 @@ interface ActiveAnswer {
 export default function HistoryAssistant() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const [activeSections, setActiveSections] = useState<BookSection[]>([]);
   const [activeAnswer, setActiveAnswer] = useState<ActiveAnswer | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [previewSection, setPreviewSection] = useState<BookSection | null>(null);
   const answerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    getAllActiveSections().then((secs) => {
+      setActiveSections(secs);
+    });
+  }, []);
 
   const handleAsk = (questionText?: string) => {
     const q = (questionText ?? query).trim();
@@ -49,7 +57,7 @@ export default function HistoryAssistant() {
 
     setIsThinking(true);
 
-    const grounded = searchGhosnAlBan(q);
+    const grounded = searchGhosnAlBan(q, activeSections);
     const primarySection = grounded.matchedSections[0];
 
     setTimeout(() => {
@@ -177,7 +185,7 @@ export default function HistoryAssistant() {
                     <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[#f0e2c8]">
                       <div className="space-y-1">
                         <span className="inline-block text-xs font-bold text-[#723c11] bg-[#fae1b7]/60 px-3 py-1 rounded-lg border border-[#d4b174]">
-                          المصدر المعتمد: كتاب «{GHOSN_AL_BAN_META.title}» — {GHOSN_AL_BAN_META.author} ({activeAnswer.section.pages})
+                          المصدر المعتمد: «{activeAnswer.section.bookTitle || GHOSN_AL_BAN_META.title}» — {activeAnswer.section.bookAuthor || GHOSN_AL_BAN_META.author} ({activeAnswer.section.pages})
                         </span>
                         <h3 className="font-thmanyah font-bold text-lg text-[#301809] pt-1">
                           {activeAnswer.section.chapterTitle}

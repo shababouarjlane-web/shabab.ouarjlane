@@ -1,5 +1,8 @@
 export interface BookSection {
   id: string;
+  bookId?: string;
+  bookTitle?: string;
+  bookAuthor?: string;
   chapterTitle: string;
   category:
     | 'سدراتة والعهود الأولى'
@@ -8,7 +11,8 @@ export interface BookSection {
     | 'القرى والأعراش والمياه'
     | 'العلماء والأعلام'
     | 'الفتن والعهود السياسية'
-    | 'الزيارات والمخطوطات';
+    | 'الزيارات والمخطوطات'
+    | string;
   pages: string;
   spreadImage: string;
   keywords: string[];
@@ -469,9 +473,9 @@ export interface GroundedSearchResult {
 
 export function searchGhosnAlBan(
   query: string,
-  extraSections: BookSection[] = []
+  activeSections?: BookSection[]
 ): GroundedSearchResult {
-  const allSections = [...extraSections, ...BOOK_SECTIONS];
+  const allSections = activeSections && activeSections.length > 0 ? activeSections : BOOK_SECTIONS;
   const normQuery = normalizeArabic(query);
   const tokens = normQuery
     .split(' ')
@@ -512,13 +516,15 @@ export function searchGhosnAlBan(
     .slice(0, 3)
     .map((item) => item.section);
 
-  const finalSections = topMatches.length > 0 ? topMatches : [BOOK_SECTIONS[2], BOOK_SECTIONS[3]];
+  const finalSections = topMatches.length > 0 ? topMatches : [allSections[0]];
 
   const primary = finalSections[0];
   let answer = `${primary.summary}\n\n`;
-  answer += `أهم ما ورد في هذا الباب (${primary.pages}):\n`;
-  for (const detail of primary.details) {
-    answer += `• ${detail}\n`;
+  if (primary.details && primary.details.length > 0) {
+    answer += `أهم ما ورد في هذا الباب (${primary.pages}):\n`;
+    for (const detail of primary.details) {
+      answer += `• ${detail}\n`;
+    }
   }
 
   return {
