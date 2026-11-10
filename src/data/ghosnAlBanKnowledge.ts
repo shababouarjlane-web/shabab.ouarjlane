@@ -515,20 +515,14 @@ export function searchGhosnAlBan(
   const finalSections = topMatches.length > 0 ? topMatches : [BOOK_SECTIONS[2], BOOK_SECTIONS[3]];
 
   const primary = finalSections[0];
-  let answer = `بحسب ما ورد في مرجع **«${GHOSN_AL_BAN_META.title}»** للشيخ إبراهيم بن صالح باباحمو أعزام (${primary.pages}):\n\n`;
-  answer += `${primary.summary}\n\n`;
-  answer += `**أبرز التفاصيل الموثّقة في هذا الباب:**\n`;
+  let answer = `${primary.summary}\n\n`;
+  answer += `أهم ما ورد في هذا الباب (${primary.pages}):\n`;
   for (const detail of primary.details) {
     answer += `• ${detail}\n`;
   }
 
-  if (finalSections.length > 1) {
-    const secondary = finalSections[1];
-    answer += `\nكما يرتبط بسؤالك ما جاء في فصل **«${secondary.chapterTitle}»** (${secondary.pages}):\n${secondary.summary}`;
-  }
-
   return {
-    matchedSections: finalSections,
-    synthesizedAnswer: answer
+    matchedSections: [primary],
+    synthesizedAnswer: answer.trim()
   };
 }
