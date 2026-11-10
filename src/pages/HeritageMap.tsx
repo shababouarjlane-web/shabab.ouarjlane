@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import { supabase } from '@/lib/supabase';
-import { resolveOuarglaLocationCoords, buildGoogleMapsDirectionsUrl } from '@/lib/helpers';
+import { 
+  resolveOuarglaLocationCoords, 
+  buildGoogleMapsDirectionsUrl,
+  HERITAGE_CATEGORIES,
+  packHeritageMeta
+} from '@/lib/helpers';
 import { 
   ArrowRight, 
   MapPin, 
@@ -18,9 +23,20 @@ import {
   Calendar,
   Compass,
   Ticket,
-  Sparkles
+  Sparkles,
+  PlusCircle,
+  Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogHeader,
+  DialogDescription
+} from '@/components/ui/dialog';
 import UnifiedHeader from '@/components/UnifiedHeader';
 import { toast } from 'sonner';
 
@@ -286,6 +302,60 @@ export default function HeritageMap() {
     return v !== null ? parseFloat(v) : 0;
   });
   const [copied, setCopied] = useState(false);
+
+  // ─── نافذة اقتراح معلم تاريخي جديد للخريطة ───────────────────────────
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [sugTitle, setSugTitle] = useState('');
+  const [sugCategory, setSugCategory] = useState<string>(HERITAGE_CATEGORIES[0]);
+  const [sugContributor, setSugContributor] = useState('');
+  const [sugContent, setSugContent] = useState('');
+  const [sugImageUrl, setSugImageUrl] = useState('');
+  const [sugImageFile, setSugImageFile] = useState<File | null>(null);
+  const [submittingSug, setSubmittingSug] = useState(false);
+
+  const handleSubmitSuggestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sugTitle.trim() || !sugContent.trim()) return;
+    setSubmittingSug(true);
+    try {
+      let finalImageUrl = sugImageUrl.trim();
+      if (sugImageFile) {
+        const ext = sugImageFile.name.split('.').pop();
+        const fileName = `heritage/suggestion-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('events').upload(fileName, sugImageFile);
+        if (!upErr) {
+          const { data: pubData } = supabase.storage.from('events').getPublicUrl(fileName);
+          finalImageUrl = pubData.publicUrl;
+        }
+      }
+
+      const packedContent = packHeritageMeta(sugContent, {
+        category: sugCategory,
+        contributor: sugContributor.trim() || 'مساهم من المجتمع',
+        status: 'pending'
+      });
+
+      const { error } = await supabase.from('heritage_archive').insert([{
+        title: sugTitle.trim(),
+        content: packedContent,
+        image_url: finalImageUrl || null
+      }]);
+
+      if (error) throw error;
+
+      toast.success('شكراً لمساهمتك! تم إرسال المعلم المقترح إلى إدارة المنصة للمراجعة والاعتماد.');
+      setSuggestOpen(false);
+      setSugTitle('');
+      setSugContributor('');
+      setSugContent('');
+      setSugImageUrl('');
+      setSugImageFile(null);
+    } catch (err: any) {
+      toast.error('تعذر إرسال المساهمة: ' + (err.message || 'حاول لاحقاً'));
+    } finally {
+      setSubmittingSug(false);
+    }
+  };
 
   // تحديث المحيط لحظياً عند تعديل أي قيمة من شرائط التحكم
   useEffect(() => {
@@ -1129,6 +1199,16 @@ export default function HeritageMap() {
                       </button>
                     ))}
                   </div>
+
+                  {/* زر اقتراح معلم تراثي جديد مباشرة تحت قائمة المعالم */}
+                  <button
+                    type="button"
+                    onClick={() => setSuggestOpen(true)}
+                    className="mt-3 w-full bg-[#fae1b7]/45 hover:bg-[#fae1b7] border border-dashed border-[#b87a29] text-[#301809] font-bold rounded-xl text-xs py-2.5 px-3.5 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <PlusCircle className="w-4 h-4 text-[#b87a29] shrink-0" />
+                    <span>هل تعرف معلماً تاريخياً آخر؟ اقترح إضافته للخريطة</span>
+                  </button>
                 </div>
 
                 {/* ─ قائمة الفعاليات الميدانية على الخريطة ─ */}
@@ -1173,6 +1253,95 @@ export default function HeritageMap() {
         </aside>
 
       </div>
+
+      {/* ─── نافذة اقتراح معلم تاريخي جديد للخريطة ─────────────────── */}
+      <Dialog open={suggestOpen} onOpenChange={setSuggestOpen}>
+        <DialogContent className="sm:max-w-[520px] rounded-3xl border-2 border-[#dbc397] font-sans" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-[#301809] flex items-center gap-2">
+              <PlusCircle className="w-5 h-5 text-[#b87a29]" />
+              <span>اقترح معلماً تاريخياً لإضافته إلى خريطة التراث</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs font-bold text-[#723c11]/80">
+              ساهم معنا في توثيق المعالم، القصور، المساجد العتيقة، أو المواقع الأثرية في وارجلان وسدراتة. ستتم مراجعة مقترحك من طرف الإدارة.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmitSuggestion} className="space-y-4 pt-2">
+            <div>
+              <label className="text-xs font-bold text-[#301809] mb-1 block">اسم المعلم التاريخي المقترح *</label>
+              <Input
+                required
+                value={sugTitle}
+                onChange={e => setSugTitle(e.target.value)}
+                placeholder="مثال: باب عمي وعمران / قصر أنقوصة العتيق / عين الصفا"
+                className="rounded-xl border-[#dbc397]"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-[#301809] mb-1 block">تصنيف المعلم *</label>
+                <select
+                  value={sugCategory}
+                  onChange={e => setSugCategory(e.target.value)}
+                  className="w-full h-10 rounded-xl border border-[#dbc397] bg-white px-3 text-xs font-bold text-[#301809]"
+                >
+                  {HERITAGE_CATEGORIES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-[#301809] mb-1 block">اسم المساهم / الجمعية (اختياري)</label>
+                <Input
+                  value={sugContributor}
+                  onChange={e => setSugContributor(e.target.value)}
+                  placeholder="اسمك أو اسم جمعيتك"
+                  className="rounded-xl border-[#dbc397]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#301809] mb-1 block">موقع المعلم ونبذة تاريخية عنه *</label>
+              <Textarea
+                required
+                value={sugContent}
+                onChange={e => setSugContent(e.target.value)}
+                placeholder="اذكر موقع المعلم (أو إحداثياته إن وجدت) وأهم المعلومات التاريخية المعروفة عنه..."
+                className="rounded-xl border-[#dbc397] min-h-[110px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-[#301809] block">صورة للمعلم (رفع من جهازك أو رابط مباشر - اختياري)</label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={e => setSugImageFile(e.target.files?.[0] || null)}
+                className="rounded-xl border-[#dbc397] text-xs cursor-pointer"
+              />
+              <Input
+                value={sugImageUrl}
+                onChange={e => setSugImageUrl(e.target.value)}
+                placeholder="أو ضع رابط صورة أو موقع Google Maps مباشر https://..."
+                dir="ltr"
+                className="rounded-xl border-[#dbc397] text-xs"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={submittingSug}
+              className="w-full bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] font-black h-12 rounded-xl gap-2 cursor-pointer"
+            >
+              <Send className="w-4 h-4 text-[#efa83f]" />
+              {submittingSug ? 'جاري إرسال المقترح...' : 'إرسال المعلم المقترح للإدارة'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
