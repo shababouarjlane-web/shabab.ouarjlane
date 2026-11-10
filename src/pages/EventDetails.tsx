@@ -1088,7 +1088,7 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                                 onClick={handleSaveContactInfo}
                                 disabled={savingContact}
                                 variant="outline"
-                                className="w-full h-9 text-xs font-bold border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl cursor-pointer"
+                                className="w-full min-h-9 h-auto py-2 px-3 whitespace-normal text-center leading-snug text-xs font-bold border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl cursor-pointer"
                               >
                                 {savingContact ? 'جاري الحفظ...' : 'تحديث الاسم ورقم الهاتف في التذكرة'}
                               </Button>
@@ -1171,7 +1171,7 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                           <Button
                             onClick={handleRsvp}
                             disabled={rsvpLoading}
-                            className="w-full h-13 text-base font-black bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] shadow-lg text-white rounded-xl cursor-pointer transition-all"
+                            className="w-full min-h-12 h-auto py-3 px-4 whitespace-normal text-center leading-snug text-base font-black bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] shadow-lg text-white rounded-xl cursor-pointer transition-all"
                           >
                             {rsvpLoading
                               ? 'جاري المعالجة...'
@@ -1211,7 +1211,7 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                         <Button
                           type="submit"
                           disabled={guestLoading}
-                          className="w-full h-11 bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] font-bold rounded-xl cursor-pointer"
+                          className="w-full min-h-11 h-auto py-2.5 px-4 whitespace-normal text-center leading-snug bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] font-bold rounded-xl cursor-pointer"
                         >
                           {guestLoading ? 'جاري الإرسال...' : 'أرسل رابط الدخول السريع'}
                         </Button>
@@ -1221,9 +1221,9 @@ export default function EventDetails({ userRole: externalUserRole }: { userRole?
                         <Button
                           variant="outline"
                           onClick={() => navigate('/login')}
-                          className="w-full h-10 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 font-bold rounded-xl text-xs cursor-pointer"
+                          className="w-full min-h-11 h-auto py-2.5 px-3 whitespace-normal break-words text-center leading-relaxed border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 font-bold rounded-xl text-xs cursor-pointer"
                         >
-                          الذهاب لصفحة تسجيل الدخول / حساب تجريبي ⚡
+                          <span>الذهاب لصفحة تسجيل الدخول / حساب تجريبي ⚡</span>
                         </Button>
                       </div>
                     </div>
