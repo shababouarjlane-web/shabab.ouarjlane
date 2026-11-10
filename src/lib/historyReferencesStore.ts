@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase';
 import {
   BOOK_SECTIONS,
   GHOSN_AL_BAN_META,
+  MAALIM_AL_HADARA_META,
+  MAALIM_BOOK_SECTIONS,
   type BookSection
 } from '@/data/ghosnAlBanKnowledge';
 
@@ -266,9 +268,9 @@ export async function saveUploadedBook(book: ReferenceBookRecord): Promise<void>
 }
 
 export async function deleteUploadedBook(bookId: string): Promise<void> {
-  if (bookId === GHOSN_AL_BAN_META.id) {
+  if (bookId === GHOSN_AL_BAN_META.id || bookId === MAALIM_AL_HADARA_META.id) {
     const { ids } = await fetchCloudDeletedBuiltinIds();
-    ids.add(GHOSN_AL_BAN_META.id);
+    ids.add(bookId);
     await saveCloudDeletedBuiltinIds(ids);
     return;
   }
@@ -292,7 +294,7 @@ export async function deleteUploadedBook(bookId: string): Promise<void> {
 }
 
 export async function deleteSingleSection(bookId: string, sectionId: string): Promise<void> {
-  if (bookId === GHOSN_AL_BAN_META.id) {
+  if (bookId === GHOSN_AL_BAN_META.id || bookId === MAALIM_AL_HADARA_META.id) {
     const { ids } = await fetchCloudDeletedBuiltinIds();
     ids.add(sectionId);
     await saveCloudDeletedBuiltinIds(ids);
@@ -349,6 +351,30 @@ export async function getAllReferenceBooks(): Promise<ReferenceBookRecord[]> {
         createdAt: '2026-01-01T00:00:00.000Z',
         totalPages: GHOSN_AL_BAN_META.totalPages,
         sections: activeBuiltinSections
+      });
+    }
+  }
+
+  if (!deletedIds.has(MAALIM_AL_HADARA_META.id)) {
+    const activeMaalimSections = MAALIM_BOOK_SECTIONS.filter((s) => !deletedIds.has(s.id)).map(
+      (s) => ({
+        ...s,
+        bookId: MAALIM_AL_HADARA_META.id,
+        bookTitle: MAALIM_AL_HADARA_META.title,
+        bookAuthor: MAALIM_AL_HADARA_META.author
+      })
+    );
+
+    if (activeMaalimSections.length > 0) {
+      result.push({
+        id: MAALIM_AL_HADARA_META.id,
+        title: MAALIM_AL_HADARA_META.title,
+        author: MAALIM_AL_HADARA_META.author,
+        fileType: 'builtin',
+        fileName: 'معالم الحضارة الإسلامية بوارجلان 296-626هـ & 909-1229م.pdf',
+        createdAt: '2026-01-02T00:00:00.000Z',
+        totalPages: MAALIM_AL_HADARA_META.totalPages,
+        sections: activeMaalimSections
       });
     }
   }

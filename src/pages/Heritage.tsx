@@ -218,7 +218,7 @@ export default function Heritage() {
                 <span>أسئلة شائعة يمكنك الضغط عليها مباشرة:</span>
               </p>
               <div className="flex flex-wrap gap-2.5">
-                {SUGGESTED_QUESTIONS.slice(0, 6).map((sq) => {
+                {SUGGESTED_QUESTIONS.map((sq) => {
                   const isSelected = activeAnswer?.question === sq;
                   return (
                     <button
@@ -393,7 +393,7 @@ export default function Heritage() {
             <div className="bg-[#301809] text-[#fae1b7] px-5 py-3.5 flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-bold text-[#efa83f] block">
-                  نسخة مصوّرة من الكتاب الأصلي • {previewSection.pages}
+                  نسخة مصوّرة من «{previewSection.bookTitle || GHOSN_AL_BAN_META.title}» • {previewSection.pages}
                 </span>
                 <h3 className="font-thmanyah font-bold text-sm sm:text-base text-white">
                   {previewSection.chapterTitle}
