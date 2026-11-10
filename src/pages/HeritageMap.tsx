@@ -193,6 +193,7 @@ export default function HeritageMap() {
   const ksarGlowRef = useRef<L.Polygon | null>(null);
 
   const [selected, setSelected] = useState<Landmark>(LANDMARKS[0]);
+  const [focusedLandmarkId, setFocusedLandmarkId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [mapEvents, setMapEvents] = useState<any[]>([]);
   const [layerFilter, setLayerFilter] = useState<'all' | 'landmarks' | 'events'>('all');
@@ -295,8 +296,8 @@ export default function HeritageMap() {
     if (mapRef.current || !mapContainerRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
-      center: [31.95, 5.31],
-      zoom: 13,
+      center: [31.93, 5.318],
+      zoom: 12,
       zoomControl: false,
       attributionControl: true,
     });
@@ -330,6 +331,7 @@ export default function HeritageMap() {
       marker.on('click', () => {
         setSelectedEvent(null);
         setSelected(lm);
+        setFocusedLandmarkId(lm.id);
         setSidebarOpen(true);
       });
 
@@ -384,6 +386,7 @@ export default function HeritageMap() {
       if (ksarLandmark) {
         setSelectedEvent(null);
         setSelected(ksarLandmark);
+        setFocusedLandmarkId(ksarLandmark.id);
         setSidebarOpen(true);
       }
     });
@@ -396,7 +399,7 @@ export default function HeritageMap() {
     };
   }, []);
 
-  // رسم ماركرات الفعاليات الميدانية وتحديث ظهور الطبقات
+  // رسم ماركرات الفعاليات الميدانية وتحديث ظهور الطبقات والمعلم المحدد
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -405,8 +408,12 @@ export default function HeritageMap() {
     eventMarkersRef.current.forEach((m) => m.remove());
     eventMarkersRef.current = [];
 
-    if (layerFilter === 'all' || layerFilter === 'events') {
+    const showEventsLayer =
+      (layerFilter === 'all' || layerFilter === 'events') && !focusedLandmarkId;
+
+    if (showEventsLayer) {
       mapEvents.forEach((ev) => {
+        if (selectedEvent && selectedEvent.id !== ev.id) return;
         const marker = L.marker([ev.lat, ev.lng], {
           icon: createCustomIcon('#10b981'),
           title: ev.title,
@@ -418,6 +425,7 @@ export default function HeritageMap() {
         );
 
         marker.on('click', () => {
+          setFocusedLandmarkId(null);
           setSelectedEvent(ev);
           setSidebarOpen(true);
         });
@@ -426,17 +434,24 @@ export default function HeritageMap() {
       });
     }
 
-    // إظهار أو إخفاء المعالم التاريخية ومضلع القصر
-    const showLandmarks = layerFilter === 'all' || layerFilter === 'landmarks';
-    Object.values(markersRef.current).forEach((m) => {
-      if (showLandmarks) {
+    // إظهار أو إخفاء المعالم التاريخية ومضلع القصر حسب الاختيار
+    const showLandmarksLayer =
+      (layerFilter === 'all' || layerFilter === 'landmarks') && !selectedEvent;
+
+    Object.entries(markersRef.current).forEach(([lmId, m]) => {
+      const shouldShowThisMarker =
+        showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === lmId);
+      if (shouldShowThisMarker) {
         if (!map.hasLayer(m)) m.addTo(map);
       } else {
         if (map.hasLayer(m)) m.remove();
       }
     });
+
     if (ksarPolygonRef.current && ksarGlowRef.current) {
-      if (showLandmarks) {
+      const shouldShowKsarPolygon =
+        showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === 'ksar-atiq');
+      if (shouldShowKsarPolygon) {
         if (!map.hasLayer(ksarPolygonRef.current)) ksarPolygonRef.current.addTo(map);
         if (!map.hasLayer(ksarGlowRef.current)) ksarGlowRef.current.addTo(map);
       } else {
@@ -444,12 +459,13 @@ export default function HeritageMap() {
         if (map.hasLayer(ksarGlowRef.current)) ksarGlowRef.current.remove();
       }
     }
-  }, [mapEvents, layerFilter]);
+  }, [mapEvents, layerFilter, focusedLandmarkId, selectedEvent]);
 
-  // التحليق إلى المعلم المحدد
+  // التحليق إلى المعلم المحدد وإخفاء بقية المعالم
   const flyTo = (lm: Landmark) => {
     setSelectedEvent(null);
     setSelected(lm);
+    setFocusedLandmarkId(lm.id);
     setSidebarOpen(true);
     if (lm.id === 'ksar-atiq' && mapRef.current) {
       const currentCoords = computeTransformedPolygon(
@@ -468,8 +484,19 @@ export default function HeritageMap() {
     }
   };
 
+  // إعادة إظهار جميع المعالم على الخريطة
+  const showAllLandmarks = () => {
+    setFocusedLandmarkId(null);
+    setSelectedEvent(null);
+    if (mapRef.current) {
+      const allBounds = L.latLngBounds(LANDMARKS.map((l) => L.latLng(l.lat, l.lng)));
+      mapRef.current.fitBounds(allBounds, { padding: [70, 70], animate: true, duration: 1.2 });
+    }
+  };
+
   // التحليق إلى الفعالية المحددة
   const flyToEvent = (ev: any) => {
+    setFocusedLandmarkId(null);
     setSelectedEvent(ev);
     setSidebarOpen(true);
     mapRef.current?.flyTo([ev.lat, ev.lng], 15, { duration: 1.3 });
@@ -745,18 +772,27 @@ export default function HeritageMap() {
         )}
 
         {/* ── قائمة المعالم (أيقونات دائرية سريعة على الخريطة) ── */}
-        <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-2">
+        <div className="absolute bottom-6 right-4 z-20 flex flex-col items-end gap-2">
+          {(focusedLandmarkId || selectedEvent) && (
+            <button
+              onClick={showAllLandmarks}
+              className="px-3.5 h-10 rounded-xl border-2 border-[#efa83f] bg-[#301809] text-[#fae1b7] hover:bg-[#4a2510] text-xs font-bold flex items-center gap-1.5 shadow-xl transition-all cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-[#efa83f]" />
+              <span>إظهار جميع المعالم</span>
+            </button>
+          )}
           {LANDMARKS.map((lm) => (
             <button
               key={lm.id}
               onClick={() => flyTo(lm)}
               title={lm.nameAr}
               className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 ${
-                !selectedEvent && selected.id === lm.id
+                focusedLandmarkId === lm.id
                   ? 'border-[#efa83f] bg-[#301809]'
                   : 'border-white/60 bg-[#301809]/80'
               }`}
-              style={{ boxShadow: !selectedEvent && selected.id === lm.id ? '0 0 16px rgba(239,168,63,0.5)' : undefined }}
+              style={{ boxShadow: focusedLandmarkId === lm.id ? '0 0 16px rgba(239,168,63,0.5)' : undefined }}
             >
               <div
                 className="w-4 h-4 rounded-full"
@@ -786,10 +822,10 @@ export default function HeritageMap() {
                     📅 فعالية ميدانية نشطة
                   </span>
                   <button
-                    onClick={() => setSelectedEvent(null)}
+                    onClick={showAllLandmarks}
                     className="text-[11px] text-[#fae1b7]/80 hover:text-white underline cursor-pointer"
                   >
-                    العودة للمعالم ←
+                    إظهار جميع المعالم ←
                   </button>
                 </div>
                 <h2 className="text-xl font-bold text-white leading-snug mb-1" style={{ fontFamily: '"Thmanyah Serif Display", serif' }}>
@@ -866,13 +902,23 @@ export default function HeritageMap() {
               {/* رأس الشريط للمعلم التراثي */}
               <div className="flex-shrink-0 bg-gradient-to-b from-[#301809] to-[#4a2510] px-5 pt-5 pb-6">
                 {/* بادج الفئة */}
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${selected.badgeColor ?? 'bg-[#efa83f] text-[#301809]'}`}>
-                    {selected.badge ?? CATEGORY_LABELS[selected.category]}
-                  </span>
-                  <span className="text-[10px] text-[#fae1b7]/60 font-medium">
-                    {CATEGORY_LABELS[selected.category]}
-                  </span>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${selected.badgeColor ?? 'bg-[#efa83f] text-[#301809]'}`}>
+                      {selected.badge ?? CATEGORY_LABELS[selected.category]}
+                    </span>
+                    <span className="text-[10px] text-[#fae1b7]/60 font-medium">
+                      {CATEGORY_LABELS[selected.category]}
+                    </span>
+                  </div>
+                  {focusedLandmarkId && (
+                    <button
+                      onClick={showAllLandmarks}
+                      className="text-[10px] bg-white/10 hover:bg-white/20 text-[#fae1b7] px-2.5 py-1 rounded-lg font-bold transition-colors cursor-pointer"
+                    >
+                      إظهار كل المعالم
+                    </button>
+                  )}
                 </div>
 
                 {/* الاسم العربي */}
@@ -977,17 +1023,27 @@ export default function HeritageMap() {
 
                 {/* ─ قائمة المعالم مرتبة بدقة ─ */}
                 <div className="border-t border-[#dbc397]/50 pt-4">
-                  <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                    <Star className="w-3 h-3 text-[#efa83f]" />
-                    المعالم التاريخية ({LANDMARKS.length})
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                      <Star className="w-3 h-3 text-[#efa83f]" />
+                      المعالم التاريخية ({LANDMARKS.length})
+                    </p>
+                    {focusedLandmarkId && (
+                      <button
+                        onClick={showAllLandmarks}
+                        className="text-[10px] font-bold text-[#b87a29] hover:text-[#301809] underline cursor-pointer"
+                      >
+                        عرض الكل على الخريطة
+                      </button>
+                    )}
+                  </div>
                   <div className="space-y-2">
                     {LANDMARKS.map((lm, idx) => (
                       <button
                         key={lm.id}
                         onClick={() => flyTo(lm)}
                         className={`w-full text-right flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm ${
-                          !selectedEvent && selected.id === lm.id
+                          focusedLandmarkId === lm.id
                             ? 'bg-[#301809] text-white shadow-md'
                             : 'bg-white border border-[#dbc397]/50 text-[#301809] hover:border-[#efa83f]/60 hover:bg-[#fae1b7]/30'
                         }`}
@@ -1005,8 +1061,8 @@ export default function HeritageMap() {
                             className="text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
                             style={{
                               backgroundColor:
-                                !selectedEvent && selected.id === lm.id ? 'rgba(255,255,255,0.15)' : CATEGORY_COLORS[lm.category] + '22',
-                              color: !selectedEvent && selected.id === lm.id ? '#fae1b7' : CATEGORY_COLORS[lm.category],
+                                focusedLandmarkId === lm.id ? 'rgba(255,255,255,0.15)' : CATEGORY_COLORS[lm.category] + '22',
+                              color: focusedLandmarkId === lm.id ? '#fae1b7' : CATEGORY_COLORS[lm.category],
                             }}
                           >
                             {CATEGORY_LABELS[lm.category]}
