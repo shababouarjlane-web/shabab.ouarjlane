@@ -18,6 +18,7 @@ import {
   Tag
 } from 'lucide-react';
 import UnifiedHeader from '../components/UnifiedHeader';
+import { HeritageQuest } from '../components/heritage/HeritageQuest';
 import {
   GHOSN_AL_BAN_META,
   SUGGESTED_QUESTIONS,
@@ -347,7 +348,18 @@ export default function Heritage() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            2. شريط الخريطة التفاعلية للأقمار الصناعية
+            2. تحدي الباحث التاريخي (Heritage Quest)
+        ══════════════════════════════════════════════════════════════════ */}
+        <HeritageQuest
+          onSearchHint={(hint) => {
+            setAssistantQuery(hint);
+            handleAsk(hint);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+
+        {/* ══════════════════════════════════════════════════════════════════
+            3. شريط الخريطة التفاعلية للأقمار الصناعية
         ══════════════════════════════════════════════════════════════════ */}
         <div
           onClick={() => navigate('/map')}
