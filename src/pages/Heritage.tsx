@@ -382,7 +382,7 @@ export default function Heritage() {
 
           <Button
             onClick={() => setIsQuestOpen(true)}
-            className="w-full sm:w-auto bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold px-6 py-5 rounded-2xl text-xs md:text-sm shadow-md cursor-pointer shrink-0 gap-2 border border-amber-200/50"
+            className="w-full sm:w-auto bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-thmanyah font-bold px-6 py-5 rounded-2xl text-xs md:text-sm shadow-md cursor-pointer shrink-0 gap-2 border border-amber-200/50"
           >
             <Sparkles className="w-4 h-4 text-slate-950" />
             <span>ابدأ التحدي الآن</span>

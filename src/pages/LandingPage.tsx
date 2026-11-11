@@ -689,10 +689,10 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 w-full lg:w-auto">
               <Button
                 onClick={() => navigate('/heritage?quest=open')}
-                className="h-13 px-8 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-base shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 border border-amber-200/50"
+                className="h-13 px-8 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-thmanyah font-bold text-base shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 border border-amber-200/50"
               >
                 <Trophy className="w-5 h-5 text-slate-950" />
-                <span>خض التحدي الآن 🏆</span>
+                <span>خض التحدي الآن</span>
                 <ChevronLeft className="w-4 h-4 text-slate-950" />
               </Button>
             </div>
