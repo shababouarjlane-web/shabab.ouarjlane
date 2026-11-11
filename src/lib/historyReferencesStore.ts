@@ -6,6 +6,23 @@ import {
   MAALIM_BOOK_SECTIONS,
   VAN_BERCHEM_META,
   VAN_BERCHEM_SECTIONS,
+  ALL_ADDITIONAL_BOOKS_META,
+  BAJOU_VOL1_META,
+  BAJOU_VOL1_SECTIONS,
+  BAJOU_VOL2_META,
+  BAJOU_VOL2_SECTIONS,
+  SEDRATA_1997_META,
+  SEDRATA_1997_SECTIONS,
+  SEDRATA_2016_META,
+  SEDRATA_2016_SECTIONS,
+  IBADIYA_MAAMAR_META,
+  IBADIYA_MAAMAR_SECTIONS,
+  TAHAWULAT_WAHAT_META,
+  TAHAWULAT_WAHAT_SECTIONS,
+  ABI_AMMAR_MAWARITH_META,
+  ABI_AMMAR_MAWARITH_SECTIONS,
+  MALAMIH_HARAKA_META,
+  MALAMIH_HARAKA_SECTIONS,
   type BookSection
 } from '@/data/ghosnAlBanKnowledge';
 
@@ -299,12 +316,15 @@ export async function deleteUploadedBook(bookId: string): Promise<void> {
   }
 }
 
+const BUILTIN_BOOK_IDS = new Set([
+  GHOSN_AL_BAN_META.id,
+  MAALIM_AL_HADARA_META.id,
+  VAN_BERCHEM_META.id,
+  ...ALL_ADDITIONAL_BOOKS_META.map((b) => b.id)
+]);
+
 export async function deleteSingleSection(bookId: string, sectionId: string): Promise<void> {
-  if (
-    bookId === GHOSN_AL_BAN_META.id ||
-    bookId === MAALIM_AL_HADARA_META.id ||
-    bookId === VAN_BERCHEM_META.id
-  ) {
+  if (BUILTIN_BOOK_IDS.has(bookId)) {
     const { ids } = await fetchCloudDeletedBuiltinIds();
     ids.add(sectionId);
     await saveCloudDeletedBuiltinIds(ids);
@@ -409,6 +429,142 @@ export async function getAllReferenceBooks(): Promise<ReferenceBookRecord[]> {
         createdAt: '2026-01-03T00:00:00.000Z',
         totalPages: VAN_BERCHEM_META.totalPages,
         sections: activeVbSections
+      });
+    }
+  }
+
+  // 4. باجو - الجزء 1: دراسة لعصره وحضارة وارجلان وسيرته
+  if (!deletedIds.has(BAJOU_VOL1_META.id)) {
+    const activeSecs = BAJOU_VOL1_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: BAJOU_VOL1_META.id,
+        title: BAJOU_VOL1_META.title,
+        author: BAJOU_VOL1_META.author,
+        fileType: 'builtin',
+        fileName: 'أبو يعقوب الوارجلاني أصوليا لمصطفى باجو.pdf',
+        createdAt: '2026-01-04T00:00:00.000Z',
+        totalPages: BAJOU_VOL1_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 5. باجو - الجزء 2: فكره الأصولي مقارناً بالغزالي
+  if (!deletedIds.has(BAJOU_VOL2_META.id)) {
+    const activeSecs = BAJOU_VOL2_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: BAJOU_VOL2_META.id,
+        title: BAJOU_VOL2_META.title,
+        author: BAJOU_VOL2_META.author,
+        fileType: 'builtin',
+        fileName: 'أبو يعقوب الوارجلاني أصوليًا دراسة لعصره وفكره الأصولي مقارنًا بأبي حامد الغزالي.pdf',
+        createdAt: '2026-01-05T00:00:00.000Z',
+        totalPages: BAJOU_VOL2_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 6. الأيام الدراسية سدراتة الأولى 1997م
+  if (!deletedIds.has(SEDRATA_1997_META.id)) {
+    const activeSecs = SEDRATA_1997_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: SEDRATA_1997_META.id,
+        title: SEDRATA_1997_META.title,
+        author: SEDRATA_1997_META.author,
+        fileType: 'builtin',
+        fileName: 'الأيام الدراسية سدراتة الاولى1997.pdf',
+        createdAt: '2026-01-06T00:00:00.000Z',
+        totalPages: SEDRATA_1997_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 7. أعمال المهرجان الوطني الأول لسدراتة 2016م
+  if (!deletedIds.has(SEDRATA_2016_META.id)) {
+    const activeSecs = SEDRATA_2016_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: SEDRATA_2016_META.id,
+        title: SEDRATA_2016_META.title,
+        author: SEDRATA_2016_META.author,
+        fileType: 'builtin',
+        fileName: 'أعمال الأيام الدراسية للمهرجان الوطني الأول 2016 مصحح.pdf',
+        createdAt: '2026-01-07T00:00:00.000Z',
+        totalPages: SEDRATA_2016_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 8. الإباضية في موكب التاريخ (علي يحيى معمر)
+  if (!deletedIds.has(IBADIYA_MAAMAR_META.id)) {
+    const activeSecs = IBADIYA_MAAMAR_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: IBADIYA_MAAMAR_META.id,
+        title: IBADIYA_MAAMAR_META.title,
+        author: IBADIYA_MAAMAR_META.author,
+        fileType: 'builtin',
+        fileName: 'الإباضية في موكب التاريخ.pdf',
+        createdAt: '2026-01-08T00:00:00.000Z',
+        totalPages: IBADIYA_MAAMAR_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 9. التحولات الاجتماعية والثقافية في واحات المغرب الأوسط (د. عمار غرايسة)
+  if (!deletedIds.has(TAHAWULAT_WAHAT_META.id)) {
+    const activeSecs = TAHAWULAT_WAHAT_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: TAHAWULAT_WAHAT_META.id,
+        title: TAHAWULAT_WAHAT_META.title,
+        author: TAHAWULAT_WAHAT_META.author,
+        fileType: 'builtin',
+        fileName: 'التحولات الاجتماعية والثقافية في واحات المغرب الأوسط (الزاب، أريغ، أسوف، وارجلان) من الفتح الإسلامي إلى نهاية القرن الثامن الهجري.pdf',
+        createdAt: '2026-01-09T00:00:00.000Z',
+        totalPages: TAHAWULAT_WAHAT_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 10. تحقيق كتاب اختصار المواريث والفرائض للشيخ أبي عمار عبد الكافي الوارجلاني
+  if (!deletedIds.has(ABI_AMMAR_MAWARITH_META.id)) {
+    const activeSecs = ABI_AMMAR_MAWARITH_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: ABI_AMMAR_MAWARITH_META.id,
+        title: ABI_AMMAR_MAWARITH_META.title,
+        author: ABI_AMMAR_MAWARITH_META.author,
+        fileType: 'builtin',
+        fileName: 'تحقيق كتاب اختصار المواريث والفرائض للشيخ أبي عمار عبد الكافي الوارجلاني.pdf',
+        createdAt: '2026-01-10T00:00:00.000Z',
+        totalPages: ABI_AMMAR_MAWARITH_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 11. ملامح الحركة العلمية في وارجلان (د. عمرو خليفة النامي)
+  if (!deletedIds.has(MALAMIH_HARAKA_META.id)) {
+    const activeSecs = MALAMIH_HARAKA_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: MALAMIH_HARAKA_META.id,
+        title: MALAMIH_HARAKA_META.title,
+        author: MALAMIH_HARAKA_META.author,
+        fileType: 'builtin',
+        fileName: 'ملامح الحركة العلمية في وارجلان ورقلة وضواحيها منذ انتهاء الدولة الرستمية حتى أواخر القرن السادس الهجري.pdf',
+        createdAt: '2026-01-11T00:00:00.000Z',
+        totalPages: MALAMIH_HARAKA_META.totalPages,
+        sections: activeSecs
       });
     }
   }
