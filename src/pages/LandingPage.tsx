@@ -32,7 +32,8 @@ import {
   ArrowUp,
   Heart,
   HelpCircle,
-  Send
+  Send,
+  Trophy
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -598,6 +599,13 @@ export default function LandingPage() {
                   <BookOpen className="w-4 h-4 text-[#efa83f]" />
                   <span>اسأل الباحث التاريخي</span>
                 </Button>
+                <Button 
+                  onClick={() => navigate('/heritage?quest=open')}
+                  className="bg-linear-to-r from-[#d97706] to-[#b45309] hover:from-[#f59e0b] hover:to-[#d97706] text-white font-bold px-5 py-5 rounded-xl text-sm shadow-md flex items-center gap-2 transition-all cursor-pointer border border-[#fef3c7]/20"
+                >
+                  <Trophy className="w-4 h-4 text-[#fef08a]" />
+                  <span>خض تحدي الباحث 🏆</span>
+                </Button>
               </div>
             </div>
 
@@ -647,6 +655,45 @@ export default function LandingPage() {
 
           </div>
 
+        </div>
+      </section>
+
+      {/* Heritage Quest Interactive Teaser Banner */}
+      <section className="py-4 relative z-10 mx-4 md:mx-auto max-w-7xl">
+        <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-[#1e120a] via-[#2c170d] to-[#1a0f07] border-2 border-[#efa83f]/40 p-6 md:p-8 text-white shadow-xl">
+          <div className="absolute -top-12 -left-12 w-48 h-48 bg-[#efa83f]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-[#b87a29]/15 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="space-y-3 text-right">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efa83f]/20 border border-[#efa83f]/50 text-[#efa83f] text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-[#efa83f] animate-ping" />
+                <span>جديد: مسابقة تفاعلية شيقة 🏺</span>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-thmanyah font-bold text-[#fae1b7]">
+                تحدي الباحث التاريخي: اختبر معرفتك بأسرار وارجلان وسدراتة!
+              </h3>
+              <p className="text-xs md:text-sm text-[#fae1b7]/80 max-w-2xl leading-relaxed">
+                هل تعلم أين حُفرت أول بئر ارتوازية؟ ولماذا دُهنت أقفال سدراتة بالزيت قبل ألف عام؟ خض التحدي وحل 5 ألغاز تاريخية موثقة من أمهات كتب الواحة، واحصل على أوسمة مؤرخ الواحة!
+              </p>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[#efa83f]/90 pt-1">
+                <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">📜 5 ألغاز تاريخية موثقة</span>
+                <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">💡 تلميحات ذكية من الذكاء الاصطناعي</span>
+                <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">🏆 رتبة باحث تاريخي خبير</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 w-full lg:w-auto">
+              <Button
+                onClick={() => navigate('/heritage?quest=open')}
+                className="h-13 px-8 rounded-xl bg-linear-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-[#301809] font-bold text-base shadow-glow-amber transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Trophy className="w-5 h-5 text-[#301809]" />
+                <span>خض التحدي الآن 🏆</span>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 

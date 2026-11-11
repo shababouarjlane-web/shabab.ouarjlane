@@ -15,7 +15,9 @@ import {
   Share2,
   Copy,
   Check,
-  Tag
+  Tag,
+  Trophy,
+  Sparkles
 } from 'lucide-react';
 import UnifiedHeader from '../components/UnifiedHeader';
 import { HeritageQuest } from '../components/heritage/HeritageQuest';
@@ -46,8 +48,15 @@ export default function Heritage() {
   const [isThinking, setIsThinking] = useState(false);
   const [previewSection, setPreviewSection] = useState<BookSection | null>(null);
   const [copiedAnswer, setCopiedAnswer] = useState(false);
+  const [isQuestOpen, setIsQuestOpen] = useState(false);
   const answerRef = useRef<HTMLDivElement>(null);
   const lastHandledQParam = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('quest') === 'open') {
+      setIsQuestOpen(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     getAllActiveSections().then((secs) => {
@@ -348,15 +357,61 @@ export default function Heritage() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════
-            2. تحدي الباحث التاريخي (Heritage Quest)
+            2. شريط إطلاق تحدي الباحث التاريخي (Compact Trigger Banner)
         ══════════════════════════════════════════════════════════════════ */}
-        <HeritageQuest
-          onSearchHint={(hint) => {
-            setAssistantQuery(hint);
-            handleAsk(hint);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
+        <div className="mt-8 rounded-3xl bg-linear-to-r from-[#301809] via-[#4a2711] to-[#1e120a] border-2 border-[#efa83f]/60 p-5 md:p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 text-right w-full sm:w-auto">
+            <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/50 flex items-center justify-center shrink-0">
+              <Trophy className="w-6 h-6 text-[#efa83f] animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black text-[#301809] bg-[#efa83f] px-2 py-0.5 rounded-full inline-block">
+                  مغامرة تفاعلية
+                </span>
+                <span className="text-xs text-[#fae1b7]">5 ألغاز موثقة وأوسمة شرفية</span>
+              </div>
+              <h4 className="text-base md:text-lg font-thmanyah font-bold text-white mt-1">
+                هل أنت مستعد لخوض «تحدي الباحث التاريخي»؟ 🏺
+              </h4>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => setIsQuestOpen(true)}
+            className="w-full sm:w-auto bg-linear-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#8c4b18] text-[#301809] font-black px-6 py-5 rounded-2xl text-xs md:text-sm shadow-glow-amber cursor-pointer shrink-0 gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-[#301809]" />
+            <span>ابدأ التحدي الآن</span>
+            <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
+          </Button>
+        </div>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            3. نافذة التحدي المنبثقة بخلفية داكنة فاخرة (Quest Dark Modal)
+        ══════════════════════════════════════════════════════════════════ */}
+        {isQuestOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+            onClick={() => setIsQuestOpen(false)}
+          >
+            <div
+              className="w-full max-w-2xl animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <HeritageQuest
+                isModal={true}
+                onClose={() => setIsQuestOpen(false)}
+                onSearchHint={(hint) => {
+                  setIsQuestOpen(false);
+                  setAssistantQuery(hint);
+                  handleAsk(hint);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* ══════════════════════════════════════════════════════════════════
             3. شريط الخريطة التفاعلية للأقمار الصناعية
