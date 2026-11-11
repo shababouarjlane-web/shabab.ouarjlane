@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
-  HERITAGE_QUEST_STAGES,
   HERITAGE_QUEST_RANKS,
   QUEST_STORAGE_KEY,
+  QUEST_QUESTIONS_KEY,
+  generateRandomHeritageQuest,
   type QuestQuestion
 } from '@/data/heritageQuestData';
 import {
@@ -14,7 +15,8 @@ import {
   ArrowRight,
   RotateCcw,
   Award,
-  X
+  X,
+  Shuffle
 } from 'lucide-react';
 
 interface HeritageQuestProps {
@@ -28,6 +30,28 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
   onClose,
   isModal = false
 }) => {
+  // توليد أسئلة عشوائية فريدة لكل مستخدم مع خلط الإجابات
+  const [questStages, setQuestStages] = useState<QuestQuestion[]>(() => {
+    try {
+      const saved = localStorage.getItem(QUEST_QUESTIONS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === 5) {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    const fresh = generateRandomHeritageQuest();
+    try {
+      localStorage.setItem(QUEST_QUESTIONS_KEY, JSON.stringify(fresh));
+    } catch {
+      // Ignore
+    }
+    return fresh;
+  });
+
   const [currentStageIdx, setCurrentStageIdx] = useState<number>(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -42,7 +66,7 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
       if (saved) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.currentStageIdx === 'number') {
-          setCurrentStageIdx(Math.min(parsed.currentStageIdx, HERITAGE_QUEST_STAGES.length - 1));
+          setCurrentStageIdx(Math.min(parsed.currentStageIdx, questStages.length - 1));
         }
         if (typeof parsed.score === 'number') {
           setScore(parsed.score);
@@ -57,7 +81,7 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
     } catch {
       // Ignore
     }
-  }, []);
+  }, [questStages.length]);
 
   const saveProgress = (nextIdx: number, newScore: number, newBadges: string[], completed: boolean) => {
     try {
@@ -75,8 +99,8 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
     }
   };
 
-  const currentQuest: QuestQuestion = HERITAGE_QUEST_STAGES[currentStageIdx];
-  const isLastStage = currentStageIdx === HERITAGE_QUEST_STAGES.length - 1;
+  const currentQuest: QuestQuestion = questStages[currentStageIdx] || questStages[0];
+  const isLastStage = currentStageIdx === questStages.length - 1;
 
   const handleSelectOption = (optId: string) => {
     if (isSubmitted) return;
@@ -111,14 +135,26 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
     }
   };
 
-  const handleResetQuest = () => {
+  // توليد مجموعة أسئلة جديدة كلياً
+  const handleShuffleNewQuestions = () => {
+    const fresh = generateRandomHeritageQuest();
+    setQuestStages(fresh);
+    try {
+      localStorage.setItem(QUEST_QUESTIONS_KEY, JSON.stringify(fresh));
+      localStorage.removeItem(QUEST_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
     setCurrentStageIdx(0);
     setSelectedOption(null);
     setIsSubmitted(false);
     setScore(0);
     setEarnedBadges([]);
     setIsCompletedAll(false);
-    localStorage.removeItem(QUEST_STORAGE_KEY);
+  };
+
+  const handleResetQuest = () => {
+    handleShuffleNewQuestions();
   };
 
   const handleAskResearcher = () => {
@@ -152,13 +188,24 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
               </span>
             </div>
             <p className="text-xs text-amber-200/70 font-thmanyah hidden sm:block mt-0.5">
-              ألغاز تاريخ وارجلان وحاضرة سدراتة من أمهات المراجع الـ 11
+              ألغاز تاريخ وارجلان وحاضرة سدراتة من بطون الكتب والمراجع التاريخية
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="bg-[#06111f] px-4 py-1.5 rounded-2xl border border-amber-500/40 text-center shadow-inner">
+        <div className="flex items-center gap-2.5">
+          {/* زر تبديل وتجديد الأسئلة من بنك الأسئلة */}
+          <button
+            type="button"
+            onClick={handleShuffleNewQuestions}
+            className="bg-[#06111f] hover:bg-[#10243e] px-3 py-1.5 rounded-2xl border border-amber-500/40 text-amber-300 hover:text-amber-100 flex items-center gap-1.5 text-xs font-thmanyah transition-all cursor-pointer shadow-inner"
+            title="تجديد الأسئلة وسحب ألغاز أخرى من بنك المخطوطات"
+          >
+            <Shuffle className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">ألغاز جديدة</span>
+          </button>
+
+          <div className="bg-[#06111f] px-3.5 py-1.5 rounded-2xl border border-amber-500/40 text-center shadow-inner">
             <span className="text-sm font-thmanyah font-bold text-amber-400">
               🪙 {score} <span className="text-xs font-normal text-amber-200/70">نقطة</span>
             </span>
@@ -228,7 +275,7 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
                 طوبى لك يا مؤرخ وارجلان العظيم! 🎉
               </h4>
               <p className="text-sm font-thmanyah text-amber-100/90 leading-loose">
-                اجتزت مراتب: قارئ ➔ مستكشف ➔ فارس ➔ علاّمة ➔ مؤرخ، وبرهنت على إحاطة شاملة بتاريخ الواحة وسدراتة من بطون الكتب الـ 11.
+                اجتزت مراتب: قارئ ➔ مستكشف ➔ فارس ➔ علاّمة ➔ مؤرخ، وبرهنت على إحاطة شاملة بتاريخ الواحة وسدراتة من بطون أمهات الكتب والمخطوطات التاريخية.
               </p>
             </div>
 
@@ -239,7 +286,7 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
                 <span>أوسمة الواحة المحفورة في سجلك:</span>
               </h5>
               <div className="flex flex-wrap items-center justify-center gap-2.5">
-                {HERITAGE_QUEST_STAGES.map((s) => (
+                {questStages.map((s) => (
                   <div
                     key={s.id}
                     className="bg-[#0f2136] border border-amber-400/50 text-amber-100 px-4 py-2 rounded-2xl shadow-xs flex items-center gap-2"
