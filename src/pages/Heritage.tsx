@@ -395,11 +395,11 @@ export default function Heritage() {
         ══════════════════════════════════════════════════════════════════ */}
         {isQuestOpen && (
           <div
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
             onClick={() => setIsQuestOpen(false)}
           >
             <div
-              className="w-full max-w-2xl animate-in zoom-in-95 duration-200"
+              className="w-full max-w-3xl lg:max-w-4xl animate-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
               <HeritageQuest
