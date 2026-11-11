@@ -13,7 +13,6 @@ import {
   XCircle,
   ArrowRight,
   RotateCcw,
-  BookOpen,
   Award,
   X
 } from 'lucide-react';
@@ -136,32 +135,23 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
       style={{ backgroundColor: '#09111c' }}
     >
       {/* ══════════════════════════════════════════════════════════════════
-          1. Header: مقتضب وأنيق
+          1. Header: مقتضب وأنيق وخالٍ من الحشو
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="bg-gradient-to-r from-[#06101c] via-[#0d1e34] to-[#06101c] px-4 py-3 sm:px-5 sm:py-3.5 border-b border-amber-500/30 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-amber-400/20 border border-amber-400/50 flex items-center justify-center text-lg shadow-inner">
-            🏺
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-thmanyah font-bold text-amber-100">
-                تحدي الباحث التاريخي
-              </h3>
-              <span className="bg-amber-400 text-slate-950 font-thmanyah font-bold text-[10px] px-2 py-0.5 rounded-full">
-                {currentQuest.rankIcon} رتبة: {currentQuest.rankTitle}
-              </span>
-            </div>
-            <p className="text-[10px] text-amber-200/70 font-thmanyah hidden sm:block">
-              مسابقة واحة وارجلان وسدراتة مستقاة من أمهات المراجع الـ 11
-            </p>
-          </div>
+      <div className="bg-gradient-to-r from-[#06101c] via-[#0d1e34] to-[#06101c] px-4 py-2.5 sm:px-5 sm:py-3 border-b border-amber-500/30 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🏺</span>
+          <h3 className="text-sm sm:text-base font-thmanyah font-bold text-amber-100">
+            تحدي الباحث التاريخي
+          </h3>
+          <span className="bg-amber-400 text-slate-950 font-thmanyah font-bold text-[10px] px-2 py-0.5 rounded-full">
+            {currentQuest.rankIcon} {currentQuest.rankTitle}
+          </span>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <div className="bg-[#06111f] px-3 py-1 rounded-xl border border-amber-500/40 text-center">
+        <div className="flex items-center gap-2">
+          <div className="bg-[#06111f] px-2.5 py-1 rounded-xl border border-amber-500/40 text-center">
             <span className="text-xs font-thmanyah font-bold text-amber-400">
-              🪙 {score} <span className="text-[10px] font-normal text-amber-200/70">نقطة</span>
+              🪙 {score} نقطة
             </span>
           </div>
 
@@ -169,10 +159,10 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+              className="w-7 h-7 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer"
               title="إغلاق التحدي"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -181,13 +171,13 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
       {/* ══════════════════════════════════════════════════════════════════
           2. شريط الرتب الـ 5: قارئ ➔ مستكشف ➔ فارس ➔ علاّمة ➔ مؤرخ
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="bg-[#06111f] border-b border-amber-500/20 px-3 py-2 shrink-0 overflow-x-auto">
-        <div className="flex items-center justify-between min-w-[340px] max-w-lg mx-auto">
+      <div className="bg-[#06111f] border-b border-amber-500/20 px-3 py-1.5 shrink-0 overflow-x-auto">
+        <div className="flex items-center justify-between min-w-[320px] max-w-md mx-auto">
           {HERITAGE_QUEST_RANKS.map((r, idx) => {
             const isCurrent = idx === currentStageIdx;
             const isDone = idx < currentStageIdx;
 
-            let pillStyle = 'text-slate-400 border-slate-800 bg-slate-900/60';
+            let pillStyle = 'text-slate-500 border-slate-800 bg-slate-900/40';
             if (isDone) {
               pillStyle = 'text-amber-300 border-amber-500/60 bg-amber-500/10 font-bold';
             } else if (isCurrent) {
@@ -212,9 +202,9 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          3. جسم التحدي المدمج
+          3. جسم التحدي المدمج والموجز
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-3.5 bg-[#09111c] text-slate-100">
+      <div className="p-3.5 sm:p-4 overflow-y-auto flex-1 space-y-3 bg-[#09111c] text-slate-100">
         {/* If Completed All Stages */}
         {isCompletedAll ? (
           <div className="text-center py-6 space-y-4">
@@ -273,133 +263,117 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
           </div>
         ) : (
           /* Active Stage */
-          <div className="space-y-3.5">
+          <div className="space-y-3">
             {/* ══════════════════════════════════════════════════════════════════
-                رق اللغز التراثي المحكم والمدمج
+                بطاقة اللغز المركزة (بدون حشو)
             ══════════════════════════════════════════════════════════════════ */}
-            <div className="relative rounded-2xl bg-gradient-to-b from-[#101f33] via-[#0c1827] to-[#08121e] border border-amber-500/50 p-3.5 sm:p-4 shadow-xl">
-              {/* شريط المرجع والاستشارة */}
-              <div className="flex items-center justify-between text-xs font-thmanyah text-amber-300/90 pb-2 border-b border-amber-500/20">
-                <span className="flex items-center gap-1.5 font-bold">
-                  <span className="text-amber-400">❖</span>
+            <div className="rounded-2xl bg-gradient-to-b from-[#101f33] to-[#08121e] border border-amber-500/40 p-3 sm:p-3.5 shadow-lg">
+              <div className="flex items-center justify-between text-xs font-thmanyah text-amber-300 pb-1.5 border-b border-amber-500/20">
+                <span className="font-bold flex items-center gap-1">
+                  <span>❖</span>
                   <span>{currentQuest.title}</span>
                 </span>
                 <button
                   type="button"
                   onClick={handleAskResearcher}
-                  className="inline-flex items-center gap-1 text-[11px] font-thmanyah text-amber-300 hover:text-amber-100 bg-amber-400/10 hover:bg-amber-400/25 border border-amber-400/30 rounded-lg px-2.5 py-1 transition-all cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1 text-[11px] font-thmanyah text-amber-300 hover:text-amber-100 bg-amber-400/10 hover:bg-amber-400/25 border border-amber-400/30 rounded-lg px-2 py-0.5 transition-all cursor-pointer"
                 >
                   <Search className="w-3 h-3 text-amber-400" />
-                  <span>تلميح الباحث 🏺</span>
+                  <span>تلميح الباحث 💡</span>
                 </button>
               </div>
 
-              {/* نص اللغز المخطوط */}
-              <div className="my-2.5 py-2 px-3 rounded-xl bg-amber-500/5 border-r-3 border-amber-400/80">
-                <p className="font-thmanyah text-sm sm:text-base text-amber-50 leading-relaxed text-right">
-                  «{currentQuest.riddle}»
+              {/* السؤال المباشر */}
+              <div className="my-2 py-1.5 px-2.5 rounded-xl bg-amber-500/5 border-r-3 border-amber-400">
+                <p className="font-thmanyah text-sm sm:text-base text-amber-50 font-bold leading-relaxed text-right">
+                  {currentQuest.riddle}
                 </p>
               </div>
 
-              {/* الشاهد والمصدر في سطر واحد */}
-              <div className="text-[11px] font-thmanyah text-amber-200/70 flex items-center justify-between pt-1">
-                <span className="flex items-center gap-1">
-                  <BookOpen className="w-3 h-3 text-amber-400" />
-                  <span>المصدر: {currentQuest.bookTitle}</span>
-                </span>
-                <span className="text-amber-400 font-bold">{currentQuest.pageReference}</span>
+              <div className="text-[10px] font-thmanyah text-amber-200/60 flex items-center justify-between">
+                <span>المصدر: {currentQuest.bookTitle}</span>
+                <span className="text-amber-400/80">{currentQuest.pageReference}</span>
               </div>
             </div>
 
             {/* ══════════════════════════════════════════════════════════════════
-                ألواح الروايات التاريخية (شبكة من عمودين لتقليل الارتفاع)
+                ألواح الإجابة السريعة (شبكة خفيفة ومباشرة)
             ══════════════════════════════════════════════════════════════════ */}
-            <div className="space-y-2">
-              <h5 className="text-xs font-thmanyah font-bold text-amber-300 px-0.5 flex items-center gap-1">
-                <span>✦</span>
-                <span>اختر الرواية التاريخية الثابتة:</span>
-              </h5>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {currentQuest.options.map((opt, idx) => {
-                  const isSelected = selectedOption === opt.id;
-                  let cardStyle =
-                    'border border-amber-500/30 bg-[#0e1d2f] text-slate-100 hover:border-amber-400/80 hover:bg-[#152a42] hover:shadow-md';
-                  if (isSelected && !isSubmitted) {
-                    cardStyle = 'border-2 border-amber-400 bg-gradient-to-r from-amber-950/60 to-[#1b2b40] text-amber-100 font-bold shadow-lg ring-1 ring-amber-400/20';
-                  } else if (isSubmitted) {
-                    if (opt.isCorrect) {
-                      cardStyle = 'border-2 border-emerald-400 bg-gradient-to-r from-emerald-950 to-[#0e2a22] text-emerald-100 font-bold shadow-md';
-                    } else if (isSelected && !opt.isCorrect) {
-                      cardStyle = 'border-2 border-rose-500 bg-rose-950/70 text-rose-200 line-through opacity-85';
-                    } else {
-                      cardStyle = 'border border-slate-800 bg-slate-900/50 opacity-35 text-slate-400';
-                    }
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {currentQuest.options.map((opt, idx) => {
+                const isSelected = selectedOption === opt.id;
+                let cardStyle =
+                  'border border-amber-500/25 bg-[#0e1d2f] text-slate-100 hover:border-amber-400/80 hover:bg-[#152a42]';
+                if (isSelected && !isSubmitted) {
+                  cardStyle = 'border-2 border-amber-400 bg-amber-950/50 text-amber-100 font-bold shadow-md';
+                } else if (isSubmitted) {
+                  if (opt.isCorrect) {
+                    cardStyle = 'border-2 border-emerald-400 bg-emerald-950 text-emerald-100 font-bold shadow-md';
+                  } else if (isSelected && !opt.isCorrect) {
+                    cardStyle = 'border-2 border-rose-500 bg-rose-950/70 text-rose-200 line-through opacity-80';
+                  } else {
+                    cardStyle = 'border border-slate-800 bg-slate-900/40 opacity-30 text-slate-400';
                   }
+                }
 
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      disabled={isSubmitted}
-                      onClick={() => handleSelectOption(opt.id)}
-                      className={`w-full text-right p-3 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-2.5 ${cardStyle}`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-thmanyah font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
-                          {['أ', 'ب', 'ج', 'د'][idx]}
-                        </span>
-                        <span className="text-xs sm:text-sm font-thmanyah font-medium leading-snug">{opt.text}</span>
-                      </div>
-                      {isSubmitted && opt.isCorrect && (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      )}
-                      {isSubmitted && isSelected && !opt.isCorrect && (
-                        <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    disabled={isSubmitted}
+                    onClick={() => handleSelectOption(opt.id)}
+                    className={`w-full text-right p-2.5 sm:p-3 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-2 ${cardStyle}`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-thmanyah font-bold text-xs flex items-center justify-center shrink-0">
+                        {['أ', 'ب', 'ج', 'د'][idx]}
+                      </span>
+                      <span className="text-xs sm:text-sm font-thmanyah font-medium leading-snug">{opt.text}</span>
+                    </div>
+                    {isSubmitted && opt.isCorrect && (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    )}
+                    {isSubmitted && isSelected && !opt.isCorrect && (
+                      <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {/* ══════════════════════════════════════════════════════════════════
-                شهادة المخطوط الأكاديمية بعد الإجابة
+                الشرح الموجز بعد الإجابة
             ══════════════════════════════════════════════════════════════════ */}
             {isSubmitted && (
-              <div className="bg-gradient-to-b from-[#0e1d2f] to-[#071320] border border-amber-400/60 rounded-xl p-3.5 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200 shadow-md">
-                <div className="flex items-center gap-1.5">
+              <div className="bg-[#0e1d2f] border border-amber-400/50 rounded-xl p-2.5 space-y-1.5 animate-in fade-in duration-200">
+                <div className="flex items-center gap-1.5 text-xs font-thmanyah font-bold text-amber-300">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-xs font-thmanyah font-bold text-amber-300">شهادة التوثيق والشاهد الأكاديمي:</span>
+                  <span>التوثيق المباشر:</span>
                 </div>
                 <p className="text-xs font-thmanyah text-amber-100 leading-relaxed text-right">
                   {currentQuest.explanation}
                 </p>
-                <div className="flex items-center justify-between text-[11px] font-thmanyah text-amber-200/90 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
-                  <span>📖 المصدر التاريخي: {currentQuest.bookTitle}</span>
-                  <span className="font-bold text-amber-300">{currentQuest.pageReference}</span>
-                </div>
               </div>
             )}
 
             {/* ══════════════════════════════════════════════════════════════════
-                زر الإجراء المدمج
+                زر الإجراء
             ══════════════════════════════════════════════════════════════════ */}
-            <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center justify-between pt-0.5">
               {!isSubmitted ? (
                 <Button
                   onClick={handleVerifyAnswer}
                   disabled={!selectedOption}
-                  className="px-6 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-thmanyah font-bold text-xs shadow-lg transition-all cursor-pointer disabled:opacity-40 gap-1.5 border border-amber-200/50 mr-auto"
+                  className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-thmanyah font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-40 gap-1.5 mr-auto"
                 >
-                  <span>اكشف سرّ اللغز 📜</span>
-                  <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                  <span>تحقق من الإجابة 📜</span>
                 </Button>
               ) : (
                 <Button
                   onClick={handleNextStage}
-                  className="px-6 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-thmanyah font-bold text-xs shadow-lg transition-all cursor-pointer gap-1.5 border border-amber-200/50 mr-auto"
+                  className="px-5 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-thmanyah font-bold text-xs shadow-md transition-all cursor-pointer gap-1.5 mr-auto"
                 >
-                  <span>{isLastStage ? 'ختام الرحلة واستلام الأوسمة 👑' : 'الانتقال إلى المحطة التالية 🏺 ❯'}</span>
+                  <span>{isLastStage ? 'عرض الأوسمة النهائية 👑' : 'المحطة التالية 🏺 ❯'}</span>
                   <ArrowRight className="w-3.5 h-3.5 rotate-180 text-slate-950" />
                 </Button>
               )}
