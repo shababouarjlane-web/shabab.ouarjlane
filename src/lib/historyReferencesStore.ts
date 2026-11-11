@@ -4,6 +4,8 @@ import {
   GHOSN_AL_BAN_META,
   MAALIM_AL_HADARA_META,
   MAALIM_BOOK_SECTIONS,
+  VAN_BERCHEM_META,
+  VAN_BERCHEM_SECTIONS,
   type BookSection
 } from '@/data/ghosnAlBanKnowledge';
 
@@ -268,7 +270,11 @@ export async function saveUploadedBook(book: ReferenceBookRecord): Promise<void>
 }
 
 export async function deleteUploadedBook(bookId: string): Promise<void> {
-  if (bookId === GHOSN_AL_BAN_META.id || bookId === MAALIM_AL_HADARA_META.id) {
+  if (
+    bookId === GHOSN_AL_BAN_META.id ||
+    bookId === MAALIM_AL_HADARA_META.id ||
+    bookId === VAN_BERCHEM_META.id
+  ) {
     const { ids } = await fetchCloudDeletedBuiltinIds();
     ids.add(bookId);
     await saveCloudDeletedBuiltinIds(ids);
@@ -294,7 +300,11 @@ export async function deleteUploadedBook(bookId: string): Promise<void> {
 }
 
 export async function deleteSingleSection(bookId: string, sectionId: string): Promise<void> {
-  if (bookId === GHOSN_AL_BAN_META.id || bookId === MAALIM_AL_HADARA_META.id) {
+  if (
+    bookId === GHOSN_AL_BAN_META.id ||
+    bookId === MAALIM_AL_HADARA_META.id ||
+    bookId === VAN_BERCHEM_META.id
+  ) {
     const { ids } = await fetchCloudDeletedBuiltinIds();
     ids.add(sectionId);
     await saveCloudDeletedBuiltinIds(ids);
@@ -375,6 +385,30 @@ export async function getAllReferenceBooks(): Promise<ReferenceBookRecord[]> {
         createdAt: '2026-01-02T00:00:00.000Z',
         totalPages: MAALIM_AL_HADARA_META.totalPages,
         sections: activeMaalimSections
+      });
+    }
+  }
+
+  if (!deletedIds.has(VAN_BERCHEM_META.id)) {
+    const activeVbSections = VAN_BERCHEM_SECTIONS.filter((s) => !deletedIds.has(s.id)).map(
+      (s) => ({
+        ...s,
+        bookId: VAN_BERCHEM_META.id,
+        bookTitle: VAN_BERCHEM_META.title,
+        bookAuthor: VAN_BERCHEM_META.author
+      })
+    );
+
+    if (activeVbSections.length > 0) {
+      result.push({
+        id: VAN_BERCHEM_META.id,
+        title: VAN_BERCHEM_META.title,
+        author: VAN_BERCHEM_META.author,
+        fileType: 'builtin',
+        fileName: 'Marguerite_van_Berchem_Sedrata_et_les_anciennes_villes_du_Sahara_1960.pdf',
+        createdAt: '2026-01-03T00:00:00.000Z',
+        totalPages: VAN_BERCHEM_META.totalPages,
+        sections: activeVbSections
       });
     }
   }
