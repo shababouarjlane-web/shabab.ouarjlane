@@ -6,7 +6,6 @@ import {
   type QuestQuestion
 } from '@/data/heritageQuestData';
 import {
-  Trophy,
   Sparkles,
   Search,
   CheckCircle2,
@@ -131,48 +130,55 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
 
   return (
     <div
-      className={`rounded-3xl border-2 border-cyan-500/40 bg-[#0b172a] text-slate-100 shadow-2xl overflow-hidden font-sans ${
-        isModal ? 'max-w-2xl w-full mx-auto my-auto max-h-[90vh] flex flex-col' : 'my-8'
+      className={`rounded-3xl border-2 border-amber-500/50 bg-[#09111c] text-slate-100 shadow-2xl overflow-hidden font-sans ${
+        isModal ? 'max-w-2xl w-full mx-auto my-auto max-h-[92vh] flex flex-col' : 'my-8'
       }`}
-      style={{ backgroundColor: '#0b172a' }}
+      style={{ backgroundColor: '#09111c' }}
     >
-      {/* Header Banner - Royal Indigo & Amber */}
-      <div className="bg-gradient-to-r from-[#07162c] via-[#0f284d] to-[#07162c] p-5 md:p-6 relative overflow-hidden border-b border-cyan-500/30 shrink-0">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+      {/* ══════════════════════════════════════════════════════════════════
+          Header: واجهة التحدي التراثية الأصيلة
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="bg-gradient-to-r from-[#06101c] via-[#0d1e34] to-[#06101c] p-5 md:p-6 relative overflow-hidden border-b border-amber-500/30 shrink-0">
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-400/15 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-inner">
-              <Trophy className="w-6 h-6 text-amber-400 animate-pulse" />
+          <div className="flex items-center gap-3.5">
+            <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-amber-400/30 to-amber-700/20 border-2 border-amber-400/60 flex items-center justify-center shrink-0 shadow-lg text-2xl">
+              🏺
             </div>
-            <div>
+            <div className="text-right">
               <div className="flex items-center gap-2">
-                <span className="bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-full inline-block">
-                  تحدي واحة وارجلان
+                <span className="bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-thmanyah font-bold text-[11px] px-2.5 py-0.5 rounded-full inline-block shadow-xs">
+                  مغامرة باحث الواحة
                 </span>
-                <span className="text-[11px] text-cyan-200">مستند إلى المراجع الـ 11</span>
+                <span className="text-[11px] font-thmanyah text-amber-200/80">مستقاة من أمهات المراجع الـ 11</span>
               </div>
-              <h3 className="text-lg md:text-xl font-thmanyah font-black text-white mt-1">
-                تحدي الباحث التاريخي 🏺
+              <h3 className="text-lg md:text-xl font-thmanyah font-bold text-amber-100 mt-1">
+                تحدي الباحث التاريخي ✦ أسرار وارجلان وسدراتة
               </h3>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
-            <div className="bg-[#050f1d] px-3 py-1.5 rounded-xl border border-cyan-500/30 text-center">
-              <span className="text-[9px] text-cyan-300 block">النقاط</span>
-              <span className="text-base font-black text-amber-400">{score} / 100</span>
-            </div>
-            <div className="bg-[#050f1d] px-3 py-1.5 rounded-xl border border-cyan-500/30 text-center">
-              <span className="text-[9px] text-cyan-300 block">المرحلة</span>
-              <span className="text-base font-black text-white">
-                {isCompletedAll ? 'مكتمل 🏆' : `${currentStageIdx + 1}/${HERITAGE_QUEST_STAGES.length}`}
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+            {/* رصيد النقاط المعرب دون انقلاب */}
+            <div className="bg-[#06111f] px-3.5 py-2 rounded-2xl border border-amber-500/40 text-center shadow-inner">
+              <span className="text-[10px] font-thmanyah text-amber-300 block">الرصيد العلمي</span>
+              <span className="text-sm font-thmanyah font-bold text-amber-400">
+                {score} <span className="text-[11px] font-normal text-amber-200/70">نقطة</span>
               </span>
             </div>
+
+            {/* المرحلة الحالية */}
+            <div className="bg-[#06111f] px-3.5 py-2 rounded-2xl border border-amber-500/40 text-center shadow-inner">
+              <span className="text-[10px] font-thmanyah text-amber-300 block">المحطة الحالية</span>
+              <span className="text-sm font-thmanyah font-bold text-slate-100">
+                {isCompletedAll ? 'مكتمل 🏆' : `اللغز ${currentStageIdx + 1} من ${HERITAGE_QUEST_STAGES.length}`}
+              </span>
+            </div>
+
             {onClose && (
               <button
                 type="button"
                 onClick={onClose}
-                className="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-white flex items-center justify-center transition-all cursor-pointer mr-1"
+                className="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer mr-1"
                 title="إغلاق التحدي"
               >
                 <X className="w-5 h-5" />
@@ -182,38 +188,40 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
         </div>
       </div>
 
-      <div className="p-5 md:p-6 overflow-y-auto flex-1 space-y-6 bg-[#0b172a] text-slate-100">
+      <div className="p-5 md:p-6 overflow-y-auto flex-1 space-y-6 bg-[#09111c] text-slate-100">
         {/* If Completed All Stages */}
         {isCompletedAll ? (
-          <div className="text-center py-6 space-y-5">
-            <div className="w-20 h-20 rounded-full bg-amber-400/20 border-3 border-amber-400 flex items-center justify-center mx-auto shadow-xl text-4xl animate-bounce">
+          <div className="text-center py-8 space-y-6">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400/30 to-amber-700/30 border-3 border-amber-400 flex items-center justify-center mx-auto shadow-2xl text-5xl animate-bounce">
               👑
             </div>
-            <div className="max-w-md mx-auto">
-              <h4 className="text-xl md:text-2xl font-thmanyah font-black text-amber-400">
-                تهانينا يا مؤرخ وارجلان العظيم! 🎉
+            <div className="max-w-md mx-auto space-y-2">
+              <span className="text-xs font-thmanyah font-bold text-amber-400 tracking-wider">
+                ✦ وسام التميز التراثي الأعلى ✦
+              </span>
+              <h4 className="text-2xl md:text-3xl font-thmanyah font-bold text-amber-200">
+                طوبى لك يا مؤرخ وارجلان العظيم! 🎉
               </h4>
-              <p className="text-xs md:text-sm text-slate-200 mt-2 leading-relaxed">
-                لقد اجتزت جميع مراحل تحدي الباحث التاريخي بنجاح، وبرهنت على معرفة عميقة بأسرار مدينة سدراتة، وقصر
-                وارجلان، وخزائن المخطوطات، وتاريخ العزابة وحيلة الزيت في قارة كريمة.
+              <p className="text-xs md:text-sm font-thmanyah text-amber-100/90 leading-loose">
+                لقد طفت في مجاهل حوض سدراتة، وسبرت أغوار قصر وارجلان العتيق، وحفظت حيلة الزيت في قارة كريمة، وبرهنت على بصيرة علمية بكتب الأئمة ورجالات الواحة.
               </p>
             </div>
 
             {/* Badges Collection */}
-            <div className="bg-[#050f1d] border border-cyan-500/40 rounded-2xl p-4 max-w-lg mx-auto">
-              <h5 className="text-xs font-bold text-amber-400 mb-3 flex items-center justify-center gap-1.5">
+            <div className="bg-[#06111f] border-2 border-amber-500/40 rounded-3xl p-5 max-w-lg mx-auto shadow-inner">
+              <h5 className="text-xs font-thmanyah font-bold text-amber-400 mb-3.5 flex items-center justify-center gap-1.5">
                 <Award className="w-4 h-4 text-amber-400" />
-                <span>أوسمتك التاريخية المحققة:</span>
+                <span>أوسمة الواحة المحفورة في سجلك:</span>
               </h5>
-              <div className="flex flex-wrap items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2.5">
                 {HERITAGE_QUEST_STAGES.map((s) => (
-                  <span
+                  <div
                     key={s.id}
-                    className="bg-[#10243e] border border-cyan-500/50 text-cyan-100 px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5"
+                    className="bg-[#0f2136] border border-amber-400/50 text-amber-100 px-3.5 py-2 rounded-2xl shadow-xs flex items-center gap-2"
                   >
-                    <span className="text-sm">{s.badgeReward?.icon || '⭐'}</span>
-                    <span className="text-xs font-bold">{s.badgeReward?.name}</span>
-                  </span>
+                    <span className="text-base">{s.badgeReward?.icon || '⭐'}</span>
+                    <span className="text-xs font-thmanyah font-bold">{s.badgeReward?.name}</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -222,7 +230,7 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
               <Button
                 onClick={handleResetQuest}
                 variant="outline"
-                className="border-cyan-500/50 bg-[#10243e] text-cyan-200 hover:bg-[#1a3a63] hover:text-white rounded-xl px-4 h-10 text-xs font-bold gap-2 cursor-pointer"
+                className="border-amber-500/50 bg-[#0f2136] text-amber-200 hover:bg-[#173252] hover:text-white rounded-xl px-4 h-11 text-xs font-thmanyah font-bold gap-2 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
                 <span>إعادة خوض التحدي</span>
@@ -230,7 +238,7 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
               {onClose && (
                 <Button
                   onClick={onClose}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl px-5 h-10 text-xs cursor-pointer shadow-lg"
+                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-thmanyah font-bold rounded-xl px-6 h-11 text-xs cursor-pointer shadow-lg"
                 >
                   إغلاق النافذة
                 </Button>
@@ -239,72 +247,112 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
           </div>
         ) : (
           /* Active Stage */
-          <div className="space-y-5">
-            {/* Stage Progress Bar */}
-            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-gradient-to-r from-cyan-400 via-amber-400 to-amber-500 h-2 rounded-full transition-all duration-500 ease-out"
-                style={{
-                  width: `${((currentStageIdx + (isSubmitted ? 1 : 0)) / HERITAGE_QUEST_STAGES.length) * 100}%`
-                }}
-              />
+          <div className="space-y-6">
+            {/* ══════════════════════════════════════════════════════════════════
+                مسار الأختام التاريخية الـ 5 (Milestone Seals Journey)
+            ══════════════════════════════════════════════════════════════════ */}
+            <div className="bg-[#06111f] border border-amber-500/30 rounded-2xl p-3 md:p-4">
+              <div className="flex items-center justify-between relative px-2">
+                {/* Connecting Thread */}
+                <div className="absolute top-1/2 left-6 right-6 -translate-y-1/2 h-0.5 bg-gradient-to-r from-amber-900 via-amber-600 to-amber-900 pointer-events-none" />
+
+                {HERITAGE_QUEST_STAGES.map((stage, idx) => {
+                  const isCurrent = idx === currentStageIdx;
+                  const isDone = idx < currentStageIdx;
+
+                  let sealStyle = 'border-slate-700 bg-slate-900 text-slate-500';
+                  if (isDone) {
+                    sealStyle = 'border-amber-400 bg-amber-500 text-slate-950 font-bold shadow-md';
+                  } else if (isCurrent) {
+                    sealStyle = 'border-amber-300 bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-black shadow-lg ring-4 ring-amber-400/30 scale-110';
+                  }
+
+                  return (
+                    <div key={stage.id} className="relative z-10 flex flex-col items-center gap-1">
+                      <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-thmanyah transition-all ${sealStyle}`}>
+                        {isDone ? '✓' : idx + 1}
+                      </div>
+                      <span className={`text-[10px] font-thmanyah hidden sm:block ${isCurrent ? 'text-amber-300 font-bold' : 'text-slate-400'}`}>
+                        {stage.badgeReward?.name ? stage.badgeReward.name.split(' ')[0] : `لغز ${idx + 1}`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Riddle Box */}
-            <div className="bg-[#071322] border-2 border-cyan-500/30 rounded-2xl p-4 md:p-5 shadow-lg relative">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-[11px] font-black text-slate-950 bg-amber-400 px-2.5 py-0.5 rounded-md">
-                  المرحلة {currentQuest.stage} من {HERITAGE_QUEST_STAGES.length}
-                </span>
-                <span className="text-[11px] text-cyan-300 font-medium flex items-center gap-1">
-                  <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>المرجع: {currentQuest.bookTitle}</span>
-                </span>
-              </div>
+            {/* ══════════════════════════════════════════════════════════════════
+                رق اللغز التراثي (The Heritage Manuscript Scroll)
+            ══════════════════════════════════════════════════════════════════ */}
+            <div className="relative rounded-3xl bg-gradient-to-b from-[#101f33] via-[#0c1827] to-[#08121e] border-2 border-amber-500/50 p-5 md:p-6 shadow-2xl overflow-hidden">
+              {/* زخارف أركان اللوح التراثي */}
+              <div className="absolute top-3 right-3 text-amber-500/40 text-xs font-serif select-none pointer-events-none">❖</div>
+              <div className="absolute top-3 left-3 text-amber-500/40 text-xs font-serif select-none pointer-events-none">❖</div>
+              <div className="absolute bottom-3 right-3 text-amber-500/40 text-xs font-serif select-none pointer-events-none">❖</div>
+              <div className="absolute bottom-3 left-3 text-amber-500/40 text-xs font-serif select-none pointer-events-none">❖</div>
 
-              <h4 className="text-base md:text-lg font-thmanyah font-bold text-white mb-3">
-                {currentQuest.title}
-              </h4>
-
-              <div className="bg-[#0b1c30] rounded-xl p-3.5 border border-cyan-800/60 mb-3 text-xs md:text-sm text-slate-200 leading-relaxed font-sans">
-                «{currentQuest.riddle}»
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1 border-t border-cyan-900/40">
-                <div className="text-[11px] text-slate-300 flex items-center gap-1.5">
-                  <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>هل استشكل عليك الحل؟</span>
+              {/* عنوان اللغز والمرجع */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 border-b border-amber-500/20 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-400 text-sm">✦</span>
+                  <h4 className="text-base sm:text-lg font-thmanyah font-bold text-amber-200">
+                    {currentQuest.title}
+                  </h4>
                 </div>
-                <Button
+                <div className="inline-flex items-center gap-1.5 text-[11px] font-thmanyah text-amber-300/80 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
+                  <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                  <span>المرجع: {currentQuest.bookTitle}</span>
+                </div>
+              </div>
+
+              {/* نص اللغز المخطوط */}
+              <div className="my-4 py-3.5 px-4 sm:px-6 rounded-2xl bg-amber-500/5 border-r-4 border-l-4 border-amber-400/60 shadow-inner">
+                <span className="text-2xl text-amber-400/50 font-serif block -mb-2">❝</span>
+                <p className="font-thmanyah text-base sm:text-lg text-amber-50 leading-loose tracking-wide text-right">
+                  {currentQuest.riddle}
+                </p>
+                <span className="text-2xl text-amber-400/50 font-serif block -mt-2 text-left">❞</span>
+              </div>
+
+              {/* استشارة خزانة الباحث التاريخي */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-amber-500/20">
+                <div className="text-[11px] font-thmanyah text-amber-200/70 flex items-center gap-1.5">
+                  <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                  <span>هل استشكل عليك حل هذا اللغز التراثي؟</span>
+                </div>
+                <button
                   type="button"
-                  size="sm"
-                  variant="outline"
                   onClick={handleAskResearcher}
-                  className="border-cyan-500/40 bg-[#0e233d] text-cyan-200 hover:bg-[#163861] hover:text-white rounded-xl h-7 text-[11px] font-bold gap-1.5 cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-2 text-xs font-thmanyah font-bold text-amber-300 hover:text-amber-100 bg-amber-400/10 hover:bg-amber-400/25 border border-amber-400/30 rounded-xl px-3 py-1.5 transition-all cursor-pointer shadow-xs"
                 >
-                  <Search className="w-3 h-3 text-cyan-400" />
-                  <span>ابحث عنها في الباحث التاريخي 🔎</span>
-                </Button>
+                  <Search className="w-3.5 h-3.5 text-amber-400" />
+                  <span>استشر خزانة الباحث التاريخي 🏺</span>
+                </button>
               </div>
             </div>
 
-            {/* Options List */}
+            {/* ══════════════════════════════════════════════════════════════════
+                ألواح الروايات التاريخية (Options - Engraved Tablets)
+            ══════════════════════════════════════════════════════════════════ */}
             <div className="space-y-2.5">
-              <h5 className="text-xs font-bold text-cyan-300 px-1">اختر الإجابة الصحيحة الموثقة:</h5>
-              <div className="grid grid-cols-1 gap-2">
+              <h5 className="text-xs font-thmanyah font-bold text-amber-300 px-1 flex items-center gap-1.5">
+                <span>✦</span>
+                <span>أيّ هذه الروايات هي الثابتة في أمهات كتب الواحة؟</span>
+              </h5>
+              <div className="grid grid-cols-1 gap-2.5">
                 {currentQuest.options.map((opt, idx) => {
                   const isSelected = selectedOption === opt.id;
                   let cardStyle =
-                    'border border-cyan-800/80 bg-[#10243e] text-slate-100 hover:border-amber-400 hover:bg-[#163459]';
+                    'border border-amber-500/30 bg-[#0e1d2f] text-slate-100 hover:border-amber-400/80 hover:bg-[#152a42] hover:shadow-md';
                   if (isSelected && !isSubmitted) {
-                    cardStyle = 'border-2 border-amber-400 bg-amber-500/20 text-amber-200 font-bold shadow-md';
+                    cardStyle = 'border-2 border-amber-400 bg-gradient-to-r from-amber-950/60 to-[#1b2b40] text-amber-100 font-bold shadow-lg ring-2 ring-amber-400/20';
                   } else if (isSubmitted) {
                     if (opt.isCorrect) {
-                      cardStyle = 'border-2 border-emerald-400 bg-emerald-950 text-emerald-100 font-bold shadow-md';
+                      cardStyle = 'border-2 border-emerald-400 bg-gradient-to-r from-emerald-950 to-[#0e2a22] text-emerald-100 font-bold shadow-lg';
                     } else if (isSelected && !opt.isCorrect) {
-                      cardStyle = 'border-2 border-rose-500 bg-rose-950 text-rose-200 line-through';
+                      cardStyle = 'border-2 border-rose-500 bg-rose-950/70 text-rose-200 line-through opacity-85';
                     } else {
-                      cardStyle = 'border border-slate-800 bg-slate-900/60 opacity-40 text-slate-400';
+                      cardStyle = 'border border-slate-800 bg-slate-900/50 opacity-35 text-slate-400';
                     }
                   }
 
@@ -314,13 +362,13 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
                       type="button"
                       disabled={isSubmitted}
                       onClick={() => handleSelectOption(opt.id)}
-                      className={`w-full text-right p-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 ${cardStyle}`}
+                      className={`w-full text-right p-4 rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-3.5 transform hover:-translate-y-0.5 ${cardStyle}`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="w-6 h-6 rounded-lg bg-[#071322] text-amber-400 font-black text-xs flex items-center justify-center shrink-0 border border-cyan-700/60">
+                      <div className="flex items-center gap-3.5">
+                        <span className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-thmanyah font-bold text-sm flex items-center justify-center shrink-0 shadow-md">
                           {['أ', 'ب', 'ج', 'د'][idx]}
                         </span>
-                        <span className="text-xs md:text-sm leading-relaxed font-medium">{opt.text}</span>
+                        <span className="text-sm sm:text-base font-thmanyah font-medium leading-relaxed">{opt.text}</span>
                       </div>
                       {isSubmitted && opt.isCorrect && (
                         <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -334,39 +382,45 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
               </div>
             </div>
 
-            {/* Explanation Card after Submission */}
+            {/* ══════════════════════════════════════════════════════════════════
+                شهادة المخطوط الأكاديمية (Explanation Testimony Card)
+            ══════════════════════════════════════════════════════════════════ */}
             {isSubmitted && (
-              <div className="bg-[#071322] border-2 border-amber-400/50 rounded-xl p-4 space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="bg-gradient-to-b from-[#0e1d2f] to-[#071320] border-2 border-amber-400/60 rounded-2xl p-5 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300 shadow-xl">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-black text-amber-400">التوثيق والشاهد الأكاديمي:</span>
+                  <span className="text-xs font-thmanyah font-bold text-amber-300">شهادة التوثيق والشاهد الأكاديمي:</span>
                 </div>
-                <p className="text-xs text-slate-200 leading-relaxed font-sans">{currentQuest.explanation}</p>
-                <div className="flex items-center justify-between text-[11px] text-cyan-200 bg-[#0d223a] p-2 rounded-lg border border-cyan-800/60">
-                  <span>📖 المصدر: {currentQuest.bookTitle}</span>
-                  <span className="font-bold text-amber-400">{currentQuest.pageReference}</span>
+                <p className="text-xs sm:text-sm font-thmanyah text-amber-100 leading-loose text-right">
+                  {currentQuest.explanation}
+                </p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs font-thmanyah text-amber-200/90 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/30 gap-1.5">
+                  <span>📖 المصدر التاريخي: {currentQuest.bookTitle}</span>
+                  <span className="font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-md">{currentQuest.pageReference}</span>
                 </div>
               </div>
             )}
 
-            {/* Bottom Actions */}
+            {/* ══════════════════════════════════════════════════════════════════
+                زر الإجراء التراثي (Action Button)
+            ══════════════════════════════════════════════════════════════════ */}
             <div className="flex items-center justify-between pt-2">
               {!isSubmitted ? (
                 <Button
                   onClick={handleVerifyAnswer}
                   disabled={!selectedOption}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-6 h-10 rounded-xl cursor-pointer disabled:opacity-40 shadow-lg gap-2 mr-auto text-xs"
+                  className="w-full sm:w-auto px-8 py-5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-thmanyah font-bold text-sm shadow-xl hover:shadow-amber-400/20 transition-all cursor-pointer disabled:opacity-40 gap-2 border border-amber-200/50 mr-auto"
                 >
-                  <span>تحقق من الإجابة</span>
-                  <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                  <span>اكشف سرّ اللغز 📜</span>
+                  <Sparkles className="w-4 h-4 text-slate-950" />
                 </Button>
               ) : (
                 <Button
                   onClick={handleNextStage}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black px-6 h-10 rounded-xl cursor-pointer shadow-lg gap-2 mr-auto text-xs"
+                  className="w-full sm:w-auto px-8 py-5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-thmanyah font-bold text-sm shadow-xl transition-all cursor-pointer gap-2 border border-amber-200/50 mr-auto"
                 >
-                  <span>{isLastStage ? 'إنهاء التحدي واستلام الشارات 👑' : 'المرحلة التالية ⏩'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>{isLastStage ? 'ختام الرحلة واستلام الأوسمة 👑' : 'الانتقال إلى المحطة التالية 🏺 ❯'}</span>
+                  <ArrowRight className="w-4 h-4 rotate-180 text-slate-950" />
                 </Button>
               )}
             </div>
