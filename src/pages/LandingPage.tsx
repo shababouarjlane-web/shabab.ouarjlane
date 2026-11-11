@@ -658,39 +658,42 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Heritage Quest Interactive Teaser Banner */}
+      {/* Heritage Quest Interactive Teaser Banner - Royal Indigo & Amber */}
       <section className="py-4 relative z-10 mx-4 md:mx-auto max-w-7xl">
-        <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-[#1e120a] via-[#2c170d] to-[#1a0f07] border-2 border-[#efa83f]/40 p-6 md:p-8 text-white shadow-xl">
-          <div className="absolute -top-12 -left-12 w-48 h-48 bg-[#efa83f]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-[#b87a29]/15 rounded-full blur-3xl pointer-events-none" />
+        <div 
+          className="relative overflow-hidden rounded-3xl bg-[#0b172a] bg-gradient-to-r from-[#07162c] via-[#0f284d] to-[#07162c] border-2 border-cyan-500/50 p-6 md:p-8 text-white shadow-2xl"
+          style={{ backgroundColor: '#0b172a' }}
+        >
+          <div className="absolute -top-12 -left-12 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="space-y-3 text-right">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efa83f]/20 border border-[#efa83f]/50 text-[#efa83f] text-xs font-bold">
-                <span className="w-2 h-2 rounded-full bg-[#efa83f] animate-ping" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/60 text-cyan-300 text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
                 <span>جديد: مسابقة تفاعلية شيقة 🏺</span>
               </div>
-              <h3 className="text-2xl md:text-3xl font-thmanyah font-bold text-[#fae1b7]">
+              <h3 className="text-2xl md:text-3xl font-thmanyah font-bold text-white">
                 تحدي الباحث التاريخي: اختبر معرفتك بأسرار وارجلان وسدراتة!
               </h3>
-              <p className="text-xs md:text-sm text-[#fae1b7]/80 max-w-2xl leading-relaxed">
+              <p className="text-xs md:text-sm text-slate-200 max-w-2xl leading-relaxed font-sans">
                 هل تعلم أين حُفرت أول بئر ارتوازية؟ ولماذا دُهنت أقفال سدراتة بالزيت قبل ألف عام؟ خض التحدي وحل 5 ألغاز تاريخية موثقة من أمهات كتب الواحة، واحصل على أوسمة مؤرخ الواحة!
               </p>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[#efa83f]/90 pt-1">
-                <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">📜 5 ألغاز تاريخية موثقة</span>
-                <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">💡 تلميحات ذكية من الذكاء الاصطناعي</span>
-                <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10">🏆 رتبة باحث تاريخي خبير</span>
+              <div className="flex flex-wrap items-center gap-2 text-xs pt-1">
+                <span className="px-2.5 py-1 rounded-lg bg-[#071322] border border-cyan-800 text-cyan-200 font-medium">📜 5 ألغاز تاريخية موثقة</span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#071322] border border-cyan-800 text-cyan-200 font-medium">💡 تلميحات ذكية من الذكاء الاصطناعي</span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#071322] border border-amber-500/50 text-amber-300 font-bold">🏆 رتبة باحث تاريخي خبير</span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 w-full lg:w-auto">
               <Button
                 onClick={() => navigate('/heritage?quest=open')}
-                className="h-13 px-8 rounded-xl bg-linear-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#854515] text-[#301809] font-bold text-base shadow-glow-amber transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="h-13 px-8 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-base shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 border border-amber-300/40"
               >
-                <Trophy className="w-5 h-5 text-[#301809]" />
+                <Trophy className="w-5 h-5 text-slate-950" />
                 <span>خض التحدي الآن 🏆</span>
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4 text-slate-950" />
               </Button>
             </div>
           </div>

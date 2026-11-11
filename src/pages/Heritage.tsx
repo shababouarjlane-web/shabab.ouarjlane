@@ -359,17 +359,20 @@ export default function Heritage() {
         {/* ══════════════════════════════════════════════════════════════════
             2. شريط إطلاق تحدي الباحث التاريخي (Compact Trigger Banner)
         ══════════════════════════════════════════════════════════════════ */}
-        <div className="mt-8 rounded-3xl bg-linear-to-r from-[#301809] via-[#4a2711] to-[#1e120a] border-2 border-[#efa83f]/60 p-5 md:p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div 
+          className="mt-8 rounded-3xl bg-[#0b172a] bg-gradient-to-r from-[#07162c] via-[#0f284d] to-[#07162c] border-2 border-cyan-500/50 p-5 md:p-6 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ backgroundColor: '#0b172a' }}
+        >
           <div className="flex items-center gap-3.5 text-right w-full sm:w-auto">
-            <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/50 flex items-center justify-center shrink-0">
-              <Trophy className="w-6 h-6 text-[#efa83f] animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-inner">
+              <Trophy className="w-6 h-6 text-amber-400 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-[#301809] bg-[#efa83f] px-2 py-0.5 rounded-full inline-block">
+                <span className="text-[10px] font-black text-slate-950 bg-amber-400 px-2.5 py-0.5 rounded-full inline-block">
                   مغامرة تفاعلية
                 </span>
-                <span className="text-xs text-[#fae1b7]">5 ألغاز موثقة وأوسمة شرفية</span>
+                <span className="text-xs text-cyan-200 font-semibold">5 ألغاز موثقة وأوسمة شرفية</span>
               </div>
               <h4 className="text-base md:text-lg font-thmanyah font-bold text-white mt-1">
                 هل أنت مستعد لخوض «تحدي الباحث التاريخي»؟ 🏺
@@ -379,11 +382,11 @@ export default function Heritage() {
 
           <Button
             onClick={() => setIsQuestOpen(true)}
-            className="w-full sm:w-auto bg-linear-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#8c4b18] text-[#301809] font-black px-6 py-5 rounded-2xl text-xs md:text-sm shadow-glow-amber cursor-pointer shrink-0 gap-2"
+            className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-6 py-5 rounded-2xl text-xs md:text-sm shadow-lg cursor-pointer shrink-0 gap-2 border border-amber-300/40"
           >
-            <Sparkles className="w-4 h-4 text-[#301809]" />
+            <Sparkles className="w-4 h-4 text-slate-950" />
             <span>ابدأ التحدي الآن</span>
-            <ArrowRight className="w-4 h-4 mr-1 rotate-180" />
+            <ArrowRight className="w-4 h-4 mr-1 rotate-180 text-slate-950" />
           </Button>
         </div>
 

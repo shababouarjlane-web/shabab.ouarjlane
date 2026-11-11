@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   HERITAGE_QUEST_STAGES,
@@ -131,25 +130,26 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
   };
 
   return (
-    <Card
-      className={`rounded-3xl border-2 border-[#efa83f]/60 bg-linear-to-b from-[#1e120a] via-[#26150b] to-[#170c06] text-white shadow-2xl overflow-hidden font-sans ${
+    <div
+      className={`rounded-3xl border-2 border-cyan-500/40 bg-[#0b172a] text-slate-100 shadow-2xl overflow-hidden font-sans ${
         isModal ? 'max-w-2xl w-full mx-auto my-auto max-h-[90vh] flex flex-col' : 'my-8'
       }`}
+      style={{ backgroundColor: '#0b172a' }}
     >
-      {/* Header Banner */}
-      <div className="bg-linear-to-r from-[#723c11] via-[#8c4b18] to-[#301809] p-5 md:p-6 relative overflow-hidden border-b border-[#efa83f]/30 shrink-0">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+      {/* Header Banner - Royal Indigo & Amber */}
+      <div className="bg-gradient-to-r from-[#07162c] via-[#0f284d] to-[#07162c] p-5 md:p-6 relative overflow-hidden border-b border-cyan-500/30 shrink-0">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/50 flex items-center justify-center shrink-0 shadow-inner">
-              <Trophy className="w-6 h-6 text-[#efa83f] animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-amber-400/15 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-inner">
+              <Trophy className="w-6 h-6 text-amber-400 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="bg-[#efa83f] text-[#301809] font-black text-[10px] px-2.5 py-0.5 rounded-full inline-block">
+                <span className="bg-amber-400 text-slate-950 font-black text-[10px] px-2.5 py-0.5 rounded-full inline-block">
                   تحدي واحة وارجلان
                 </span>
-                <span className="text-[11px] text-[#fae1b7]">مستند إلى المراجع الـ 11</span>
+                <span className="text-[11px] text-cyan-200">مستند إلى المراجع الـ 11</span>
               </div>
               <h3 className="text-lg md:text-xl font-thmanyah font-black text-white mt-1">
                 تحدي الباحث التاريخي 🏺
@@ -158,12 +158,12 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
-            <div className="bg-black/30 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-white/10 text-center">
-              <span className="text-[9px] text-[#fae1b7] block">النقاط</span>
-              <span className="text-base font-black text-[#efa83f]">{score} / 100</span>
+            <div className="bg-[#050f1d] px-3 py-1.5 rounded-xl border border-cyan-500/30 text-center">
+              <span className="text-[9px] text-cyan-300 block">النقاط</span>
+              <span className="text-base font-black text-amber-400">{score} / 100</span>
             </div>
-            <div className="bg-black/30 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-white/10 text-center">
-              <span className="text-[9px] text-[#fae1b7] block">المرحلة</span>
+            <div className="bg-[#050f1d] px-3 py-1.5 rounded-xl border border-cyan-500/30 text-center">
+              <span className="text-[9px] text-cyan-300 block">المرحلة</span>
               <span className="text-base font-black text-white">
                 {isCompletedAll ? 'مكتمل 🏆' : `${currentStageIdx + 1}/${HERITAGE_QUEST_STAGES.length}`}
               </span>
@@ -172,7 +172,7 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer mr-1"
+                className="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-white flex items-center justify-center transition-all cursor-pointer mr-1"
                 title="إغلاق التحدي"
               >
                 <X className="w-5 h-5" />
@@ -182,34 +182,34 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
         </div>
       </div>
 
-      <CardContent className="p-5 md:p-6 overflow-y-auto flex-1 space-y-6">
+      <div className="p-5 md:p-6 overflow-y-auto flex-1 space-y-6 bg-[#0b172a] text-slate-100">
         {/* If Completed All Stages */}
         {isCompletedAll ? (
           <div className="text-center py-6 space-y-5">
-            <div className="w-20 h-20 rounded-full bg-[#efa83f]/20 border-3 border-[#efa83f] flex items-center justify-center mx-auto shadow-xl text-4xl animate-bounce">
+            <div className="w-20 h-20 rounded-full bg-amber-400/20 border-3 border-amber-400 flex items-center justify-center mx-auto shadow-xl text-4xl animate-bounce">
               👑
             </div>
             <div className="max-w-md mx-auto">
-              <h4 className="text-xl md:text-2xl font-thmanyah font-black text-[#efa83f]">
+              <h4 className="text-xl md:text-2xl font-thmanyah font-black text-amber-400">
                 تهانينا يا مؤرخ وارجلان العظيم! 🎉
               </h4>
-              <p className="text-xs md:text-sm text-[#fae1b7]/90 mt-2 leading-relaxed">
+              <p className="text-xs md:text-sm text-slate-200 mt-2 leading-relaxed">
                 لقد اجتزت جميع مراحل تحدي الباحث التاريخي بنجاح، وبرهنت على معرفة عميقة بأسرار مدينة سدراتة، وقصر
                 وارجلان، وخزائن المخطوطات، وتاريخ العزابة وحيلة الزيت في قارة كريمة.
               </p>
             </div>
 
             {/* Badges Collection */}
-            <div className="bg-black/40 border border-[#efa83f]/30 rounded-2xl p-4 max-w-lg mx-auto">
-              <h5 className="text-xs font-bold text-[#efa83f] mb-3 flex items-center justify-center gap-1.5">
-                <Award className="w-4 h-4 text-[#efa83f]" />
+            <div className="bg-[#050f1d] border border-cyan-500/40 rounded-2xl p-4 max-w-lg mx-auto">
+              <h5 className="text-xs font-bold text-amber-400 mb-3 flex items-center justify-center gap-1.5">
+                <Award className="w-4 h-4 text-amber-400" />
                 <span>أوسمتك التاريخية المحققة:</span>
               </h5>
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {HERITAGE_QUEST_STAGES.map((s) => (
                   <span
                     key={s.id}
-                    className="bg-white/10 border border-[#efa83f]/40 text-[#fae1b7] px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5"
+                    className="bg-[#10243e] border border-cyan-500/50 text-cyan-100 px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5"
                   >
                     <span className="text-sm">{s.badgeReward?.icon || '⭐'}</span>
                     <span className="text-xs font-bold">{s.badgeReward?.name}</span>
@@ -222,15 +222,15 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
               <Button
                 onClick={handleResetQuest}
                 variant="outline"
-                className="border-[#efa83f]/50 text-[#fae1b7] hover:bg-[#efa83f]/20 rounded-xl px-4 h-10 text-xs font-bold gap-2 cursor-pointer"
+                className="border-cyan-500/50 bg-[#10243e] text-cyan-200 hover:bg-[#1a3a63] hover:text-white rounded-xl px-4 h-10 text-xs font-bold gap-2 cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-[#efa83f]" />
+                <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
                 <span>إعادة خوض التحدي</span>
               </Button>
               {onClose && (
                 <Button
                   onClick={onClose}
-                  className="bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] font-black rounded-xl px-5 h-10 text-xs cursor-pointer shadow-lg"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl px-5 h-10 text-xs cursor-pointer shadow-lg"
                 >
                   إغلاق النافذة
                 </Button>
@@ -241,9 +241,9 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
           /* Active Stage */
           <div className="space-y-5">
             {/* Stage Progress Bar */}
-            <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-linear-to-r from-[#efa83f] to-[#b87a29] h-2 rounded-full transition-all duration-500 ease-out"
+                className="bg-gradient-to-r from-cyan-400 via-amber-400 to-amber-500 h-2 rounded-full transition-all duration-500 ease-out"
                 style={{
                   width: `${((currentStageIdx + (isSubmitted ? 1 : 0)) / HERITAGE_QUEST_STAGES.length) * 100}%`
                 }}
@@ -251,28 +251,28 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
             </div>
 
             {/* Riddle Box */}
-            <div className="bg-black/40 border border-[#efa83f]/40 rounded-2xl p-4 md:p-5 shadow-xs relative">
+            <div className="bg-[#071322] border-2 border-cyan-500/30 rounded-2xl p-4 md:p-5 shadow-lg relative">
               <div className="flex items-center justify-between mb-2.5">
-                <span className="text-[11px] font-black text-[#301809] bg-[#efa83f] px-2.5 py-0.5 rounded-md">
+                <span className="text-[11px] font-black text-slate-950 bg-amber-400 px-2.5 py-0.5 rounded-md">
                   المرحلة {currentQuest.stage} من {HERITAGE_QUEST_STAGES.length}
                 </span>
-                <span className="text-[11px] text-[#fae1b7]/80 font-medium flex items-center gap-1">
-                  <BookOpen className="w-3.5 h-3.5 text-[#efa83f]" />
+                <span className="text-[11px] text-cyan-300 font-medium flex items-center gap-1">
+                  <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
                   <span>المرجع: {currentQuest.bookTitle}</span>
                 </span>
               </div>
 
-              <h4 className="text-base md:text-lg font-thmanyah font-bold text-white leading-snug">
+              <h4 className="text-base md:text-lg font-thmanyah font-bold text-white mb-3">
                 {currentQuest.title}
               </h4>
-              <p className="text-xs md:text-sm text-[#fae1b7] mt-2.5 leading-relaxed bg-[#301809]/60 p-3.5 rounded-xl border border-white/5">
-                «{currentQuest.riddle}»
-              </p>
 
-              {/* Research Hint Helper Button */}
-              <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
-                <div className="flex items-center gap-1.5 text-[11px] text-[#fae1b7]/70">
-                  <HelpCircle className="w-3.5 h-3.5 text-[#efa83f]" />
+              <div className="bg-[#0b1c30] rounded-xl p-3.5 border border-cyan-800/60 mb-3 text-xs md:text-sm text-slate-200 leading-relaxed font-sans">
+                «{currentQuest.riddle}»
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1 border-t border-cyan-900/40">
+                <div className="text-[11px] text-slate-300 flex items-center gap-1.5">
+                  <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
                   <span>هل استشكل عليك الحل؟</span>
                 </div>
                 <Button
@@ -280,9 +280,9 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
                   size="sm"
                   variant="outline"
                   onClick={handleAskResearcher}
-                  className="border-[#efa83f]/50 bg-[#efa83f]/10 text-[#fae1b7] hover:bg-[#efa83f]/30 hover:text-white rounded-xl h-7 text-[11px] font-bold gap-1.5 cursor-pointer shadow-xs"
+                  className="border-cyan-500/40 bg-[#0e233d] text-cyan-200 hover:bg-[#163861] hover:text-white rounded-xl h-7 text-[11px] font-bold gap-1.5 cursor-pointer shadow-xs"
                 >
-                  <Search className="w-3 h-3 text-[#efa83f]" />
+                  <Search className="w-3 h-3 text-cyan-400" />
                   <span>ابحث عنها في الباحث التاريخي 🔎</span>
                 </Button>
               </div>
@@ -290,21 +290,21 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
 
             {/* Options List */}
             <div className="space-y-2.5">
-              <h5 className="text-[11px] font-bold text-[#fae1b7]/80 px-1">اختر الإجابة الصحيحة الموثقة:</h5>
+              <h5 className="text-xs font-bold text-cyan-300 px-1">اختر الإجابة الصحيحة الموثقة:</h5>
               <div className="grid grid-cols-1 gap-2">
                 {currentQuest.options.map((opt, idx) => {
                   const isSelected = selectedOption === opt.id;
                   let cardStyle =
-                    'border border-white/10 bg-white/5 text-white hover:border-[#efa83f]/60 hover:bg-[#efa83f]/10';
+                    'border border-cyan-800/80 bg-[#10243e] text-slate-100 hover:border-amber-400 hover:bg-[#163459]';
                   if (isSelected && !isSubmitted) {
-                    cardStyle = 'border-2 border-[#efa83f] bg-[#efa83f]/20 text-[#efa83f] font-bold shadow-xs';
+                    cardStyle = 'border-2 border-amber-400 bg-amber-500/20 text-amber-200 font-bold shadow-md';
                   } else if (isSubmitted) {
                     if (opt.isCorrect) {
-                      cardStyle = 'border-2 border-emerald-400 bg-emerald-950/80 text-emerald-200 font-bold';
+                      cardStyle = 'border-2 border-emerald-400 bg-emerald-950 text-emerald-100 font-bold shadow-md';
                     } else if (isSelected && !opt.isCorrect) {
-                      cardStyle = 'border-2 border-rose-500 bg-rose-950/80 text-rose-200 line-through';
+                      cardStyle = 'border-2 border-rose-500 bg-rose-950 text-rose-200 line-through';
                     } else {
-                      cardStyle = 'border border-white/5 bg-black/40 opacity-40';
+                      cardStyle = 'border border-slate-800 bg-slate-900/60 opacity-40 text-slate-400';
                     }
                   }
 
@@ -317,10 +317,10 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
                       className={`w-full text-right p-3.5 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 ${cardStyle}`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="w-6 h-6 rounded-lg bg-white/10 text-[#efa83f] font-black text-xs flex items-center justify-center shrink-0 border border-white/10">
+                        <span className="w-6 h-6 rounded-lg bg-[#071322] text-amber-400 font-black text-xs flex items-center justify-center shrink-0 border border-cyan-700/60">
                           {['أ', 'ب', 'ج', 'د'][idx]}
                         </span>
-                        <span className="text-xs md:text-sm leading-relaxed">{opt.text}</span>
+                        <span className="text-xs md:text-sm leading-relaxed font-medium">{opt.text}</span>
                       </div>
                       {isSubmitted && opt.isCorrect && (
                         <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -336,15 +336,15 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
 
             {/* Explanation Card after Submission */}
             {isSubmitted && (
-              <div className="bg-linear-to-b from-black/60 to-black/80 border border-[#efa83f]/40 rounded-xl p-4 space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="bg-[#071322] border-2 border-amber-400/50 rounded-xl p-4 space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#efa83f]" />
-                  <span className="text-xs font-black text-[#efa83f]">التوثيق والشاهد الأكاديمي:</span>
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-black text-amber-400">التوثيق والشاهد الأكاديمي:</span>
                 </div>
-                <p className="text-xs text-[#fae1b7] leading-relaxed">{currentQuest.explanation}</p>
-                <div className="flex items-center justify-between text-[11px] text-[#fae1b7]/80 bg-white/5 p-2 rounded-lg border border-white/10">
+                <p className="text-xs text-slate-200 leading-relaxed font-sans">{currentQuest.explanation}</p>
+                <div className="flex items-center justify-between text-[11px] text-cyan-200 bg-[#0d223a] p-2 rounded-lg border border-cyan-800/60">
                   <span>📖 المصدر: {currentQuest.bookTitle}</span>
-                  <span className="font-bold text-[#efa83f]">{currentQuest.pageReference}</span>
+                  <span className="font-bold text-amber-400">{currentQuest.pageReference}</span>
                 </div>
               </div>
             )}
@@ -355,15 +355,15 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
                 <Button
                   onClick={handleVerifyAnswer}
                   disabled={!selectedOption}
-                  className="bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] font-black px-6 h-10 rounded-xl cursor-pointer disabled:opacity-40 shadow-lg gap-2 mr-auto text-xs"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-6 h-10 rounded-xl cursor-pointer disabled:opacity-40 shadow-lg gap-2 mr-auto text-xs"
                 >
                   <span>تحقق من الإجابة</span>
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 text-slate-950" />
                 </Button>
               ) : (
                 <Button
                   onClick={handleNextStage}
-                  className="bg-linear-to-r from-[#efa83f] to-[#b87a29] hover:from-[#f0b24d] hover:to-[#8c4b18] text-[#301809] font-black px-6 h-10 rounded-xl cursor-pointer shadow-lg gap-2 mr-auto text-xs"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black px-6 h-10 rounded-xl cursor-pointer shadow-lg gap-2 mr-auto text-xs"
                 >
                   <span>{isLastStage ? 'إنهاء التحدي واستلام الشارات 👑' : 'المرحلة التالية ⏩'}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -372,7 +372,7 @@ export const HeritageQuest: React.FC<HeritageQuestProps> = ({
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
