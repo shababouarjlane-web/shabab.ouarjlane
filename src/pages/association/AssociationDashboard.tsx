@@ -580,7 +580,7 @@ export default function AssociationDashboard() {
               className="border-2 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 h-10 px-3 md:px-4 rounded-xl font-bold cursor-pointer hidden md:flex items-center gap-1.5 text-xs md:text-sm"
             >
               <HistoryIcon className="w-4 h-4 text-[#b87a29]" />
-              <span>الأرشيف التراثي</span>
+              <span>الباحث التاريخي</span>
             </Button>
 
             <Button
@@ -634,9 +634,9 @@ export default function AssociationDashboard() {
                 >
                   <div className="flex items-center gap-2">
                     <HistoryIcon className="w-4 h-4 text-[#b87a29]" />
-                    <span>الأرشيف التراثي</span>
+                    <span>الباحث التاريخي</span>
                   </div>
-                  <span className="text-[10px]">🏺</span>
+                  <span className="text-[10px]">📚</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
