@@ -360,21 +360,21 @@ export default function Heritage() {
             2. شريط إطلاق تحدي الباحث التاريخي (Compact Trigger Banner)
         ══════════════════════════════════════════════════════════════════ */}
         <div 
-          className="mt-8 rounded-3xl bg-[#0b172a] bg-gradient-to-r from-[#07162c] via-[#0f284d] to-[#07162c] border-2 border-cyan-500/50 p-5 md:p-6 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4"
-          style={{ backgroundColor: '#0b172a' }}
+          className="mt-8 rounded-3xl bg-[#180f07] bg-gradient-to-r from-[#221409] via-[#38210d] to-[#221409] border-2 border-amber-400 p-5 md:p-6 shadow-[0_0_35px_rgba(245,158,11,0.25)] flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ backgroundColor: '#180f07' }}
         >
           <div className="flex items-center gap-3.5 text-right w-full sm:w-auto">
-            <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-inner">
-              <Trophy className="w-6 h-6 text-amber-400 animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 border-2 border-amber-300 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.4)] text-[#1a0e05]">
+              <Trophy className="w-6 h-6 text-[#1a0e05]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-slate-950 bg-amber-400 px-2.5 py-0.5 rounded-full inline-block">
+                <span className="text-[10px] font-black text-[#1a0e05] bg-gradient-to-r from-amber-400 to-yellow-400 px-2.5 py-0.5 rounded-full inline-block border border-amber-200">
                   مغامرة تفاعلية
                 </span>
-                <span className="text-xs text-cyan-200 font-semibold">5 ألغاز موثقة وأوسمة شرفية</span>
+                <span className="text-xs text-amber-200/90 font-semibold">5 ألغاز موثقة من أمهات كتب الواحة</span>
               </div>
-              <h4 className="text-base md:text-lg font-thmanyah font-bold text-white mt-1">
+              <h4 className="text-base md:text-lg font-thmanyah font-bold text-amber-100 mt-1">
                 هل أنت مستعد لخوض «تحدي الباحث التاريخي»؟ 🏺
               </h4>
             </div>
@@ -382,11 +382,11 @@ export default function Heritage() {
 
           <Button
             onClick={() => setIsQuestOpen(true)}
-            className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black px-6 py-5 rounded-2xl text-xs md:text-sm shadow-lg cursor-pointer shrink-0 gap-2 border border-amber-300/40"
+            className="w-full sm:w-auto bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-amber-400 text-[#1a0e05] font-black px-6 py-5 rounded-2xl text-xs md:text-sm shadow-[0_4px_20px_rgba(245,158,11,0.4)] cursor-pointer shrink-0 gap-2 border-2 border-amber-200"
           >
-            <Sparkles className="w-4 h-4 text-slate-950" />
+            <Sparkles className="w-4 h-4 text-[#1a0e05]" />
             <span>ابدأ التحدي الآن</span>
-            <ArrowRight className="w-4 h-4 mr-1 rotate-180 text-slate-950" />
+            <ArrowRight className="w-4 h-4 mr-1 rotate-180 text-[#1a0e05]" />
           </Button>
         </div>
 

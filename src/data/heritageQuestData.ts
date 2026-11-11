@@ -350,25 +350,35 @@ export function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
+// دالة اختيار لغز بديل ومختلف للمرحلة الحالية مع خلط خياراته دون إعادة التحدي من البداية
+export function getRandomQuestionForStage(stage: number, currentQuestionId?: string): QuestQuestion {
+  const pool = HERITAGE_QUESTION_BANK[stage] || [];
+  if (pool.length === 0) {
+    throw new Error(`No questions found for stage ${stage}`);
+  }
+
+  // فلترة اللغز الحالي لتجنب تكرار نفس اللغز عند التبديل
+  const candidatePool = pool.filter((q) => q.id !== currentQuestionId);
+  const selectedPool = candidatePool.length > 0 ? candidatePool : pool;
+  const chosenIdx = Math.floor(Math.random() * selectedPool.length);
+  const chosenQuestion = selectedPool[chosenIdx];
+
+  // خلط الخيارات عشوائياً
+  const shuffledOptions = shuffleArray(chosenQuestion.options);
+
+  return {
+    ...chosenQuestion,
+    options: shuffledOptions
+  };
+}
+
 // دالة توليد مسابقة فريدة ومحدثة لكل مستخدم وجلسة
 export function generateRandomHeritageQuest(): QuestQuestion[] {
   const quest: QuestQuestion[] = [];
 
   for (let stage = 1; stage <= 5; stage++) {
-    const pool = HERITAGE_QUESTION_BANK[stage];
-    if (pool && pool.length > 0) {
-      // اختيار لغز عشوائي من بنك المحطة
-      const chosenIdx = Math.floor(Math.random() * pool.length);
-      const chosenQuestion = pool[chosenIdx];
-
-      // خلط خيارات الإجابة حتى لا تكون الإجابة الصحيحة في الأول دائماً
-      const shuffledOptions = shuffleArray(chosenQuestion.options);
-
-      quest.push({
-        ...chosenQuestion,
-        options: shuffledOptions
-      });
-    }
+    const q = getRandomQuestionForStage(stage);
+    quest.push(q);
   }
 
   return quest;

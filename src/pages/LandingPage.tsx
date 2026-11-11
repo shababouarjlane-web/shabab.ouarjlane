@@ -658,42 +658,42 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Heritage Quest Interactive Teaser Banner - Royal Indigo & Amber */}
+      {/* Heritage Quest Interactive Teaser Banner - Saharan Royal Gold */}
       <section className="py-4 relative z-10 mx-4 md:mx-auto max-w-7xl">
         <div 
-          className="relative overflow-hidden rounded-3xl bg-[#0b172a] bg-gradient-to-r from-[#07162c] via-[#0f284d] to-[#07162c] border-2 border-cyan-500/50 p-6 md:p-8 text-white shadow-2xl"
-          style={{ backgroundColor: '#0b172a' }}
+          className="relative overflow-hidden rounded-3xl bg-[#180f07] bg-gradient-to-r from-[#221409] via-[#38210d] to-[#221409] border-2 border-amber-400 p-6 md:p-8 text-amber-50 shadow-[0_0_40px_rgba(245,158,11,0.25)]"
+          style={{ backgroundColor: '#180f07' }}
         >
-          <div className="absolute -top-12 -left-12 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-12 -left-12 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-yellow-500/15 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="space-y-3 text-right">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/60 text-cyan-300 text-xs font-bold">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300/60 text-amber-300 text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
                 <span>جديد: مسابقة تفاعلية شيقة 🏺</span>
               </div>
-              <h3 className="text-2xl md:text-3xl font-thmanyah font-bold text-white">
+              <h3 className="text-2xl md:text-3xl font-thmanyah font-bold text-amber-100">
                 تحدي الباحث التاريخي: اختبر معرفتك بأسرار وارجلان وسدراتة!
               </h3>
-              <p className="text-xs md:text-sm text-slate-200 max-w-2xl leading-relaxed font-sans">
-                هل تعلم أين حُفرت أول بئر ارتوازية؟ ولماذا دُهنت أقفال سدراتة بالزيت قبل ألف عام؟ خض التحدي وحل 5 ألغاز تاريخية موثقة من أمهات كتب الواحة، واحصل على أوسمة مؤرخ الواحة!
+              <p className="text-xs md:text-sm text-amber-100/90 max-w-2xl leading-relaxed font-sans">
+                هل تعلم أين حُفرت أول بئر ارتوازية؟ ولماذا دُهنت أقفال سدراتة بالزيت قبل ألف عام؟ خض التحدي وحل 5 ألغاز تاريخية موثقة من أمهات كتب الواحة، وتدرج حتى تبلغ رتبة المؤرخ الأكبر!
               </p>
               <div className="flex flex-wrap items-center gap-2 text-xs pt-1">
-                <span className="px-2.5 py-1 rounded-lg bg-[#071322] border border-cyan-800 text-cyan-200 font-medium">📜 5 ألغاز تاريخية موثقة</span>
-                <span className="px-2.5 py-1 rounded-lg bg-[#071322] border border-cyan-800 text-cyan-200 font-medium">💡 تلميحات ذكية من الذكاء الاصطناعي</span>
-                <span className="px-2.5 py-1 rounded-lg bg-[#071322] border border-amber-500/50 text-amber-300 font-bold">🏆 رتبة باحث تاريخي خبير</span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#24160a] border border-amber-500/40 text-amber-200 font-medium">📜 5 ألغاز تاريخية موثقة</span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#24160a] border border-amber-500/40 text-amber-200 font-medium">💡 تلميحات ذكية من الذكاء الاصطناعي</span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#24160a] border border-amber-400 text-amber-300 font-bold">👑 رتبة مؤرخ الواحة الأكبر</span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 w-full lg:w-auto">
               <Button
                 onClick={() => navigate('/heritage?quest=open')}
-                className="h-13 px-8 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-base shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 border border-amber-300/40"
+                className="h-13 px-8 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-amber-400 text-[#1a0e05] font-black text-base shadow-[0_4px_25px_rgba(245,158,11,0.45)] transition-all cursor-pointer flex items-center justify-center gap-2 border-2 border-amber-200"
               >
-                <Trophy className="w-5 h-5 text-slate-950" />
+                <Trophy className="w-5 h-5 text-[#1a0e05]" />
                 <span>خض التحدي الآن 🏆</span>
-                <ChevronLeft className="w-4 h-4 text-slate-950" />
+                <ChevronLeft className="w-4 h-4 text-[#1a0e05]" />
               </Button>
             </div>
           </div>
