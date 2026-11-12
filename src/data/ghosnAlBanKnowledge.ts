@@ -14,7 +14,7 @@ export interface BookSection {
     | 'الزيارات والمخطوطات'
     | string;
   pages: string;
-  spreadImage: string;
+  spreadImage?: string;
   keywords: string[];
   summary: string;
   verbatimQuote: string;
@@ -25,12 +25,12 @@ export interface BookReferenceMeta {
   id: string;
   title: string;
   author: string;
-  editors: string;
+  editors?: string;
   publisher: string;
   yearWritten: string;
   totalPages: number;
   pdfPathInRepo: string;
-  coverImage: string;
+  coverImage?: string;
   description: string;
 }
 
@@ -456,7 +456,29 @@ export {
   ABI_AMMAR_MAWARITH_META,
   ABI_AMMAR_MAWARITH_SECTIONS,
   MALAMIH_HARAKA_META,
-  MALAMIH_HARAKA_SECTIONS
+  MALAMIH_HARAKA_SECTIONS,
+  YAHYAOUI_ECONOMY_META,
+  YAHYAOUI_ECONOMY_SECTIONS,
+  WATER_AGRICULTURE_META,
+  WATER_AGRICULTURE_SECTIONS,
+  ISLAM_SUDAN_TRADE_META,
+  ISLAM_SUDAN_TRADE_SECTIONS,
+  AZZABA_FATIMID_META,
+  AZZABA_FATIMID_SECTIONS,
+  WARJLAN_ECON_REVIEW_META,
+  WARJLAN_ECON_REVIEW_SECTIONS,
+  SLAVE_TRADE_OUARJLA_META,
+  SLAVE_TRADE_OUARJLA_SECTIONS,
+  TOURISM_CRAFTS_OUARGLA_META,
+  TOURISM_CRAFTS_OUARGLA_SECTIONS,
+  NEW_URBANISM_OUARGLA_META,
+  NEW_URBANISM_OUARGLA_SECTIONS,
+  HIRAK_SOCIOLOGY_OUARGLA_META,
+  HIRAK_SOCIOLOGY_OUARGLA_SECTIONS,
+  WOMEN_ROLES_WORK_META,
+  WOMEN_ROLES_WORK_SECTIONS,
+  DEVELOPMENT_OUARGLA_ILLIZI_META,
+  DEVELOPMENT_OUARGLA_ILLIZI_SECTIONS
 } from './additionalReferencesKnowledge';
 
 import {

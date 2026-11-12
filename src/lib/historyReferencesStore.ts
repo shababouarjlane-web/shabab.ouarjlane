@@ -23,6 +23,28 @@ import {
   ABI_AMMAR_MAWARITH_SECTIONS,
   MALAMIH_HARAKA_META,
   MALAMIH_HARAKA_SECTIONS,
+  YAHYAOUI_ECONOMY_META,
+  YAHYAOUI_ECONOMY_SECTIONS,
+  WATER_AGRICULTURE_META,
+  WATER_AGRICULTURE_SECTIONS,
+  ISLAM_SUDAN_TRADE_META,
+  ISLAM_SUDAN_TRADE_SECTIONS,
+  AZZABA_FATIMID_META,
+  AZZABA_FATIMID_SECTIONS,
+  WARJLAN_ECON_REVIEW_META,
+  WARJLAN_ECON_REVIEW_SECTIONS,
+  SLAVE_TRADE_OUARJLA_META,
+  SLAVE_TRADE_OUARJLA_SECTIONS,
+  TOURISM_CRAFTS_OUARGLA_META,
+  TOURISM_CRAFTS_OUARGLA_SECTIONS,
+  NEW_URBANISM_OUARGLA_META,
+  NEW_URBANISM_OUARGLA_SECTIONS,
+  HIRAK_SOCIOLOGY_OUARGLA_META,
+  HIRAK_SOCIOLOGY_OUARGLA_SECTIONS,
+  WOMEN_ROLES_WORK_META,
+  WOMEN_ROLES_WORK_SECTIONS,
+  DEVELOPMENT_OUARGLA_ILLIZI_META,
+  DEVELOPMENT_OUARGLA_ILLIZI_SECTIONS,
   type BookSection
 } from '@/data/ghosnAlBanKnowledge';
 
@@ -564,6 +586,193 @@ export async function getAllReferenceBooks(): Promise<ReferenceBookRecord[]> {
         fileName: 'ملامح الحركة العلمية في وارجلان ورقلة وضواحيها منذ انتهاء الدولة الرستمية حتى أواخر القرن السادس الهجري.pdf',
         createdAt: '2026-01-11T00:00:00.000Z',
         totalPages: MALAMIH_HARAKA_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 12. أطروحة د. يحياوي سعد: الاقتصاد والمجتمع في وارجلان
+  if (!deletedIds.has(YAHYAOUI_ECONOMY_META.id)) {
+    const activeSecs = YAHYAOUI_ECONOMY_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: YAHYAOUI_ECONOMY_META.id,
+        title: YAHYAOUI_ECONOMY_META.title,
+        author: YAHYAOUI_ECONOMY_META.author,
+        fileType: 'builtin',
+        fileName: 'الاقتصاد والمجتمع في وارجلان.pdf',
+        createdAt: '2026-01-12T00:00:00.000Z',
+        totalPages: YAHYAOUI_ECONOMY_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 13. أ. إلياس حاج عيسى: مصادر المياه والنشاط الفلاحي في وارجلان
+  if (!deletedIds.has(WATER_AGRICULTURE_META.id)) {
+    const activeSecs = WATER_AGRICULTURE_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: WATER_AGRICULTURE_META.id,
+        title: WATER_AGRICULTURE_META.title,
+        author: WATER_AGRICULTURE_META.author,
+        fileType: 'builtin',
+        fileName: 'مصادر_المياه_والنشاط_الفلاحي_في_واحات_المغرب_الأوسط؛_وارجلان_نموذجا.pdf',
+        createdAt: '2026-01-13T00:00:00.000Z',
+        totalPages: WATER_AGRICULTURE_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 14. د. خليفة محمد: تاريخ وارجلان ونشر الإسلام بالسودان الغربي
+  if (!deletedIds.has(ISLAM_SUDAN_TRADE_META.id)) {
+    const activeSecs = ISLAM_SUDAN_TRADE_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: ISLAM_SUDAN_TRADE_META.id,
+        title: ISLAM_SUDAN_TRADE_META.title,
+        author: ISLAM_SUDAN_TRADE_META.author,
+        fileType: 'builtin',
+        fileName: 'تاريخ_وارجلان_وأثرها_في_نشر_الاسلام_ببلاد_السودان_الغربي_بين_القرنين.pdf',
+        createdAt: '2026-01-14T00:00:00.000Z',
+        totalPages: ISLAM_SUDAN_TRADE_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 15. د. سلمى محمود: نظام العزابة عند إباضية وارجلان في عصر الفاطميين
+  if (!deletedIds.has(AZZABA_FATIMID_META.id)) {
+    const activeSecs = AZZABA_FATIMID_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: AZZABA_FATIMID_META.id,
+        title: AZZABA_FATIMID_META.title,
+        author: AZZABA_FATIMID_META.author,
+        fileType: 'builtin',
+        fileName: 'نظام_العزابة_عند_إباضية_وارجلان_في_عصر_الخلافة_الفاطمية_بالمغرب.pdf',
+        createdAt: '2026-01-15T00:00:00.000Z',
+        totalPages: AZZABA_FATIMID_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 16. أ. هرباش زاجية: وارجلان دراسة اقتصادية وحضارية
+  if (!deletedIds.has(WARJLAN_ECON_REVIEW_META.id)) {
+    const activeSecs = WARJLAN_ECON_REVIEW_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: WARJLAN_ECON_REVIEW_META.id,
+        title: WARJLAN_ECON_REVIEW_META.title,
+        author: WARJLAN_ECON_REVIEW_META.author,
+        fileType: 'builtin',
+        fileName: 'وارجلان _ دراسة اقتصادية.pdf',
+        createdAt: '2026-01-16T00:00:00.000Z',
+        totalPages: WARJLAN_ECON_REVIEW_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 17. أ. محمد بن عربة: دور وارجلان في تجارة الرقيق بالعصر الوسيط
+  if (!deletedIds.has(SLAVE_TRADE_OUARJLA_META.id)) {
+    const activeSecs = SLAVE_TRADE_OUARJLA_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: SLAVE_TRADE_OUARJLA_META.id,
+        title: SLAVE_TRADE_OUARJLA_META.title,
+        author: SLAVE_TRADE_OUARJLA_META.author,
+        fileType: 'builtin',
+        fileName: 'دور_مدينة_وارجلان_في_تجارة_الرقيق_ببلاد_المغرب_الأوسط_خلال_العصر_1.pdf',
+        createdAt: '2026-01-17T00:00:00.000Z',
+        totalPages: SLAVE_TRADE_OUARJLA_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 18. زيدان بتشيم وأ.د خليفة: واقع السياحة والحرف التقليدية في ورقلة
+  if (!deletedIds.has(TOURISM_CRAFTS_OUARGLA_META.id)) {
+    const activeSecs = TOURISM_CRAFTS_OUARGLA_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: TOURISM_CRAFTS_OUARGLA_META.id,
+        title: TOURISM_CRAFTS_OUARGLA_META.title,
+        author: TOURISM_CRAFTS_OUARGLA_META.author,
+        fileType: 'builtin',
+        fileName: 'واقع_السياحة_والحرف_التقليدية_في_مدينة_ورقلة،_دراسة_أنثروبولوجية.pdf',
+        createdAt: '2026-01-18T00:00:00.000Z',
+        totalPages: TOURISM_CRAFTS_OUARGLA_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 19. د. بلال بوجراف: الحضرية الجديدة لمدينة ورقلة (دراسة أنثروبولوجية)
+  if (!deletedIds.has(NEW_URBANISM_OUARGLA_META.id)) {
+    const activeSecs = NEW_URBANISM_OUARGLA_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: NEW_URBANISM_OUARGLA_META.id,
+        title: NEW_URBANISM_OUARGLA_META.title,
+        author: NEW_URBANISM_OUARGLA_META.author,
+        fileType: 'builtin',
+        fileName: 'الحضرية_الجديدة_لمدينة_ورقلة_دراسة_أنثروبولوجية.pdf',
+        createdAt: '2026-01-19T00:00:00.000Z',
+        totalPages: NEW_URBANISM_OUARGLA_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 20. د. سعيدة هيدوب ود. رابح رياب: الحراك الاجتماعي في ورقلة
+  if (!deletedIds.has(HIRAK_SOCIOLOGY_OUARGLA_META.id)) {
+    const activeSecs = HIRAK_SOCIOLOGY_OUARGLA_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: HIRAK_SOCIOLOGY_OUARGLA_META.id,
+        title: HIRAK_SOCIOLOGY_OUARGLA_META.title,
+        author: HIRAK_SOCIOLOGY_OUARGLA_META.author,
+        fileType: 'builtin',
+        fileName: 'الحراك_الاجتماعي_في_مدينة_ورقلة_بين_التأطير_والعفوية_في_التنظيم_1.pdf',
+        createdAt: '2026-01-20T00:00:00.000Z',
+        totalPages: HIRAK_SOCIOLOGY_OUARGLA_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 21. صراع الأدوار لدى المرأة العاملة ببلدية ورقلة
+  if (!deletedIds.has(WOMEN_ROLES_WORK_META.id)) {
+    const activeSecs = WOMEN_ROLES_WORK_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: WOMEN_ROLES_WORK_META.id,
+        title: WOMEN_ROLES_WORK_META.title,
+        author: WOMEN_ROLES_WORK_META.author,
+        fileType: 'builtin',
+        fileName: 'صراع_الأدوار لدى العاملة بلدية ورقلة نموذجا.pdf',
+        createdAt: '2026-01-21T00:00:00.000Z',
+        totalPages: WOMEN_ROLES_WORK_META.totalPages,
+        sections: activeSecs
+      });
+    }
+  }
+
+  // 22. د. وسيلة سعود ود. عباس فرحات: واقع التنمية بالجنوب الجزائري
+  if (!deletedIds.has(DEVELOPMENT_OUARGLA_ILLIZI_META.id)) {
+    const activeSecs = DEVELOPMENT_OUARGLA_ILLIZI_SECTIONS.filter((s) => !deletedIds.has(s.id));
+    if (activeSecs.length > 0) {
+      result.push({
+        id: DEVELOPMENT_OUARGLA_ILLIZI_META.id,
+        title: DEVELOPMENT_OUARGLA_ILLIZI_META.title,
+        author: DEVELOPMENT_OUARGLA_ILLIZI_META.author,
+        fileType: 'builtin',
+        fileName: 'واقع_التنمية_في_الجنوب_الجزائري_دراسة_تقييمية_لولايتي_ورقلة_وإيليزي_1.pdf',
+        createdAt: '2026-01-22T00:00:00.000Z',
+        totalPages: DEVELOPMENT_OUARGLA_ILLIZI_META.totalPages,
         sections: activeSecs
       });
     }

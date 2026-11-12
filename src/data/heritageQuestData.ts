@@ -92,6 +92,25 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       pageReference: 'ص 15',
       researchHint: 'تحقيق كتاب اختصار المواريث أبو عمار عبد الكافي',
       badgeReward: { name: 'قارئ الفرائض', icon: '📖', title: 'متقن الأصول' }
+    },
+    {
+      id: 'q1-yahyaoui-trade-gold',
+      stage: 1,
+      rankTitle: 'قارئ',
+      rankIcon: '📖',
+      title: 'قوافل الذهب الإفريقي',
+      riddle: 'إلى أي حاضرة إفريقية كبرى ارتبط أشهر طريق تجاري لقوافل وارجلان لجلب الذهب والملح؟',
+      options: [
+        { id: 'opt-1', text: 'طريق وارجلان - غانة وتادمكت', isCorrect: true },
+        { id: 'opt-2', text: 'طريق الإسكندرية والقسطنطينية', isCorrect: false },
+        { id: 'opt-3', text: 'طريق بغداد والبصرة', isCorrect: false },
+        { id: 'opt-4', text: 'طريق جنوة والبندقية', isCorrect: false }
+      ],
+      explanation: 'كان طريق وارجلان-تادمكت-غانة شريان التجارة الذهبية عبر الصحراء الإفريقية وفق أطروحة د. يحياوي سعد.',
+      bookTitle: 'الاقتصاد والمجتمع في وارجلان',
+      pageReference: 'ص 170',
+      researchHint: 'طريق وارجلان تادمكت غانة الذهب يحياوي سعد',
+      badgeReward: { name: 'قارئ القوافل', icon: '📖', title: 'خبير المسالك' }
     }
   ],
 
@@ -153,6 +172,25 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       pageReference: 'ص 42',
       researchHint: 'زخارف جصية كوفية سدراتة مارغريت فان برشم',
       badgeReward: { name: 'مستكشف الآثار', icon: '🧭', title: 'قارئ النقوش' }
+    },
+    {
+      id: 'q2-water-artesian-depth',
+      stage: 2,
+      rankTitle: 'مستكشف',
+      rankIcon: '🧭',
+      title: 'هندسة الآبار الارتوازية',
+      riddle: 'ما السر الهندسي والتقني الذي مكن أهالي وارجلان من تفجير المياه الفوارة بقوة الدفع الذاتي؟',
+      options: [
+        { id: 'opt-1', text: 'اختراق الطبقات الصخرية الحبيسة للمياه العميقة', isCorrect: true },
+        { id: 'opt-2', text: 'تجميع مياه الأمطار السطحية فقط', isCorrect: false },
+        { id: 'opt-3', text: 'ضخ المياه بمحركات ميكانيكية حديثة', isCorrect: false },
+        { id: 'opt-4', text: 'حفر مجارٍ مكشوفة من البحر الأبيض', isCorrect: false }
+      ],
+      explanation: 'ابتكر أهالي وارجلان تقنيات مكنتهم من اختراق الطبقات الصخرية والوصول للمياه الحبيسة كما بين أ. إلياس حاج عيسى.',
+      bookTitle: 'مصادر المياه والنشاط الفلاحي بوارجلان',
+      pageReference: 'ص 99',
+      researchHint: 'هندسة الآبار الارتوازية الطبقات الحبيسة وارجلان حاج عيسى',
+      badgeReward: { name: 'مستكشف العيون الفوارة', icon: '🧭', title: 'مهندس المياه' }
     }
   ],
 
@@ -214,6 +252,25 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       pageReference: 'ص 52',
       researchHint: 'انتقال سكان سدراتة إلى قصر وارجلان',
       badgeReward: { name: 'فارس الصمود', icon: '🛡️', title: 'درع الواحة' }
+    },
+    {
+      id: 'q3-islam-sudan-convoy',
+      stage: 3,
+      rankTitle: 'فارس',
+      rankIcon: '🛡️',
+      title: 'قوافل وارجلان الدعوية',
+      riddle: 'في أي قرنين هجريين انطلقت بواكير قوافل وتجار وارجلان الدعوية لنشر الإسلام ببلاد السودان الغربي؟',
+      options: [
+        { id: 'opt-1', text: 'القرنين (2 - 3 هـ / 8 - 9 م)', isCorrect: true },
+        { id: 'opt-2', text: 'القرن العاشر الهجري', isCorrect: false },
+        { id: 'opt-3', text: 'أواخر القرن الثامن عشر', isCorrect: false },
+        { id: 'opt-4', text: 'مع بداية القرن العشرين', isCorrect: false }
+      ],
+      explanation: 'انطلقت قوافل تجار وعلماء وارجلان منذ القرنين 2 و3 هـ حاملة التجارة والإسلام لغرب إفريقيا (دراسة د. خليفة محمد).',
+      bookTitle: 'تاريخ وارجلان ونشر الإسلام بالسودان الغربي',
+      pageReference: 'ص 227',
+      researchHint: 'تاريخ وارجلان ونشر الإسلام بالسودان الغربي القرنين 2 و3 هجري',
+      badgeReward: { name: 'فارس الدعوة', icon: '🛡️', title: 'رائد القوافل' }
     }
   ],
 
@@ -275,6 +332,25 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       pageReference: 'ص 140',
       researchHint: 'ترتيب مسند الربيع بن حبيب أبو يعقوب الوارجلاني',
       badgeReward: { name: 'علاّمة الحديث', icon: '📜', title: 'محدث الواحة' }
+    },
+    {
+      id: 'q4-azzaba-fatimid-charter',
+      stage: 4,
+      rankTitle: 'علاّمة',
+      rankIcon: '📜',
+      title: 'دستور العزابة الفاطمي',
+      riddle: 'ما هو المبدأ التشريعي والمؤسسي الذي استندت عليه حلقة العزابة بوارجلان لفض النزاعات وحماية أوقاف الواحة؟',
+      options: [
+        { id: 'opt-1', text: 'الشورى وتوزيع الاختصاصات وفصل السلطات واستقلال بيت المال', isCorrect: true },
+        { id: 'opt-2', text: 'حكم الفرد المطلق والوراثة العائلية', isCorrect: false },
+        { id: 'opt-3', text: 'التبعية الإدارية التامة لولاة القيروان', isCorrect: false },
+        { id: 'opt-4', text: 'إلغاء القضاء والاحتكام للنزاعات العشائرية', isCorrect: false }
+      ],
+      explanation: 'أكدت دراسة د. سلمى محمود أن حلقة العزابة شكلت نموذجاً شورياً متقدماً فصل بين القضاء وإدارة الأموال العامة وحفظ أمن الواحة.',
+      bookTitle: 'نظام العزابة عند إباضية وارجلان في عصر الفاطميين',
+      pageReference: 'ص 520',
+      researchHint: 'نظام العزابة إباضية وارجلان الفاطميين سلمى محمود',
+      badgeReward: { name: 'علاّمة الدستور', icon: '📜', title: 'حارس الشورى' }
     }
   ],
 
@@ -336,6 +412,25 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       pageReference: 'ص 11',
       researchHint: 'استيطان وادي مية العصر النيوليتيكي الحجري الحديث',
       badgeReward: { name: 'مؤرخ الأزمنة', icon: '👑', title: 'حارس الذاكرة' }
+    },
+    {
+      id: 'q5-crafts-ouargla-carpet',
+      stage: 5,
+      rankTitle: 'مؤرخ',
+      rankIcon: '👑',
+      title: 'كنز الزربية الورقلية',
+      riddle: 'ما هو التراث الحرفي والنسيجي العريق الذي حافظت نساء قصر ورقلة على رموزه الهندسية الأمازيغية والصحراوية عبر القرون؟',
+      options: [
+        { id: 'opt-1', text: 'الزربية الورقلية الصوفية المنقوشة برموز الواحة', isCorrect: true },
+        { id: 'opt-2', text: 'السجاد الصيني المطبوع', isCorrect: false },
+        { id: 'opt-3', text: 'المنسوجات الحريرية الفلمنكية', isCorrect: false },
+        { id: 'opt-4', text: 'المفروشات الصناعية الحديثة', isCorrect: false }
+      ],
+      explanation: 'تعد الزربية الورقلية سجلاً بصرياً حياً لذاكرة الواحة وموروثها اللامادي الأصيل، كما وثقته دراسة د. عبد القادر خليفة.',
+      bookTitle: 'واقع السياحة والحرف التقليدية بمدينة ورقلة',
+      pageReference: 'ص 878',
+      researchHint: 'الزربية الورقلية الحرف التقليدية قصر ورقلة عبد القادر خليفة',
+      badgeReward: { name: 'مؤرخ التراث اللامادي', icon: '👑', title: 'حامي الصنعة' }
     }
   ]
 };
