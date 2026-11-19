@@ -44,9 +44,9 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'خزانة قصر «وَمّ»',
       riddle: 'كم جزءاً من كتب المشرق طالع وتخيّر عالم وارجلان في خزانة قصر «وَمّ» خلال 4 أشهر؟',
       options: [
-        { id: 'opt-1', text: '33 ألف جزء', isCorrect: true },
         { id: 'opt-2', text: '5 آلاف مجلد', isCorrect: false },
         { id: 'opt-3', text: 'ألف جزء فقط', isCorrect: false },
+        { id: 'opt-1', text: '33 ألف جزء', isCorrect: true },
         { id: 'opt-4', text: 'مائة مخطوطة', isCorrect: false }
       ],
       explanation: 'طالع نحو 33 ألف جزء في 4 أشهر متواصلة وجلب نفائسها إلى واحة وارجلان.',
@@ -63,8 +63,8 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'تفسير القرآن العظيم',
       riddle: 'في كم جزءاً وضع الإمام أبو يعقوب الوارجلاني تفسيره الشهير للقرآن الكريم؟',
       options: [
-        { id: 'opt-1', text: 'في 70 جزءاً', isCorrect: true },
         { id: 'opt-2', text: 'في 30 جزءاً', isCorrect: false },
+        { id: 'opt-1', text: 'في 70 جزءاً', isCorrect: true },
         { id: 'opt-3', text: 'في 10 أجزاء', isCorrect: false },
         { id: 'opt-4', text: 'في 5 أجزاء', isCorrect: false }
       ],
@@ -101,10 +101,10 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'قوافل الذهب الإفريقي',
       riddle: 'إلى أي حاضرة إفريقية كبرى ارتبط أشهر طريق تجاري لقوافل وارجلان لجلب الذهب والملح؟',
       options: [
-        { id: 'opt-1', text: 'طريق وارجلان - غانة وتادمكت', isCorrect: true },
         { id: 'opt-2', text: 'طريق الإسكندرية والقسطنطينية', isCorrect: false },
         { id: 'opt-3', text: 'طريق بغداد والبصرة', isCorrect: false },
-        { id: 'opt-4', text: 'طريق جنوة والبندقية', isCorrect: false }
+        { id: 'opt-4', text: 'طريق جنوة والبندقية', isCorrect: false },
+        { id: 'opt-1', text: 'طريق وارجلان - غانة وتادمكت', isCorrect: true }
       ],
       explanation: 'كان طريق وارجلان-تادمكت-غانة شريان التجارة الذهبية عبر الصحراء الإفريقية وفق أطروحة د. يحياوي سعد.',
       bookTitle: 'الاقتصاد والمجتمع في وارجلان',
@@ -124,9 +124,9 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'نفق سدراتة السري',
       riddle: 'إلى أين كان ينفذ النفق المائي السري المكتشف تحت رمال سدراتة بطول 8 كم؟',
       options: [
-        { id: 'opt-1', text: 'إلى وسط قصر وارجلان العتيق', isCorrect: true },
         { id: 'opt-2', text: 'إلى بحيرة عين البيضاء', isCorrect: false },
         { id: 'opt-3', text: 'إلى قلعة تاهرت الرستمية', isCorrect: false },
+        { id: 'opt-1', text: 'إلى وسط قصر وارجلان العتيق', isCorrect: true },
         { id: 'opt-4', text: 'إلى واحات وادي ريغ', isCorrect: false }
       ],
       explanation: 'نفق مائي مسقوف (تيسكفين نيسدراتن) ربط سدراتة بقلب قصر وارجلان لتأمين المؤن والماء أثناء الحصار.',
@@ -143,8 +143,8 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'عيون واحة وارجلان',
       riddle: 'كم عدد العيون والآبار الارتوازية التي وثقها الجغرافيون القدماء في واحة وارجلان؟',
       options: [
-        { id: 'opt-1', text: '1051 عيناً ارتوازية', isCorrect: true },
         { id: 'opt-2', text: '360 عيناً فقط', isCorrect: false },
+        { id: 'opt-1', text: '1051 عيناً ارتوازية', isCorrect: true },
         { id: 'opt-3', text: '100 بئر سطحية', isCorrect: false },
         { id: 'opt-4', text: '50 عيناً كبريتية', isCorrect: false }
       ],
@@ -181,10 +181,10 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'هندسة الآبار الارتوازية',
       riddle: 'ما السر الهندسي والتقني الذي مكن أهالي وارجلان من تفجير المياه الفوارة بقوة الدفع الذاتي؟',
       options: [
-        { id: 'opt-1', text: 'اختراق الطبقات الصخرية الحبيسة للمياه العميقة', isCorrect: true },
         { id: 'opt-2', text: 'تجميع مياه الأمطار السطحية فقط', isCorrect: false },
         { id: 'opt-3', text: 'ضخ المياه بمحركات ميكانيكية حديثة', isCorrect: false },
-        { id: 'opt-4', text: 'حفر مجارٍ مكشوفة من البحر الأبيض', isCorrect: false }
+        { id: 'opt-4', text: 'حفر مجارٍ مكشوفة من البحر الأبيض', isCorrect: false },
+        { id: 'opt-1', text: 'اختراق الطبقات الصخرية الحبيسة للمياه العميقة', isCorrect: true }
       ],
       explanation: 'ابتكر أهالي وارجلان تقنيات مكنتهم من اختراق الطبقات الصخرية والوصول للمياه الحبيسة كما بين أ. إلياس حاج عيسى.',
       bookTitle: 'مصادر المياه والنشاط الفلاحي بوارجلان',
@@ -204,9 +204,9 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'حيلة جبل كريمة',
       riddle: 'ما الحيلة الذكية التي فاجأ بها أهل وارجلان جيش ابن غانية المحاصر لجبل كريمة؟',
       options: [
-        { id: 'opt-1', text: 'سكب قدور زيت الزيتون على صخور الجبل', isCorrect: true },
         { id: 'opt-2', text: 'إشعال نيران ليلية للإيهام بقدوم إمدادات', isCorrect: false },
         { id: 'opt-3', text: 'إطلاق حمام زاجل برسائل استغاثة مزيفة', isCorrect: false },
+        { id: 'opt-1', text: 'سكب قدور زيت الزيتون على صخور الجبل', isCorrect: true },
         { id: 'opt-4', text: 'حفر بئر ارتوازية في ليلة واحدة', isCorrect: false }
       ],
       explanation: 'صبوا الزيت ليوهموه بوفرة طعامهم، فقال: «قوم يسيل إدامهم على الحجارة لا مطمع في قهرهم!» فارتحل.',
@@ -223,8 +223,8 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'أبواب قصر وارجلان',
       riddle: 'أيّ من الأبواب التالية يُعد من الأبواب التاريخية الحصينة لسور قصر وارجلان العتيق؟',
       options: [
-        { id: 'opt-1', text: 'باب بستان وباب عزي وباب الشرفة', isCorrect: true },
         { id: 'opt-2', text: 'باب دمشق وباب العمود', isCorrect: false },
+        { id: 'opt-1', text: 'باب بستان وباب عزي وباب الشرفة', isCorrect: true },
         { id: 'opt-3', text: 'باب الفتوح وباب زويلة', isCorrect: false },
         { id: 'opt-4', text: 'باب المنصور وباب دكالة', isCorrect: false }
       ],
@@ -261,10 +261,10 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'قوافل وارجلان الدعوية',
       riddle: 'في أي قرنين هجريين انطلقت بواكير قوافل وتجار وارجلان الدعوية لنشر الإسلام ببلاد السودان الغربي؟',
       options: [
-        { id: 'opt-1', text: 'القرنين (2 - 3 هـ / 8 - 9 م)', isCorrect: true },
         { id: 'opt-2', text: 'القرن العاشر الهجري', isCorrect: false },
         { id: 'opt-3', text: 'أواخر القرن الثامن عشر', isCorrect: false },
-        { id: 'opt-4', text: 'مع بداية القرن العشرين', isCorrect: false }
+        { id: 'opt-4', text: 'مع بداية القرن العشرين', isCorrect: false },
+        { id: 'opt-1', text: 'القرنين (2 - 3 هـ / 8 - 9 م)', isCorrect: true }
       ],
       explanation: 'انطلقت قوافل تجار وعلماء وارجلان منذ القرنين 2 و3 هـ حاملة التجارة والإسلام لغرب إفريقيا (دراسة د. خليفة محمد).',
       bookTitle: 'تاريخ وارجلان ونشر الإسلام بالسودان الغربي',
@@ -284,9 +284,9 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'جاحظ إفريقية في قرطبة',
       riddle: 'من العالم الوارجلاني الملقب بـ «جاحظ إفريقية» الذي رحل للأندلس وصنف «العدل والإنصاف»؟',
       options: [
-        { id: 'opt-1', text: 'أبو يعقوب يوسف الوارجلاني', isCorrect: true },
         { id: 'opt-2', text: 'أبو عمار عبد الكافي', isCorrect: false },
         { id: 'opt-3', text: 'أبو صالح جنون', isCorrect: false },
+        { id: 'opt-1', text: 'أبو يعقوب يوسف الوارجلاني', isCorrect: true },
         { id: 'opt-4', text: 'سعيد بن يخلف السدراتي', isCorrect: false }
       ],
       explanation: 'هو الإمام أبو يعقوب يوسف بن إبراهيم (ت 570هـ)، رحل إلى قرطبة ونقل علومها وصنف كتب الأصول والمنطق.',
@@ -303,8 +303,8 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'نظام حلقة العزابة',
       riddle: 'ما هو المجلس العلمي والاجتماعي الذي تولى إدارة شؤون وارجلان وسدراتة بالشورى والعدل؟',
       options: [
-        { id: 'opt-1', text: 'حلقة العزابة ومجالس الشورى', isCorrect: true },
         { id: 'opt-2', text: 'حامية المماليك العسكرية', isCorrect: false },
+        { id: 'opt-1', text: 'حلقة العزابة ومجالس الشورى', isCorrect: true },
         { id: 'opt-3', text: 'مجلس ديوان الإنكشارية', isCorrect: false },
         { id: 'opt-4', text: 'محكمة التفتيش القشتالية', isCorrect: false }
       ],
@@ -341,10 +341,10 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'دستور العزابة الفاطمي',
       riddle: 'ما هو المبدأ التشريعي والمؤسسي الذي استندت عليه حلقة العزابة بوارجلان لفض النزاعات وحماية أوقاف الواحة؟',
       options: [
-        { id: 'opt-1', text: 'الشورى وتوزيع الاختصاصات وفصل السلطات واستقلال بيت المال', isCorrect: true },
         { id: 'opt-2', text: 'حكم الفرد المطلق والوراثة العائلية', isCorrect: false },
         { id: 'opt-3', text: 'التبعية الإدارية التامة لولاة القيروان', isCorrect: false },
-        { id: 'opt-4', text: 'إلغاء القضاء والاحتكام للنزاعات العشائرية', isCorrect: false }
+        { id: 'opt-4', text: 'إلغاء القضاء والاحتكام للنزاعات العشائرية', isCorrect: false },
+        { id: 'opt-1', text: 'الشورى وتوزيع الاختصاصات وفصل السلطات واستقلال بيت المال', isCorrect: true }
       ],
       explanation: 'أكدت دراسة د. سلمى محمود أن حلقة العزابة شكلت نموذجاً شورياً متقدماً فصل بين القضاء وإدارة الأموال العامة وحفظ أمن الواحة.',
       bookTitle: 'نظام العزابة عند إباضية وارجلان في عصر الفاطميين',
@@ -364,9 +364,9 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'وارجلان وسدراتة',
       riddle: 'ما النموذج السياسي والحضاري الذي جسدته وارجلان وسدراتة بنظامهما القضائي والمائي؟',
       options: [
-        { id: 'opt-1', text: 'نموذج «المدينة - الدولة» المستقلة', isCorrect: true },
         { id: 'opt-2', text: 'نموذج الإقطاعيات الزراعية التابعة', isCorrect: false },
         { id: 'opt-3', text: 'نموذج المخيمات العسكرية المؤقتة', isCorrect: false },
+        { id: 'opt-1', text: 'نموذج «المدينة - الدولة» المستقلة', isCorrect: true },
         { id: 'opt-4', text: 'نموذج القرى المنعزلة بلا نظام', isCorrect: false }
       ],
       explanation: 'أثبتت أبحاث سدراتة 2016م أن وارجلان شكلت نموذج «المدينة-الدولة» (City-State) ذات السيادة والمؤسسات المستقلة.',
@@ -383,8 +383,8 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'هندسة توزيع المياه',
       riddle: 'ما هي الآلة المائية التراثية الشهيرة التي استعملها أهالي وارجلان لقياس وتوزيع حصص مياه السقي بالعدل؟',
       options: [
-        { id: 'opt-1', text: 'القدّوس (الساعة المائية المثقوبة)', isCorrect: true },
         { id: 'opt-2', text: 'الساقية البخارية', isCorrect: false },
+        { id: 'opt-1', text: 'القدّوس (الساعة المائية المثقوبة)', isCorrect: true },
         { id: 'opt-3', text: 'المضخة الهوائية', isCorrect: false },
         { id: 'opt-4', text: 'الميزان الزئبقي', isCorrect: false }
       ],
@@ -421,10 +421,10 @@ export const HERITAGE_QUESTION_BANK: Record<number, QuestQuestion[]> = {
       title: 'كنز الزربية الورقلية',
       riddle: 'ما هو التراث الحرفي والنسيجي العريق الذي حافظت نساء قصر ورقلة على رموزه الهندسية الأمازيغية والصحراوية عبر القرون؟',
       options: [
-        { id: 'opt-1', text: 'الزربية الورقلية الصوفية المنقوشة برموز الواحة', isCorrect: true },
         { id: 'opt-2', text: 'السجاد الصيني المطبوع', isCorrect: false },
         { id: 'opt-3', text: 'المنسوجات الحريرية الفلمنكية', isCorrect: false },
-        { id: 'opt-4', text: 'المفروشات الصناعية الحديثة', isCorrect: false }
+        { id: 'opt-4', text: 'المفروشات الصناعية الحديثة', isCorrect: false },
+        { id: 'opt-1', text: 'الزربية الورقلية الصوفية المنقوشة برموز الواحة', isCorrect: true }
       ],
       explanation: 'تعد الزربية الورقلية سجلاً بصرياً حياً لذاكرة الواحة وموروثها اللامادي الأصيل، كما وثقته دراسة د. عبد القادر خليفة.',
       bookTitle: 'واقع السياحة والحرف التقليدية بمدينة ورقلة',

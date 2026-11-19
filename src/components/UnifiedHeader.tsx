@@ -19,14 +19,18 @@ interface UnifiedHeaderProps {
 export default function UnifiedHeader({ rightSlot }: UnifiedHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [hasSession, setHasSession] = useState(false);
-  const [userRole, setUserRole] = useState<string>('attendee');
+  const [hasSession, setHasSession] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && !!localStorage.getItem('demo_role');
+  });
+  const [userRole, setUserRole] = useState<string>(() => {
+    return (typeof window !== 'undefined' && localStorage.getItem('demo_role')) || 'attendee';
+  });
 
   useEffect(() => {
     const demoRole = localStorage.getItem('demo_role');
-    if (demoRole) {
-      setHasSession(true);
-      setUserRole(demoRole);
+    if (!demoRole) {
+      setHasSession(false);
+      setUserRole('attendee');
     }
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {

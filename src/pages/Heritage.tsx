@@ -360,7 +360,7 @@ export default function Heritage() {
             2. شريط إطلاق تحدي الباحث التاريخي (Compact Trigger Banner)
         ══════════════════════════════════════════════════════════════════ */}
         <div 
-          className="mt-8 rounded-3xl bg-[#091524] bg-gradient-to-r from-[#0a1829] via-[#0f243d] to-[#0a1829] border border-amber-400/35 p-5 md:p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="mt-8 rounded-3xl bg-[#091524] bg-gradient-to-r from-[#07121f] via-[#0d2238] to-[#07121f] border border-amber-400/30 p-5 md:p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{ backgroundColor: '#091524' }}
         >
           <div className="flex items-center gap-3.5 text-right w-full sm:w-auto">
@@ -369,13 +369,13 @@ export default function Heritage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 rounded-full inline-block">
+                <span className="text-[11px] font-thmanyah font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 rounded-full inline-block">
                   مغامرة تفاعلية
                 </span>
-                <span className="text-xs text-slate-300 font-medium">5 ألغاز موثقة من أمهات كتب الواحة</span>
+                <span className="text-xs text-slate-300 font-thmanyah font-medium">5 ألغاز موثقة من أمهات كتب الواحة</span>
               </div>
               <h4 className="text-base md:text-lg font-thmanyah font-bold text-white mt-1">
-                هل أنت مستعد لخوض «تحدي الباحث التاريخي»؟ 🏺
+                هل أنت مستعد لخوض «تحدي الباحث التاريخي»؟
               </h4>
             </div>
           </div>
@@ -385,7 +385,7 @@ export default function Heritage() {
             className="w-full sm:w-auto bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-thmanyah font-bold px-6 py-5 rounded-2xl text-xs md:text-sm shadow-md cursor-pointer shrink-0 gap-2 border border-amber-200/50"
           >
             <Sparkles className="w-4 h-4 text-slate-950" />
-            <span>ابدأ التحدي الآن</span>
+            <span>خض التحدي الآن</span>
             <ArrowRight className="w-4 h-4 mr-1 rotate-180 text-slate-950" />
           </Button>
         </div>
