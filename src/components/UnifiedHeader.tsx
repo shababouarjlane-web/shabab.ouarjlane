@@ -7,7 +7,8 @@ import {
   MapPin,
   LogIn,
   User,
-  Home
+  Home,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
@@ -51,6 +52,7 @@ export default function UnifiedHeader({ rightSlot }: UnifiedHeaderProps) {
     { path: '/events', label: 'دليل الفعاليات', icon: Calendar },
     { path: '/associations', label: 'دليل الجمعيات', icon: Building2 },
     { path: '/heritage', label: 'الباحث التاريخي', icon: BookOpen },
+    { path: '/manuscripts', label: 'محلل المخطوطات', icon: FileText },
     { path: '/map', label: 'خريطة التراث', icon: MapPin }
   ];
 

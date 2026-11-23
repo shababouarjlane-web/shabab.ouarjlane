@@ -19,6 +19,7 @@ const AttendeeDashboard = lazy(() => import('./pages/attendee/AttendeeDashboard'
 const EventDetails = lazy(() => import('./pages/EventDetails'));
 const Heritage = lazy(() => import('./pages/Heritage'));
 const HeritageMap = lazy(() => import('./pages/HeritageMap'));
+const ManuscriptReader = lazy(() => import('./pages/ManuscriptReader'));
 const EventsExplorer = lazy(() => import('./pages/EventsExplorer'));
 const AssociationProfile = lazy(() => import('./pages/AssociationProfile'));
 const AssociationsDirectory = lazy(() => import('./pages/AssociationsDirectory'));
@@ -63,6 +64,7 @@ function AppRoutes({ session, profile, loading }: { session: any, profile: Profi
           <Route path="/associations" element={<PageTransition><AssociationsDirectory /></PageTransition>} />
           <Route path="/heritage" element={<PageTransition><Heritage /></PageTransition>} />
           <Route path="/history-assistant" element={<PageTransition><Heritage /></PageTransition>} />
+          <Route path="/manuscripts" element={<PageTransition><ManuscriptReader /></PageTransition>} />
           <Route path="/map" element={<PageTransition><HeritageMap /></PageTransition>} />
           <Route path="/event/:id" element={<PageTransition><EventDetails userRole={profile?.role || null} /></PageTransition>} />
           <Route path="/association-profile/:id" element={<PageTransition><AssociationProfile /></PageTransition>} />

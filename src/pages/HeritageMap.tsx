@@ -26,7 +26,8 @@ import {
   Ticket,
   Sparkles,
   PlusCircle,
-  Send
+  Send,
+  Headphones
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +40,7 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import UnifiedHeader from '@/components/UnifiedHeader';
+import { SpatialAudioTourModal } from '@/components/heritage/SpatialAudioTourModal';
 import { toast } from 'sonner';
 
 // ─── بيانات المعالم التاريخية ──────────────────────────────────────────
@@ -229,6 +231,8 @@ export default function HeritageMap() {
   const [mapEvents, setMapEvents] = useState<any[]>([]);
   const [layerFilter, setLayerFilter] = useState<'all' | 'landmarks' | 'events'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isAudioTourOpen, setIsAudioTourOpen] = useState<boolean>(false);
+  const [audioTourTargetId, setAudioTourTargetId] = useState<string | undefined>(undefined);
 
   const allLandmarks = [...LANDMARKS, ...dynamicLandmarks];
 
@@ -825,6 +829,21 @@ export default function HeritageMap() {
         {/* ── الخريطة ───────────────────────────── */}
         <div ref={mapContainerRef} className="flex-1 z-10" />
 
+        {/* ── زر عائم للدليل الصوتي ثلاثي الأبعاد ── */}
+        <div className="absolute top-4 right-4 z-30">
+          <button
+            onClick={() => {
+              setAudioTourTargetId(undefined);
+              setIsAudioTourOpen(true);
+            }}
+            className="bg-gradient-to-r from-[#0d1e33] via-[#16304e] to-[#0d1e33] hover:from-[#132c4a] hover:to-[#1a3a60] border border-amber-400/40 text-amber-300 hover:text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 hover:scale-105 transition-all cursor-pointer font-thmanyah font-bold text-xs"
+          >
+            <Headphones className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span>الدليل الصوتي ثلاثي الأبعاد</span>
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+          </button>
+        </div>
+
         {/* ── لوحة التحكم التفاعلية في المحيط والتموضع (محصورة للأدمن فقط) ── */}
         {showControls && isAdmin && (
           <div className="absolute top-4 left-4 z-40 w-80 bg-[#301809]/95 backdrop-blur-xl border border-[#efa83f]/40 rounded-2xl shadow-2xl p-4 text-white animate-in fade-in duration-200">
@@ -1218,6 +1237,29 @@ export default function HeritageMap() {
                   </button>
                 </div>
 
+                {/* زر الاستماع للدليل الصوتي ثلاثي الأبعاد للمعلم */}
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      const matchedStop =
+                        selected.id === 'lalla-azza'
+                          ? 'stop-lalla-azza'
+                          : selected.id === 'sedrata'
+                          ? 'stop-sedrata-ruins'
+                          : 'stop-ksar-atiq';
+                      setAudioTourTargetId(matchedStop);
+                      setIsAudioTourOpen(true);
+                    }}
+                    className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-thmanyah font-bold rounded-2xl text-xs py-3.5 px-4 flex items-center justify-between transition-all shadow-md group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Headphones className="w-4 h-4 text-slate-950 shrink-0" />
+                      <span>🎧 استمع للجولة الصوتية ثلاثية الأبعاد للمعلم</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 rotate-180 text-slate-950 group-hover:-translate-x-1 transition-transform shrink-0" />
+                  </button>
+                </div>
+
                 {/* ─ قائمة المعالم مرتبة بدقة ─ */}
                 <div className="border-t border-[#dbc397]/50 pt-4">
                   <div className="flex items-center justify-between mb-3">
@@ -1411,6 +1453,22 @@ export default function HeritageMap() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* ── الدليل الصوتي ثلاثي الأبعاد ── */}
+      <SpatialAudioTourModal
+        isOpen={isAudioTourOpen}
+        onClose={() => setIsAudioTourOpen(false)}
+        initialStopId={audioTourTargetId}
+        onFlyToLandmark={(lat, lng) => {
+          if (mapRef.current) {
+            mapRef.current.flyTo([lat, lng], 17, { duration: 1.5 });
+          }
+        }}
+        onOpenResearch={(hint) => {
+          setIsAudioTourOpen(false);
+          navigate(`/heritage?q=${encodeURIComponent(hint)}`);
+        }}
+      />
     </div>
   );
 }

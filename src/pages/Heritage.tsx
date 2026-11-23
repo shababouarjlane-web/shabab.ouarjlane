@@ -17,7 +17,8 @@ import {
   Check,
   Tag,
   Trophy,
-  Sparkles
+  Sparkles,
+  FileText
 } from 'lucide-react';
 import UnifiedHeader from '../components/UnifiedHeader';
 import { HeritageQuest } from '../components/heritage/HeritageQuest';
@@ -417,7 +418,43 @@ export default function Heritage() {
         )}
 
         {/* ══════════════════════════════════════════════════════════════════
-            3. شريط الخريطة التفاعلية للأقمار الصناعية
+            3. بطاقة محلل المخطوطات والوثائق بالذكاء الاصطناعي (AI Manuscript Reader)
+        ══════════════════════════════════════════════════════════════════ */}
+        <div 
+          onClick={() => navigate('/manuscripts')}
+          className="mt-8 rounded-3xl bg-gradient-to-r from-[#170e06] via-[#2d180a] to-[#170e06] border border-amber-400/35 p-6 md:p-8 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-6 cursor-pointer group hover:border-amber-400/70 transition-all duration-300"
+        >
+          <div className="flex items-start sm:items-center gap-4 text-right">
+            <div className="w-14 h-14 rounded-2xl bg-amber-400/15 border border-amber-400/40 flex items-center justify-center shrink-0 shadow-sm text-amber-300 group-hover:scale-105 transition-transform">
+              <FileText className="w-7 h-7 text-amber-400" />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-thmanyah font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 px-2.5 py-0.5 rounded-full inline-block">
+                  محرك رؤية حاسوبية ذكي
+                </span>
+                <span className="text-xs text-amber-200/80 font-thmanyah font-medium">فك الخط المغربي الصحراوي وعقود مياه العيون</span>
+              </div>
+              <h4 className="text-lg md:text-xl font-thmanyah font-bold text-white">
+                محلل ومفسر المخطوطات والوثائق التاريخية
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-300 font-thmanyah max-w-xl leading-relaxed">
+                ارفع صورة أي مخطوطة أو وثيقة قديمة لفك رموزها واختصاراتها الفقهية (صح معلوم، القدوس، حلقة العزابة) مع مطابقتها الفورية بأمهات المراجع الـ 22.
+              </p>
+            </div>
+          </div>
+
+          <Button
+            className="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-thmanyah font-bold px-7 py-5 rounded-2xl text-xs md:text-sm shadow-md shrink-0 gap-2 border border-amber-200/50 self-stretch lg:self-auto justify-center cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 text-slate-950" />
+            <span>فحص وتحقيق المخطوطات</span>
+            <ArrowRight className="w-4 h-4 mr-1 rotate-180 text-slate-950" />
+          </Button>
+        </div>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            4. شريط الخريطة التفاعلية للأقمار الصناعية
         ══════════════════════════════════════════════════════════════════ */}
         <div
           onClick={() => navigate('/map')}
