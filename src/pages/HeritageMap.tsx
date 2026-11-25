@@ -40,7 +40,12 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import UnifiedHeader from '@/components/UnifiedHeader';
-import { SpatialAudioTourModal } from '@/components/heritage/SpatialAudioTourModal';
+import {
+  FloatingAudioBar,
+  resolveAudioStopForLandmark,
+} from '@/components/heritage/FloatingAudioBar';
+import { type AudioTourStop } from '@/data/heritageAudioTourData';
+import { spatialAudio } from '@/lib/spatialAudioEngine';
 import { toast } from 'sonner';
 
 // ─── بيانات المعالم التاريخية ──────────────────────────────────────────
@@ -230,9 +235,8 @@ export default function HeritageMap() {
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [mapEvents, setMapEvents] = useState<any[]>([]);
   const [layerFilter, setLayerFilter] = useState<'all' | 'landmarks' | 'events'>('all');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isAudioTourOpen, setIsAudioTourOpen] = useState<boolean>(false);
-  const [audioTourTargetId, setAudioTourTargetId] = useState<string | undefined>(undefined);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [floatingBarOpen, setFloatingBarOpen] = useState<boolean>(true);
 
   const allLandmarks = [...LANDMARKS, ...dynamicLandmarks];
 
@@ -476,8 +480,9 @@ export default function HeritageMap() {
       marker.on('click', () => {
         setSelectedEvent(null);
         setSelected(lm);
-        setFocusedLandmarkId(lm.id);
-        setSidebarOpen(true);
+        setFloatingBarOpen(true);
+        setSidebarOpen(false);
+        map.flyTo([lm.lat, lm.lng], lm.id === 'lalla-azza' ? 17 : 15, { duration: 1.1 });
       });
 
       markersRef.current[lm.id] = marker;
@@ -531,8 +536,9 @@ export default function HeritageMap() {
       if (ksarLandmark) {
         setSelectedEvent(null);
         setSelected(ksarLandmark);
-        setFocusedLandmarkId(ksarLandmark.id);
-        setSidebarOpen(true);
+        setFloatingBarOpen(true);
+        setSidebarOpen(false);
+        map.flyTo([ksarLandmark.lat, ksarLandmark.lng], 15, { duration: 1.1 });
       }
     });
 
@@ -571,8 +577,9 @@ export default function HeritageMap() {
       if (lallaAzzaLandmark) {
         setSelectedEvent(null);
         setSelected(lallaAzzaLandmark);
-        setFocusedLandmarkId(lallaAzzaLandmark.id);
-        setSidebarOpen(true);
+        setFloatingBarOpen(true);
+        setSidebarOpen(false);
+        map.flyTo([lallaAzzaLandmark.lat, lallaAzzaLandmark.lng], 17, { duration: 1.1 });
       }
     });
 
@@ -638,8 +645,9 @@ export default function HeritageMap() {
         marker.on('click', () => {
           setSelectedEvent(null);
           setSelected(lm);
-          setFocusedLandmarkId(lm.id);
-          setSidebarOpen(true);
+          setFloatingBarOpen(true);
+          setSidebarOpen(false);
+          map.flyTo([lm.lat, lm.lng], 16, { duration: 1.1 });
         });
         markersRef.current[lm.id] = marker;
       }
@@ -680,12 +688,12 @@ export default function HeritageMap() {
     }
   }, [mapEvents, dynamicLandmarks, layerFilter, focusedLandmarkId, selectedEvent]);
 
-  // التحليق إلى المعلم المحدد وإخفاء بقية المعالم
+  // التحليق إلى المعلم المحدد وفتح البطاقة الصوتية العائمة
   const flyTo = (lm: Landmark) => {
     setSelectedEvent(null);
     setSelected(lm);
-    setFocusedLandmarkId(lm.id);
-    setSidebarOpen(true);
+    setFloatingBarOpen(true);
+    setSidebarOpen(false);
     if (lm.id === 'ksar-atiq' && mapRef.current) {
       const currentCoords = computeTransformedPolygon(
         DEFAULT_KSAR_POLYGON,
@@ -697,12 +705,46 @@ export default function HeritageMap() {
         rotation
       );
       const bounds = L.latLngBounds(currentCoords.map(([lat, lng]) => L.latLng(lat, lng)));
-      mapRef.current.fitBounds(bounds, { padding: [40, 40], animate: true, duration: 1.2 });
+      mapRef.current.fitBounds(bounds, { padding: [60, 60], animate: true, duration: 1.2 });
     } else if (lm.id === 'lalla-azza' && mapRef.current) {
       mapRef.current.flyTo([lm.lat, lm.lng], 17, { duration: 1.3 });
     } else {
       mapRef.current?.flyTo([lm.lat, lm.lng], 16, { duration: 1.4 });
     }
+  };
+
+  // التحليق إلى محطة من محطات الجولة الصوتية (التالي / السابق)
+  const handleSelectTourStop = (stop: AudioTourStop) => {
+    setSelectedEvent(null);
+    const matched =
+      stop.id === 'stop-lalla-azza'
+        ? LANDMARKS.find((l) => l.id === 'lalla-azza')
+        : stop.id === 'stop-ksar-atiq'
+        ? LANDMARKS.find((l) => l.id === 'ksar-atiq')
+        : stop.id === 'stop-sedrata-ruins'
+        ? LANDMARKS.find((l) => l.id === 'sedrata')
+        : undefined;
+
+    if (matched) {
+      setSelected(matched);
+    } else {
+      setSelected({
+        id: stop.id,
+        nameAr: stop.titleAr,
+        nameTifinagh: stop.categoryLabel,
+        nameTranslit: stop.subtitleAr,
+        badge: stop.categoryLabel,
+        lat: stop.lat,
+        lng: stop.lng,
+        period: stop.period,
+        image: '/hero-bg.jpg',
+        description: stop.audioNarrationText,
+        category: stop.category === 'ruins' ? 'ruins' : 'urban',
+      });
+    }
+
+    setFloatingBarOpen(true);
+    mapRef.current?.flyTo([stop.lat, stop.lng], 16, { duration: 1.3 });
   };
 
   // إعادة إظهار جميع المعالم على الخريطة
@@ -815,9 +857,9 @@ export default function HeritageMap() {
               variant="outline"
               size="sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/40 rounded-xl text-xs h-9 px-3 font-bold whitespace-nowrap cursor-pointer"
+              className="border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/40 rounded-xl text-xs h-9 px-3 font-thmanyah font-bold whitespace-nowrap cursor-pointer"
             >
-              {sidebarOpen ? 'إخفاء اللوحة' : 'إظهار اللوحة'}
+              {sidebarOpen ? 'إخفاء الدليل' : 'دليل المعالم'}
             </Button>
           </div>
         }
@@ -828,21 +870,6 @@ export default function HeritageMap() {
 
         {/* ── الخريطة ───────────────────────────── */}
         <div ref={mapContainerRef} className="flex-1 z-10" />
-
-        {/* ── زر عائم للدليل الصوتي ثلاثي الأبعاد ── */}
-        <div className="absolute top-4 right-4 z-30">
-          <button
-            onClick={() => {
-              setAudioTourTargetId(undefined);
-              setIsAudioTourOpen(true);
-            }}
-            className="bg-gradient-to-r from-[#0d1e33] via-[#16304e] to-[#0d1e33] hover:from-[#132c4a] hover:to-[#1a3a60] border border-amber-400/40 text-amber-300 hover:text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 hover:scale-105 transition-all cursor-pointer font-thmanyah font-bold text-xs"
-          >
-            <Headphones className="w-4 h-4 text-amber-400 animate-pulse" />
-            <span>الدليل الصوتي ثلاثي الأبعاد</span>
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-          </button>
-        </div>
 
         {/* ── لوحة التحكم التفاعلية في المحيط والتموضع (محصورة للأدمن فقط) ── */}
         {showControls && isAdmin && (
@@ -981,36 +1008,7 @@ export default function HeritageMap() {
           </div>
         )}
 
-        {/* ── قائمة المعالم (أيقونات دائرية سريعة على الخريطة) ── */}
-        <div className="absolute bottom-6 right-4 z-20 flex flex-col items-end gap-2">
-          {(focusedLandmarkId || selectedEvent) && (
-            <button
-              onClick={showAllLandmarks}
-              className="px-3.5 h-10 rounded-xl border-2 border-[#efa83f] bg-[#301809] text-[#fae1b7] hover:bg-[#4a2510] text-xs font-bold flex items-center gap-1.5 shadow-xl transition-all cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-[#efa83f]" />
-              <span>إظهار جميع المعالم</span>
-            </button>
-          )}
-          {allLandmarks.map((lm) => (
-            <button
-              key={lm.id}
-              onClick={() => flyTo(lm)}
-              title={lm.nameAr}
-              className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 ${
-                focusedLandmarkId === lm.id
-                  ? 'border-[#efa83f] bg-[#301809]'
-                  : 'border-white/60 bg-[#301809]/80'
-              }`}
-              style={{ boxShadow: focusedLandmarkId === lm.id ? '0 0 16px rgba(239,168,63,0.5)' : undefined }}
-            >
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: CATEGORY_COLORS[lm.category] }}
-              />
-            </button>
-          ))}
-        </div>
+        {/* تم إزالة عمود الأيقونات الدائرية المكدسة لتنظيف مساحة الخريطة واستبدالها بالمشغل السفلي المدمج */}
 
         {/* ── الشريط الجانبي ───────────────────── */}
         <aside
@@ -1237,24 +1235,26 @@ export default function HeritageMap() {
                   </button>
                 </div>
 
-                {/* زر الاستماع للدليل الصوتي ثلاثي الأبعاد للمعلم */}
+                {/* زر الاستماع المباشر عبر المشغل السفلي المدمج */}
                 <div className="pt-2">
                   <button
                     onClick={() => {
-                      const matchedStop =
-                        selected.id === 'lalla-azza'
-                          ? 'stop-lalla-azza'
-                          : selected.id === 'sedrata'
-                          ? 'stop-sedrata-ruins'
-                          : 'stop-ksar-atiq';
-                      setAudioTourTargetId(matchedStop);
-                      setIsAudioTourOpen(true);
+                      const stop = resolveAudioStopForLandmark(selected.id);
+                      setSidebarOpen(false);
+                      setFloatingBarOpen(true);
+                      spatialAudio.playStop(
+                        stop.id,
+                        stop.audioNarrationText,
+                        stop.audioFileUrl,
+                        stop.durationSeconds,
+                        stop.ambientPreset
+                      );
                     }}
                     className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-thmanyah font-bold rounded-2xl text-xs py-3.5 px-4 flex items-center justify-between transition-all shadow-md group cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <Headphones className="w-4 h-4 text-slate-950 shrink-0" />
-                      <span>🎧 استمع للجولة الصوتية ثلاثية الأبعاد للمعلم</span>
+                      <span>استمع للشرح الصوتي المباشر للمعلم</span>
                     </div>
                     <ArrowRight className="w-4 h-4 rotate-180 text-slate-950 group-hover:-translate-x-1 transition-transform shrink-0" />
                   </button>
@@ -1454,21 +1454,22 @@ export default function HeritageMap() {
         </DialogContent>
       </Dialog>
 
-      {/* ── الدليل الصوتي ثلاثي الأبعاد ── */}
-      <SpatialAudioTourModal
-        isOpen={isAudioTourOpen}
-        onClose={() => setIsAudioTourOpen(false)}
-        initialStopId={audioTourTargetId}
-        onFlyToLandmark={(lat, lng) => {
-          if (mapRef.current) {
-            mapRef.current.flyTo([lat, lng], 17, { duration: 1.5 });
+      {/* ── المشغل السفلي المدمج فائق السلاسة (Floating Audio Bar) ── */}
+      {!selectedEvent && (
+        <FloatingAudioBar
+          activeLandmark={selected}
+          isOpen={floatingBarOpen}
+          onClose={() => setFloatingBarOpen(false)}
+          onOpenTour={() => setFloatingBarOpen(true)}
+          onSelectTourStop={handleSelectTourStop}
+          onOpenResearch={(query) =>
+            navigate(`/heritage?q=${encodeURIComponent(query)}`)
           }
-        }}
-        onOpenResearch={(hint) => {
-          setIsAudioTourOpen(false);
-          navigate(`/heritage?q=${encodeURIComponent(hint)}`);
-        }}
-      />
+          onOpenFullSidebar={() => setSidebarOpen(true)}
+          hasFocusFilter={Boolean(focusedLandmarkId)}
+          onShowAllLandmarks={showAllLandmarks}
+        />
+      )}
     </div>
   );
 }

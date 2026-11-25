@@ -31,8 +31,8 @@ class SpatialAudioEngine {
   // Ambient procedural background nodes
   private ambientSourceNode: AudioScheduledSourceNode | null = null;
 
-  // State callbacks
-  private onStateChangeCallback: ((state: SpatialAudioState) => void) | null = null;
+  // State callbacks (supports multiple subscribers safely)
+  private listeners: Set<(state: SpatialAudioState) => void> = new Set();
 
   private state: SpatialAudioState = {
     isPlaying: false,
@@ -125,15 +125,17 @@ class SpatialAudioEngine {
     return this.ctx!;
   }
 
-  public subscribe(cb: (state: SpatialAudioState) => void) {
-    this.onStateChangeCallback = cb;
+  public subscribe(cb: (state: SpatialAudioState) => void): () => void {
+    this.listeners.add(cb);
     cb({ ...this.state });
+    return () => {
+      this.listeners.delete(cb);
+    };
   }
 
   private notify() {
-    if (this.onStateChangeCallback) {
-      this.onStateChangeCallback({ ...this.state });
-    }
+    const snapshot = { ...this.state };
+    this.listeners.forEach((cb) => cb(snapshot));
   }
 
   private onTimeUpdate() {
