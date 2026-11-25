@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المخطط المعماري الورقي التراثي • جامع لالة عزة العتيق</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1a140e;
+      font-family: 'Amiri', serif, system-ui;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    /* ورق البردي التراثي والتعتيق */
+    .parchment-bg {
+      background-color: #f4e8cf;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 0%, rgba(210, 180, 130, 0.2) 60%, rgba(139, 94, 43, 0.45) 100%),
+        repeating-linear-gradient(45deg, rgba(160, 120, 70, 0.04) 0px, rgba(160, 120, 70, 0.04) 2px, transparent 2px, transparent 6px),
+        linear-gradient(to right, rgba(120, 75, 25, 0.15), transparent 8%, transparent 92%, rgba(120, 75, 25, 0.15));
+      box-shadow: 
+        0 0 50px rgba(0, 0, 0, 0.8),
+        inset 0 0 80px rgba(139, 80, 30, 0.35),
+        inset 0 0 20px rgba(70, 40, 15, 0.6);
+      border: 1px solid #c49a62;
+    }
+
+    .blueprint-ink {
+      color: #3b2010;
+    }
+
+    /* خطوط الرسم المعماري الحبرية القديمة */
+    .ink-line {
+      stroke: #4a2711;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .ink-dim {
+      stroke: #8a572a;
+      stroke-width: 0.9;
+      stroke-dasharray: 4, 3;
+    }
+    .ink-fill-mud {
+      fill: #e8d3b2;
+      stroke: #4a2711;
+      stroke-width: 1.6;
+    }
+    .ink-fill-wood {
+      fill: #cfa878;
+      stroke: #4a2711;
+      stroke-width: 1.4;
+    }
+    .ink-fill-plaster {
+      fill: #fcf9f2;
+      stroke: #4a2711;
+      stroke-width: 1.2;
+    }
+
+    /* تأثير الختم التراثي الأحمر */
+    .heritage-stamp {
+      color: #991b1b;
+      border: 3px double #991b1b;
+      transform: rotate(-7deg);
+      opacity: 0.88;
+      filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.15));
+    }
+
+    /* طباعة المخطط */
+    @media print {
+      body {
+        background: white;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .parchment-bg {
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="text-[#331c0e] min-h-screen py-6 px-3 sm:px-6 flex flex-col items-center justify-start">
+
+  <!-- شريط التحكم العلوي -->
+  <header class="w-full max-w-5xl mb-5 flex flex-wrap items-center justify-between gap-3 no-print">
+    <div class="flex items-center gap-3">
+      <a href="/3d-lalla-azza.html" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-900/60 hover:bg-amber-800/80 border border-amber-600/40 text-amber-200 text-xs sm:text-sm font-bold transition-all shadow-lg hover:scale-105">
+        <i data-lucide="box" class="w-4 h-4"></i>
+        <span>العودة للمجسم ثلاثي الأبعاد 3D</span>
+      </a>
+      <span class="text-xs text-amber-400/80 hidden sm:inline">•</span>
+      <span class="text-xs text-amber-200/90 hidden sm:inline font-mono">وثيقة توثيقية معمارية نادرة</span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="window.print()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-600 text-stone-200 text-xs font-bold transition-all shadow-md">
+        <i data-lucide="printer" class="w-4 h-4 text-amber-400"></i>
+        <span>طباعة المخطط</span>
+      </button>
+
+      <button id="btn-download-svg" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-bold transition-all shadow-md">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        <span>حفظ الوثيقة (SVG)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ورقة المخطط المعماري التراثي (Parchment Paper Canvas) -->
+  <main id="blueprint-canvas" class="parchment-bg w-full max-w-5xl rounded-3xl p-6 sm:p-10 relative overflow-hidden transition-all duration-300">
+    
+    <!-- الزخرفة الهامشية التراثية (Border Filigree) -->
+    <div class="absolute inset-3 sm:inset-5 border-2 border-[#804f21]/40 rounded-2xl pointer-events-none"></div>
+    <div class="absolute inset-4 sm:inset-6 border border-[#804f21]/20 rounded-xl pointer-events-none"></div>
+
+    <!-- الترويسة الأثرية الرسمية -->
+    <div class="relative z-10 text-center pb-6 border-b-2 border-[#73431a]/40 mb-8">
+      <div class="text-sm sm:text-base font-bold text-[#63330e] tracking-widest mb-1">
+        بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ • وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ
+      </div>
+      
+      <div class="inline-block px-4 py-1 rounded-full bg-[#dfc59e]/60 border border-[#855224]/30 text-xs font-bold text-[#5c300c] mb-2 tracking-wide font-mono">
+        سِجِلُّ الآثَارِ وَالعِمَارَةِ الوَاحَاتِيَّةِ • وِلَايَةُ وَرْقْلَة (وَادِي مِيَا)
+      </div>
+
+      <h1 class="text-2xl sm:text-4xl font-bold text-[#2d1506] tracking-tight leading-snug mb-1">
+        مُخَطَّطُ كُرُوكِي مِعْمَارِيّ تَأْصِيلِيّ • جَامِعُ لَالَّا عَزَّة العَتِيق
+      </h1>
+      
+      <div class="flex items-center justify-center gap-3 text-xs sm:text-sm text-[#5a2e0e]">
+        <span class="font-bold">القصر العتيق بورقلة</span>
+        <span>—</span>
+        <span>تأسيس القرن الخامس الهجري (11م)</span>
+        <span>—</span>
+        <span class="font-mono text-xs font-bold tracking-wider text-[#733f16]">ⵜⴰⵎⵣⴳⵉⴷⴰ ⵏ ⵍⴰⵍⵍⴰ ⵄⵣⵣⴰ</span>
+      </div>
+    </div>
+
+    <!-- لوحة المخطط الرسومي المعماري (SVG Blueprint) -->
+    <div class="relative z-10 w-full overflow-x-auto pb-4">
+      <svg id="blueprint-svg" class="w-full min-w-[760px] h-auto" viewBox="0 0 1000 860" xmlns="http://www.w3.org/2000/svg">
+        
+        <!-- خلفية شبكة القياس الهندسية القديمة (Drafting Grid) -->
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#7a461c" stroke-width="0.3" stroke-opacity="0.25"/>
+          </pattern>
+          <!-- زخرفة إسلامية هندسية للبوصلة -->
+          <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#5c2e0b" />
+          </marker>
+        </defs>
+
+        <rect width="1000" height="860" fill="url(#grid)" />
+
+        <!-- ══════════════════════════════════════════════════════════
+             القسم 1: المسقط الأفقي العام (GROUND FLOOR PLAN)
+             ══════════════════════════════════════════════════════════ -->
+        <g id="ground-plan" transform="translate(60, 40)">
+          
+          <!-- عنوان المسقط -->
+          <text x="240" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#301505">
+            [1] المَسْقَطُ الأُفُقِيُّ العَامُّ لِبَيْتِ الصَّلَاةِ وَحَلَقَةِ العَزَّابَة (PLAN VIEW)
+          </text>
+          <text x="240" y="48" text-anchor="middle" font-size="11" fill="#693b16">
+            مقياس رسم تقريبي: 1 ذراع وارجلاني = 0.58 متر • التوجيه: القبلة 105° جنوب شرق
+          </text>
+
+          <!-- الجدران الطينية الخارجية السميكة (Adobe Mud Walls) -->
+          <!-- الجدار الخارجي -->
+          <rect x="50" y="70" width="380" height="300" rx="8" class="ink-fill-mud" />
+          <!-- الفناء والداخل المجوف -->
+          <rect x="80" y="100" width="320" height="240" rx="4" fill="#fdfaf3" stroke="#4a2711" stroke-width="1.8" />
+
+          <!-- جدار القبلة والمحراب المجوف في المنتصف السفلي (Mihrab Niche) -->
+          <path d="M 210,340 A 30,35 0 0,0 270,340 Z" class="ink-fill-plaster" stroke="#3d1d08" stroke-width="2" />
+          <!-- خط القبلة وسهم التوجيه -->
+          <line x1="240" y1="340" x2="240" y2="395" class="ink-line" stroke-dasharray="3,3" marker-end="url(#arrow)" />
+          <text x="240" y="412" text-anchor="middle" font-size="11" font-weight="bold" fill="#632600">
+            تِجَاهُ القِبْلَةِ الشَّرِيفَة (105°)
+          </text>
+
+          <!-- حلقة شيوخ العزابة الـ 12 (12 Elders Council Ring) -->
+          <circle cx="240" cy="220" r="62" fill="none" stroke="#99582a" stroke-width="1.2" stroke-dasharray="5,4" />
+          <text x="240" y="215" text-anchor="middle" font-size="10" font-weight="bold" fill="#5e2908">
+            حَلَقَةُ شُيُوخِ العَزَّابَة
+          </text>
+          <text x="240" y="230" text-anchor="middle" font-size="9" fill="#783c12">
+            (12 مَقْعَداً تَشَاوُرِيّاً)
+          </text>
+
+          <!-- المقاعد الاثنا عشر الموزعة هندسياً حول الحلقة -->
+          <!-- شيوخ العزابة الـ 12 بالدرجات: 0, 30, 60, ... 330 -->
+          <g id="seats" transform="translate(240, 220)">
+            <!-- 12 مقعد دائري طيني -->
+            <circle cx="0" cy="-62" r="6.5" class="ink-fill-plaster" />
+            <circle cx="31" cy="-53.7" r="6.5" class="ink-fill-plaster" />
+            <circle cx="53.7" cy="-31" r="6.5" class="ink-fill-plaster" />
+            <circle cx="62" cy="0" r="6.5" class="ink-fill-plaster" />
+            <circle cx="53.7" cy="31" r="6.5" class="ink-fill-plaster" />
+            <circle cx="31" cy="53.7" r="6.5" class="ink-fill-plaster" />
+            <circle cx="0" cy="62" r="7.5" fill="#e8bb80" stroke="#4a2711" stroke-width="2" /> <!-- مقعد شيخ الحلقة (الرئيس) -->
+            <circle cx="-31" cy="53.7" r="6.5" class="ink-fill-plaster" />
+            <circle cx="-53.7" cy="31" r="6.5" class="ink-fill-plaster" />
+            <circle cx="-62" cy="0" r="6.5" class="ink-fill-plaster" />
+            <circle cx="-53.7" cy="-31" r="6.5" class="ink-fill-plaster" />
+            <circle cx="-31" cy="-53.7" r="6.5" class="ink-fill-plaster" />
+            <!-- علامة مقعد شيخ الحلقة -->
+            <text x="0" y="85" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#7a2a00">مَقْعَدُ شَيْخِ الحَلَقَة</text>
+          </g>
+
+          <!-- الأعمدة اللولبية الستة من الجص الأبيض (6 Spiral Plaster Pillars) -->
+          <!-- صف أعمدة يمين -->
+          <circle cx="140" cy="160" r="12" class="ink-fill-plaster" stroke-width="2" />
+          <circle cx="140" cy="160" r="7" fill="none" stroke="#663610" stroke-width="1.2" />
+          
+          <circle cx="140" cy="280" r="12" class="ink-fill-plaster" stroke-width="2" />
+          <circle cx="140" cy="280" r="7" fill="none" stroke="#663610" stroke-width="1.2" />
+
+          <!-- صف أعمدة وسط -->
+          <circle cx="240" cy="140" r="12" class="ink-fill-plaster" stroke-width="2" />
+          <circle cx="240" cy="140" r="7" fill="none" stroke="#663610" stroke-width="1.2" />
+
+          <!-- صف أعمدة يسار -->
+          <circle cx="340" cy="160" r="12" class="ink-fill-plaster" stroke-width="2" />
+          <circle cx="340" cy="160" r="7" fill="none" stroke="#663610" stroke-width="1.2" />
+
+          <circle cx="340" cy="280" r="12" class="ink-fill-plaster" stroke-width="2" />
+          <circle cx="340" cy="280" r="7" fill="none" stroke="#663610" stroke-width="1.2" />
+
+          <!-- باب التوبة التاريخي في الجدار الشمالي (Bab Al-Tawba) -->
+          <rect x="215" y="65" width="50" height="15" class="ink-fill-wood" stroke-width="2" />
+          <line x1="215" y1="72" x2="265" y2="72" stroke="#4a2711" stroke-width="1.5" />
+          <!-- قوس فتح الباب باتجاه الداخل -->
+          <path d="M 215,80 A 50,50 0 0,0 265,130" fill="none" stroke="#99582a" stroke-width="1" stroke-dasharray="3,3" />
+          <text x="240" y="58" text-anchor="middle" font-size="10" font-weight="bold" fill="#7a2404">
+            «بَابُ التَّوْبَةِ المَنْقُوش»
+          </text>
+
+          <!-- قاعدة الصومعة الهرمية المدرجة في الركن (Minaret Base) -->
+          <g transform="translate(50, 70)">
+            <rect x="0" y="0" width="55" height="55" class="ink-fill-mud" />
+            <rect x="7" y="7" width="41" height="41" fill="#dfbe90" stroke="#4a2711" stroke-width="1.2" />
+            <rect x="14" y="14" width="27" height="27" fill="#cda36b" stroke="#4a2711" stroke-width="1" />
+            <rect x="20" y="20" width="15" height="15" fill="#fcf9f2" stroke="#4a2711" stroke-width="1" />
+            <!-- درج الصعود للمئذنة -->
+            <line x1="7" y1="20" x2="20" y2="20" stroke="#4a2711" stroke-width="0.8" />
+            <line x1="7" y1="27" x2="20" y2="27" stroke="#4a2711" stroke-width="0.8" />
+            <line x1="7" y1="34" x2="20" y2="34" stroke="#4a2711" stroke-width="0.8" />
+            <text x="27" y="72" text-anchor="middle" font-size="9" font-weight="bold" fill="#572202">قَاعِدَةُ الصَّوْمَعَة</text>
+          </g>
+
+          <!-- خطوط القياس والأبعاد (Dimensions) -->
+          <!-- العرض الكلي -->
+          <line x1="50" y1="385" x2="430" y2="385" class="ink-dim" />
+          <line x1="50" y1="380" x2="50" y2="390" stroke="#4a2711" stroke-width="1.2" />
+          <line x1="430" y1="380" x2="430" y2="390" stroke="#4a2711" stroke-width="1.2" />
+          <text x="240" y="381" text-anchor="middle" font-size="10" font-weight="bold" fill="#4a2711">
+            العرض الإجمالي: 22.4 متراً (حوالي 38 ذراعاً)
+          </text>
+
+          <!-- الطول الكلي الجانبي -->
+          <line x1="445" y1="70" x2="445" y2="370" class="ink-dim" />
+          <line x1="440" y1="70" x2="450" y2="70" stroke="#4a2711" stroke-width="1.2" />
+          <line x1="440" y1="370" x2="450" y2="370" stroke="#4a2711" stroke-width="1.2" />
+          <text x="458" y="225" font-size="10" font-weight="bold" fill="#4a2711" transform="rotate(90, 458, 225)" text-anchor="middle">
+            العمق: 18.6 متراً
+          </text>
+        </g>
+
+        <!-- ══════════════════════════════════════════════════════════
+             القسم 2: الواجهة الشمالية وتدرجات الصومعة (NORTH ELEVATION)
+             ══════════════════════════════════════════════════════════ -->
+        <g id="north-elevation" transform="translate(560, 40)">
+          
+          <text x="180" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#301505">
+            [2] الوَاجِهَةُ الشَّمَالِيَّةُ وَتَدَرُّجُ الصَّوْمَعَةِ (ELEVATION)
+          </text>
+          <text x="180" y="48" text-anchor="middle" font-size="11" fill="#693b16">
+            مسقط رأسي يوضح الانسياب الطيني ومقاومة العواصف الرملية
+          </text>
+
+          <!-- جدار المسجد الشمالي المنخفض -->
+          <rect x="110" y="240" width="240" height="130" class="ink-fill-mud" />
+          <!-- فتحات التهوية المشربية الطينية المثلثية (Triangular Vents) -->
+          <polygon points="170,265 160,280 180,280" fill="#361706" />
+          <polygon points="230,265 220,280 240,280" fill="#361706" />
+          <polygon points="290,265 280,280 300,280" fill="#361706" />
+
+          <!-- مدخل باب التوبة الخشبي في الواجهة الشمالية -->
+          <path d="M 205,370 L 205,305 A 25,25 0 0,1 255,305 L 255,370 Z" class="ink-fill-wood" stroke-width="2" />
+          <!-- عقد منكسر تقليدي فوق الباب (Moorish Horseshoe Arch) -->
+          <path d="M 198,370 L 198,300 A 32,32 0 0,1 262,300 L 262,370" fill="none" stroke="#3d1d08" stroke-width="2" />
+          <text x="230" y="340" text-anchor="middle" font-size="8" fill="#fdfaf3" font-weight="bold">بَابُ التَّوْبَة</text>
+
+          <!-- الصومعة الهرمية الطينية المتراجعة (Stepped Mud Minaret) -->
+          <!-- الطبقة 1 (القاعدة) -->
+          <polygon points="30,370 120,370 115,260 35,260" class="ink-fill-mud" />
+          <!-- الطبقة 2 -->
+          <polygon points="40,260 110,260 105,180 45,180" fill="#dfbe90" stroke="#4a2711" stroke-width="1.6" />
+          <!-- الطبقة 3 -->
+          <polygon points="48,180 102,180 98,120 52,120" fill="#cda36b" stroke="#4a2711" stroke-width="1.6" />
+          <!-- الطبقة 4 (شرفة الآذان الخشبية وقضيب الهلال) -->
+          <rect x="54" y="105" width="42" height="15" class="ink-fill-wood" stroke-width="1.8" />
+          <!-- قبة طينية مصغرة -->
+          <path d="M 60,105 A 15,15 0 0,1 90,105 Z" fill="#dfbe90" stroke="#4a2711" stroke-width="1.5" />
+          <!-- قضيب الهلال النحاسي -->
+          <line x1="75" y1="90" x2="75" y2="65" stroke="#7a461c" stroke-width="2" />
+          <circle cx="75" cy="62" r="4" fill="none" stroke="#7a461c" stroke-width="1.8" />
+          <path d="M 72,58 A 6,6 0 1,1 78,66" fill="none" stroke="#7a461c" stroke-width="1.5" />
+
+          <!-- نوافذ الآذان والتهوية في الصومعة -->
+          <rect x="70" y="135" width="10" height="20" rx="3" fill="#2d1204" />
+          <rect x="70" y="200" width="10" height="24" rx="3" fill="#2d1204" />
+
+          <!-- قياس ارتفاع المئذنة -->
+          <line x1="15" y1="65" x2="15" y2="370" class="ink-dim" />
+          <line x1="10" y1="65" x2="20" y2="65" stroke="#4a2711" stroke-width="1.2" />
+          <line x1="10" y1="370" x2="20" y2="370" stroke="#4a2711" stroke-width="1.2" />
+          <text x="8" y="220" font-size="10" font-weight="bold" fill="#4a2711" transform="rotate(-90, 8, 220)" text-anchor="middle">
+            الارتفاع الكلي للصومعة: 14.8 متراً
+          </text>
+
+          <!-- خط الأرض والمستوى الطبوغرافي -->
+          <line x1="10" y1="370" x2="370" y2="370" stroke="#361706" stroke-width="3" stroke-linecap="square" />
+          <path d="M 10,375 L 370,375 M 20,380 L 360,380" stroke="#804a1e" stroke-width="1" stroke-dasharray="8,6" />
+        </g>
+
+        <!-- ══════════════════════════════════════════════════════════
+             القسم 3: تفاصيل دقيقة (ARCHITECTURAL DETAILS)
+             ══════════════════════════════════════════════════════════ -->
+        
+        <!-- تفصيل أ: باب التوبة الخشبي والنقش التاريخي -->
+        <g id="detail-door" transform="translate(60, 480)">
+          <!-- إطار اللوحة -->
+          <rect x="0" y="0" width="280" height="310" rx="10" fill="#f8f1e2" stroke="#663610" stroke-width="1.4" />
+          <text x="140" y="28" text-anchor="middle" font-size="13" font-weight="bold" fill="#301505">
+            [3-أ] تَفْصِيلُ بَابِ التَّوْبَةِ المَنْقُوش
+          </text>
+          <text x="140" y="44" text-anchor="middle" font-size="9" fill="#783c12">
+            خشب النخيل والعرعار المنحوت (القرن 5 هـ)
+          </text>
+
+          <!-- رسم الباب المنحوت -->
+          <rect x="35" y="60" width="210" height="180" class="ink-fill-wood" stroke-width="1.8" />
+          <!-- درفتا الباب (مزدوج) -->
+          <line x1="140" y1="60" x2="140" y2="240" stroke="#4a2711" stroke-width="2" />
+          <!-- مسامير حديدية تقليدية مطروقة -->
+          <circle cx="50" cy="80" r="2.5" fill="#1f0e03" />
+          <circle cx="50" cy="140" r="2.5" fill="#1f0e03" />
+          <circle cx="50" cy="200" r="2.5" fill="#1f0e03" />
+          <circle cx="230" cy="80" r="2.5" fill="#1f0e03" />
+          <circle cx="230" cy="140" r="2.5" fill="#1f0e03" />
+          <circle cx="230" cy="200" r="2.5" fill="#1f0e03" />
+
+          <!-- لوح النقش التاريخي على ساكف الباب -->
+          <rect x="45" y="75" width="190" height="35" fill="#4d240c" stroke="#1f0e03" stroke-width="1.2" />
+          <text x="140" y="90" text-anchor="middle" font-size="9" font-weight="bold" fill="#ffe9c4">
+            «بَادِرُوا بِالصَّلَاةِ قَبْلَ الفَوْت»
+          </text>
+          <text x="140" y="104" text-anchor="middle" font-size="9" font-weight="bold" fill="#ffe9c4">
+            «وَبَادِرُوا بِالتَّوْبَةِ قَبْلَ المَوْت»
+          </text>
+
+          <!-- الزخرفة الهندسية الزناتية المحفورة على الخشب -->
+          <g transform="translate(45, 120)">
+            <polygon points="40,20 50,5 60,20 50,35" fill="none" stroke="#2b1103" stroke-width="1.2" />
+            <polygon points="50,5 60,20 70,5 60,-10" fill="none" stroke="#2b1103" stroke-width="1.2" />
+            <polygon points="135,20 145,5 155,20 145,35" fill="none" stroke="#2b1103" stroke-width="1.2" />
+          </g>
+
+          <text x="140" y="265" text-anchor="middle" font-size="9" fill="#542304" font-weight="bold">
+            رمز التسامح والانفتاح الروحي في قصر ورقلة
+          </text>
+          <text x="140" y="280" text-anchor="middle" font-size="8" fill="#7a421a">
+            (تُفتح درفتاه ترحيباً بالقوافل والوافدين)
+          </text>
+        </g>
+
+        <!-- تفصيل ب: العمود اللولبي الجصي وزخارف سدراتة -->
+        <g id="detail-column" transform="translate(365, 480)">
+          <rect x="0" y="0" width="270" height="310" rx="10" fill="#f8f1e2" stroke="#663610" stroke-width="1.4" />
+          <text x="135" y="28" text-anchor="middle" font-size="13" font-weight="bold" fill="#301505">
+            [3-ب] تَقْنِيَةُ العَمُودِ اللَّوْلَبِيِّ (STUCCO)
+          </text>
+          <text x="135" y="44" text-anchor="middle" font-size="9" fill="#783c12">
+            جص أبيض منحوت بتقنية سدراتة الرستمية
+          </text>
+
+          <!-- رسم العمود اللولبي الحلزوني -->
+          <!-- التاج (Capital) -->
+          <path d="M 85,70 L 185,70 L 175,95 L 95,95 Z" class="ink-fill-plaster" stroke-width="1.8" />
+          <circle cx="110" cy="82" r="5" fill="none" stroke="#663610" stroke-width="1" />
+          <circle cx="160" cy="82" r="5" fill="none" stroke="#663610" stroke-width="1" />
+
+          <!-- ساق العمود الحلزوني (Twisted Shaft) -->
+          <g transform="translate(100, 95)">
+            <path d="M 0,0 C 20,15 50,15 70,0 L 70,25 C 50,40 20,40 0,25 Z" class="ink-fill-plaster" />
+            <path d="M 0,25 C 20,40 50,40 70,25 L 70,50 C 50,65 20,65 0,50 Z" fill="#ede1cd" stroke="#4a2711" stroke-width="1.4" />
+            <path d="M 0,50 C 20,65 50,65 70,50 L 70,75 C 50,90 20,90 0,75 Z" class="ink-fill-plaster" />
+            <path d="M 0,75 C 20,90 50,90 70,75 L 70,100 C 50,115 20,115 0,100 Z" fill="#ede1cd" stroke="#4a2711" stroke-width="1.4" />
+            <path d="M 0,100 C 20,115 50,115 70,100 L 70,125 C 50,140 20,140 0,125 Z" class="ink-fill-plaster" />
+          </g>
+
+          <!-- قاعدة العمود (Base) -->
+          <rect x="90" y="220" width="90" height="25" rx="3" class="ink-fill-mud" stroke-width="1.6" />
+
+          <text x="135" y="265" text-anchor="middle" font-size="9" fill="#542304" font-weight="bold">
+            التشابه الوثائقي مع لقى مدينة سدراتة
+          </text>
+          <text x="135" y="280" text-anchor="middle" font-size="8" fill="#7a421a">
+            حفريات فان بيرشم 1951 • متحف الآثار القديمة
+          </text>
+        </g>
+
+        <!-- تفصيل ج: جدول المواد التقليدية والأختام التوثيقية -->
+        <g id="detail-materials" transform="translate(660, 480)">
+          <rect x="0" y="0" width="280" height="310" rx="10" fill="#f8f1e2" stroke="#663610" stroke-width="1.4" />
+          <text x="140" y="28" text-anchor="middle" font-size="13" font-weight="bold" fill="#301505">
+            [3-ج] دَلِيلُ المَوَادِّ التَّقْلِيدِيَّةِ (SPECIFICATIONS)
+          </text>
+          
+          <g transform="translate(20, 50)" font-size="10" fill="#422008">
+            <!-- مادة 1 -->
+            <rect x="0" y="0" width="16" height="12" class="ink-fill-mud" />
+            <text x="25" y="10" font-weight="bold">طُوبُ اللَّبِنِ الشَّمْسِيّ (Sun-Baked Mud):</text>
+            <text x="25" y="24" font-size="8.5" fill="#693b16">طمي الواحة الممزوج بالتبن المجفف طبيعياً.</text>
+
+            <!-- مادة 2 -->
+            <rect x="0" y="38" width="16" height="12" class="ink-fill-plaster" />
+            <text x="25" y="48" font-weight="bold">الجِصُّ الوَارْجْلَانِيّ (Local Gypsum / Timchent):</text>
+            <text x="25" y="62" font-size="8.5" fill="#693b16">جص محروق في أفران القصر للنقوش البيضاء.</text>
+
+            <!-- مادة 3 -->
+            <rect x="0" y="76" width="16" height="12" class="ink-fill-wood" />
+            <text x="25" y="86" font-weight="bold">خَشَبُ النَّخِيلِ وَالعَرْعَارِ (Palm & Juniper):</text>
+            <text x="25" y="100" font-size="8.5" fill="#693b16">جذوع الدقلة للروافد وأخشاب صلبة للأبواب.</text>
+          </g>
+
+          <!-- الختم التراثي التوثيقي الدائري -->
+          <g transform="translate(140, 215) rotate(-6)">
+            <circle cx="0" cy="0" r="42" fill="none" stroke="#991b1b" stroke-width="2.5" stroke-dasharray="6,3" />
+            <circle cx="0" cy="0" r="36" fill="none" stroke="#991b1b" stroke-width="1.2" />
+            <text x="0" y="-18" text-anchor="middle" font-size="7.5" font-weight="bold" fill="#991b1b">هَيْئَةُ أُمَنَاءِ التُّرَاث</text>
+            <text x="0" y="-3" text-anchor="middle" font-size="9" font-weight="bold" fill="#991b1b">قَصْرُ وَارْجْلَان</text>
+            <text x="0" y="12" text-anchor="middle" font-size="7.5" font-weight="bold" fill="#991b1b">وَادِي مِيَا • 450 هـ</text>
+            <text x="0" y="24" text-anchor="middle" font-size="6.5" fill="#991b1b">مُوَثَّقٌ مِعْمَارِيّاً</text>
+          </g>
+
+          <text x="140" y="295" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#804a1e">
+            تأصيل: أرشيف جمعية القصر العتيق للتراث
+          </text>
+        </g>
+
+      </svg>
+    </div>
+
+    <!-- تذييل الوثيقة -->
+    <div class="relative z-10 pt-4 border-t border-[#804f21]/30 flex flex-wrap items-center justify-between gap-3 text-xs text-[#5c300c]">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-700"></span>
+        <span class="font-bold">حالة التوثيق: مطابق للمعاينة الميدانية ولمخططات مدينة سدراتة التاريخية</span>
+      </div>
+      <div class="font-mono text-[11px] text-[#733f16]">
+        وثيقة رقم: OQC-HERITAGE-ARCH-450H-01
+      </div>
+    </div>
+
+  </main>
+
+  <!-- زر التنقل السريع أسفل الصفحة -->
+  <div class="w-full max-w-5xl mt-6 flex justify-center no-print">
+    <div class="flex items-center gap-4 bg-stone-900/80 p-3 rounded-2xl border border-amber-600/30 shadow-2xl backdrop-blur-md">
+      <span class="text-xs text-stone-300">هل تود فحص التفاصيل المعمارية مجسدة في بيئة ثلاثية الأبعاد؟</span>
+      <a href="/3d-lalla-azza.html" class="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all">
+        <i data-lucide="eye" class="w-4 h-4"></i>
+        <span>فتح المجسم 3D الحي</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // تصدير وتنزيل ملف SVG عالي الدقة
+    document.getElementById('btn-download-svg').addEventListener('click', () => {
+      const svgEl = document.getElementById('blueprint-svg');
+      const serializer = new XMLSerializer();
+      let source = serializer.serializeToString(svgEl);
+
+      // إضافة namespaces
+      if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
+
+      const svgBlob = new Blob([source], {type:"image/svg+xml;charset=utf-8"});
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const downloadLink = document.createElement("a");
+      downloadLink.href = svgUrl;
+      downloadLink.download = "مخطط_معماري_تراثي_جامع_لالة_عزة_ورقلة.svg";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(svgUrl);
+    });
+  </script>
+</body>
+</html>
