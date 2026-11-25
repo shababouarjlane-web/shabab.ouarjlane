@@ -26,7 +26,9 @@ import {
   Image as ImageIcon,
   MapPin,
   RotateCcw,
+  Box,
 } from 'lucide-react';
+import { GlbModelViewer } from '@/components/heritage/GlbModelViewer';
 
 export interface FloatingLandmarkInfo {
   id: string;
@@ -103,7 +105,7 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
   });
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [expandedTab, setExpandedTab] = useState<'story' | 'transcript' | 'stops'>('story');
+  const [expandedTab, setExpandedTab] = useState<'story' | 'model3d' | 'transcript' | 'stops'>('story');
   const progressBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -115,6 +117,13 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
 
   // تحديد المحطة الصوتية المرتبطة بالمعلم المختار
   const activeStop = resolveAudioStopForLandmark(activeLandmark?.id);
+
+  // العودة تلقائياً لتبويب الصورة عند الانتقال لمعلم لا يحتوي على مجسم 3D بعد
+  useEffect(() => {
+    if (expandedTab === 'model3d' && !activeStop.model3dUrl) {
+      setExpandedTab('story');
+    }
+  }, [activeStop.id, activeStop.model3dUrl, expandedTab]);
   const activeStopIdx = Math.max(
     0,
     AUDIO_TOUR_STOPS.findIndex((s) => s.id === activeStop.id)
@@ -275,6 +284,20 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
                   <ImageIcon className="w-3.5 h-3.5" />
                   <span>الصورة والنبذة</span>
                 </button>
+                {activeStop.model3dUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setExpandedTab('model3d')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-thmanyah font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                      expandedTab === 'model3d'
+                        ? 'bg-amber-400 text-stone-950'
+                        : 'text-amber-300 hover:text-white'
+                    }`}
+                  >
+                    <Box className="w-3.5 h-3.5" />
+                    <span>مجسم 3D</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setExpandedTab('transcript')}
@@ -311,6 +334,14 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
             </div>
 
             <div className="p-4 space-y-3.5">
+              {expandedTab === 'model3d' && activeStop.model3dUrl && (
+                <GlbModelViewer
+                  modelUrl={activeStop.model3dUrl}
+                  altModelUrl={activeStop.model3dAltUrl}
+                  title={`مجسم 3D • ${displayTitle}`}
+                />
+              )}
+
               {expandedTab === 'story' && (
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
                   {/* صورة المعلم */}
@@ -466,6 +497,22 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
 
             {/* يسار: أزرار التحكم الصوتي المباشر */}
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              {/* زر سريع لفتح المجسم ثلاثي الأبعاد إذا توفر للمعلم */}
+              {activeStop.model3dUrl && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsExpanded(true);
+                    setExpandedTab('model3d');
+                  }}
+                  className="px-2.5 h-8 rounded-full bg-amber-400/20 hover:bg-amber-400 text-amber-300 hover:text-stone-950 ring-1 ring-amber-400/40 flex items-center gap-1 text-[11px] font-thmanyah font-bold transition-all cursor-pointer"
+                  title="استعراض المجسم ثلاثي الأبعاد الحقيقي"
+                >
+                  <Box className="w-3.5 h-3.5" />
+                  <span>3D</span>
+                </button>
+              )}
+
               {/* المحطة السابقة */}
               <button
                 type="button"
