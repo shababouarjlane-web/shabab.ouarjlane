@@ -663,7 +663,7 @@ export default function HeritageMap() {
         map.getCanvas().style.cursor = '';
       });
 
-      // 2. مربع محيط جامع لالة عزة الذهبي
+      // 2. مربع محيط جامع لالة عزة الذهبي (مع وهج واضح فوق سطوح القصر)
       map.addSource('lalla-azza-polygon', {
         type: 'geojson',
         data: toGeoJsonPolygon(LALLA_AZZA_POLYGON),
@@ -674,8 +674,20 @@ export default function HeritageMap() {
         type: 'fill',
         source: 'lalla-azza-polygon',
         paint: {
-          'fill-color': '#efa83f',
-          'fill-opacity': 0.24,
+          'fill-color': '#f59e0b',
+          'fill-opacity': 0.36,
+        },
+      });
+
+      map.addLayer({
+        id: 'lalla-azza-glow',
+        type: 'line',
+        source: 'lalla-azza-polygon',
+        paint: {
+          'line-color': '#fbbf24',
+          'line-width': 12,
+          'line-opacity': 0.55,
+          'line-blur': 6,
         },
       });
 
@@ -684,9 +696,9 @@ export default function HeritageMap() {
         type: 'line',
         source: 'lalla-azza-polygon',
         paint: {
-          'line-color': '#efa83f',
+          'line-color': '#fef08a',
           'line-width': 3.5,
-          'line-opacity': 0.98,
+          'line-opacity': 1,
         },
       });
 
@@ -701,10 +713,17 @@ export default function HeritageMap() {
         setSidebarOpen(false);
         map.flyTo({
           center: [lallaLandmark.lng, lallaLandmark.lat],
-          zoom: 17.2,
-          pitch: is3DMode ? 60 : 0,
+          zoom: 18,
+          pitch: is3DMode ? 52 : 0,
           duration: 1200,
         });
+      });
+
+      map.on('mouseenter', 'lalla-azza-fill', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'lalla-azza-fill', () => {
+        map.getCanvas().style.cursor = '';
       });
 
       // 3. دمج مجسم سدراتة الحقيقي ثلاثي الأبعاد (.glb) مباشرة فوق إحداثيات سدراتة!
@@ -811,8 +830,8 @@ export default function HeritageMap() {
           setSidebarOpen(false);
           map.flyTo({
             center: [lm.lng, lm.lat],
-            zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 17.2 : 15.8,
-            pitch: is3DMode ? (lm.has3dModel ? 64 : 56) : 0,
+            zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 18 : 15.8,
+            pitch: is3DMode ? (lm.has3dModel ? 64 : 52) : 0,
             bearing: lm.has3dModel ? -22 : map.getBearing(),
             duration: 1300,
           });
@@ -846,6 +865,7 @@ export default function HeritageMap() {
     const showLalla =
       showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === 'lalla-azza');
     setLayerVis('lalla-azza-fill', showLalla);
+    setLayerVis('lalla-azza-glow', showLalla);
     setLayerVis('lalla-azza-outline', showLalla);
 
     const showSedrata3D =
@@ -877,8 +897,8 @@ export default function HeritageMap() {
 
     mapRef.current.flyTo({
       center: [lm.lng, lm.lat],
-      zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 17.2 : 15.8,
-      pitch: is3DMode ? (lm.has3dModel ? 64 : 56) : 0,
+      zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 18 : 15.8,
+      pitch: is3DMode ? (lm.has3dModel ? 64 : 52) : 0,
       bearing: lm.has3dModel ? -22 : -10,
       duration: 1350,
     });
