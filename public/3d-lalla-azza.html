@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مجسم جامع لالة عزة العتيق ثلاثي الأبعاد • ⵜⴰⵡⵉⵍⴰ 3D</title>
+  <!-- Tailwind CSS CDN for sleek UI overlay -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js + OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @font-face {
+      font-family: 'Thmanyah';
+      src: local('Segoe UI'), local('Arial');
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0d121d;
+      font-family: 'Thmanyah', system-ui, -apple-system, sans-serif;
+      user-select: none;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    .glass-card {
+      background: rgba(18, 24, 38, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+    .glass-btn {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-btn:hover {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: rgba(245, 158, 11, 0.5);
+      transform: translateY(-1px);
+    }
+    .glass-btn.active {
+      background: #f59e0b;
+      color: #0f172a;
+      border-color: #f59e0b;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+    }
+    /* Pulse pin animation */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    .pulse-ring {
+      animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+  </style>
+</head>
+<body class="text-slate-100">
+
+  <!-- ── Three.js WebGL Canvas ── -->
+  <div id="canvas-container"></div>
+
+  <!-- ── شريط الرأس والتحكم العلوي ── -->
+  <header class="absolute top-4 right-4 left-4 z-20 flex items-center justify-between pointer-events-none">
+    <div class="glass-card px-5 py-3 rounded-2xl shadow-2xl pointer-events-auto flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+        <i data-lucide="box" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base sm:text-lg font-bold text-white tracking-wide">
+            جامع لَالَّا عَزَّة العَتِيق • مجسم تفاعلي ثلاثي الأبعاد
+          </h1>
+          <span class="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+            WebGL 3D
+          </span>
+        </div>
+        <p class="text-xs text-slate-400">
+          محاكاة معمارية متكاملة لنسيج الطين وعمارة القصر (القرن 5هـ)
+        </p>
+      </div>
+    </div>
+
+    <!-- أزرار الإضاءة والتحكم -->
+    <div class="glass-card p-1.5 rounded-2xl pointer-events-auto flex items-center gap-1.5 shadow-xl">
+      <button id="btn-cinematic-tour" class="glass-btn px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/40 text-amber-300 hover:from-amber-500 hover:to-orange-500 hover:text-slate-950 transition-all">
+        <i data-lucide="video" class="w-4 h-4 text-amber-400"></i>
+        <span>عرض فيديو سينمائي تلقائي</span>
+      </button>
+
+      <button id="btn-record-video" class="glass-btn px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-rose-300 border-rose-500/30 hover:bg-rose-500/20" title="تسجيل فيديو وحفظه في جهازك">
+        <span id="rec-dot" class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse hidden"></span>
+        <i id="rec-icon" data-lucide="circle-dot" class="w-3.5 h-3.5 text-rose-400"></i>
+        <span id="rec-text">تسجيل فيديو (WebM)</span>
+      </button>
+
+      <div class="h-4 w-[1px] bg-white/20 mx-1"></div>
+
+      <button id="btn-day" class="glass-btn active px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5" title="شمس الظهيرة">
+        <i data-lucide="sun" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">ظهيرة</span>
+      </button>
+      <button id="btn-sunset" class="glass-btn px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-amber-300" title="غروب صحراوي">
+        <i data-lucide="sunset" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">غروب</span>
+      </button>
+      <button id="btn-night" class="glass-btn px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 text-indigo-300" title="ليل وسكينة">
+        <i data-lucide="moon" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline">ليل</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── لوحة المعاينة التفاعلية والتفكيك المعماري (يمين الشاشة) ── -->
+  <aside class="absolute top-24 right-4 z-20 w-80 glass-card p-4 rounded-2xl shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+      <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+        <i data-lucide="layers" class="w-4 h-4"></i>
+        <span>طبقات التفكيك المعماري:</span>
+      </span>
+      <span id="rotation-status" class="text-[10px] text-slate-400 font-mono">دوران حي 360°</span>
+    </div>
+
+    <!-- مفاتيح عرض الأجزاء -->
+    <div class="space-y-2 text-xs">
+      <button id="btn-toggle-explode" class="w-full glass-btn p-2.5 rounded-xl flex items-center justify-between text-right text-stone-200">
+        <span class="flex items-center gap-2">
+          <i data-lucide="split" class="w-4 h-4 text-amber-400"></i>
+          <span>رفع السقف وكشف الداخل (Exploded View)</span>
+        </span>
+        <span id="explode-badge" class="text-[10px] bg-white/10 px-2 py-0.5 rounded-md">مغلق</span>
+      </button>
+
+      <button id="btn-focus-minaret" class="w-full glass-btn p-2.5 rounded-xl flex items-center justify-between text-right text-stone-200">
+        <span class="flex items-center gap-2">
+          <i data-lucide="building" class="w-4 h-4 text-amber-400"></i>
+          <span>1. الصومعة الهرمية المدرجة</span>
+        </span>
+        <i data-lucide="chevron-left" class="w-4 h-4 text-slate-500"></i>
+      </button>
+
+      <button id="btn-focus-door" class="w-full glass-btn p-2.5 rounded-xl flex items-center justify-between text-right text-stone-200">
+        <span class="flex items-center gap-2">
+          <i data-lucide="door-open" class="w-4 h-4 text-amber-400"></i>
+          <span>2. باب التوبة الخشبي المنقوش</span>
+        </span>
+        <i data-lucide="chevron-left" class="w-4 h-4 text-slate-500"></i>
+      </button>
+
+      <button id="btn-focus-mihrab" class="w-full glass-btn p-2.5 rounded-xl flex items-center justify-between text-right text-stone-200">
+        <span class="flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+          <span>3. المحراب العتيق وأعمدة الجبس</span>
+        </span>
+        <i data-lucide="chevron-left" class="w-4 h-4 text-slate-500"></i>
+      </button>
+
+      <button id="btn-focus-azzaba" class="w-full glass-btn p-2.5 rounded-xl flex items-center justify-between text-right text-stone-200">
+        <span class="flex items-center gap-2">
+          <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
+          <span>4. حلقة شيوخ العزابة (12 مقعداً)</span>
+        </span>
+        <i data-lucide="chevron-left" class="w-4 h-4 text-slate-500"></i>
+      </button>
+    </div>
+
+    <!-- بطاقة الشرح الموضعي التلقائي -->
+    <div id="info-panel" class="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1.5 transition-all">
+      <h4 id="info-title" class="text-xs font-bold text-amber-300">
+        الصومعة الهرمية الطينية (المئذنة)
+      </h4>
+      <p id="info-desc" class="text-[11px] leading-relaxed text-slate-300">
+        بُنيت مئذنة جامع لالة عزة بنظام التدريج الطيني المائل مع فتحات تهوية علوية، لتصمد أمام رياح الرمال العاتية وتوفر تبريداً طبيعياً للمسجد عبر حركة تيار الهواء.
+      </p>
+    </div>
+
+    <!-- مشغل صوت جورج التوثيقي المباشر للمعلم -->
+    <div class="pt-2 border-t border-white/10">
+      <button id="btn-audio-play" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95">
+        <i id="audio-icon" data-lucide="play" class="w-4 h-4 fill-current"></i>
+        <span id="audio-text">استمع لشرح جورج الوثائقي (ElevenLabs)</span>
+      </button>
+      <audio id="audio-el" src="/audio/tour/lalla_azza.mp3" preload="auto"></audio>
+    </div>
+  </aside>
+
+  <!-- ── إرشادات التحكم السفلية ── -->
+  <footer class="absolute bottom-4 left-4 z-20 flex items-center gap-2 pointer-events-none">
+    <div class="glass-card px-4 py-2 rounded-xl text-xs text-slate-400 pointer-events-auto flex items-center gap-3 shadow-lg">
+      <span class="flex items-center gap-1.5">
+        <i data-lucide="rotate-3d" class="w-4 h-4 text-amber-400"></i>
+        <span>اسحب بالماوس للتدوير 360°</span>
+      </span>
+      <span class="text-slate-600">•</span>
+      <span class="flex items-center gap-1.5">
+        <i data-lucide="zoom-in" class="w-4 h-4 text-amber-400"></i>
+        <span>عجلة الماوس للتقريب</span>
+      </span>
+      <span class="text-slate-600">•</span>
+      <button id="btn-reset-cam" class="text-amber-400 hover:underline font-bold cursor-pointer">
+        إعادة ضبط الكاميرا
+      </button>
+    </div>
+  </footer>
+
+  <!-- ── كود Three.js WebGL لبناء مجسم المسجد التفاعلي ── -->
+  <script>
+    // 1. إعداد المشهد والكاميرا والمُصيّر (Scene, Camera, Renderer)
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0e1422);
+    scene.fog = new THREE.FogExp2(0x0e1422, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(22, 16, 26);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    container.appendChild(renderer.domElement);
+
+    // OrbitControls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.02; // منع النزول تحت الأرضية الرملية
+    controls.minDistance = 8;
+    controls.maxDistance = 65;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.8;
+    controls.target.set(0, 3.5, 0);
+
+    // 2. خامات العمارة الطينية الصحراوية (Materials)
+    // خامة الطين الصحراوي الدافئ (Oasis Sun-Baked Adobe Mud)
+    const mudMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc89258,
+      roughness: 0.92,
+      metalness: 0.05,
+      flatShading: true
+    });
+
+    // خامة الجص الأبيض المنقوش (Plaster & Stucco)
+    const plasterMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf4eee4,
+      roughness: 0.85,
+      metalness: 0.02
+    });
+
+    // خامة خشب النخيل العتيق (Palm Wood & Old Carved Timber)
+    const woodMaterial = new THREE.MeshStandardMaterial({
+      color: 0x5a3418,
+      roughness: 0.8,
+      metalness: 0.1
+    });
+
+    // خامة الأرضية الرملية (Sahara Sand)
+    const sandMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd9a468,
+      roughness: 0.95,
+      metalness: 0.0
+    });
+
+    // خامة الذهب والبرونز للزخرفة (Bronze & Lantern Glow)
+    const bronzeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd97706,
+      roughness: 0.35,
+      metalness: 0.8
+    });
+
+    // 3. بناء عناصر المسجد الهندسية (Mosque Architectural Structure)
+    const mosqueGroup = new THREE.Group();
+    scene.add(mosqueGroup);
+
+    // أ. الأرضية الرملية الممتدة
+    const groundGeo = new THREE.PlaneGeometry(160, 160, 32, 32);
+    const ground = new THREE.Mesh(groundGeo, sandMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // إضافة تموجات كثبان بسيطة على الأرضية
+    const pos = groundGeo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      pos.setZ(i, Math.sin(x * 0.08) * Math.cos(y * 0.08) * 0.4);
+    }
+    groundGeo.computeVertexNormals();
+
+    // مصطبة المسجد الأساسية (Basement Platform)
+    const baseGeo = new THREE.BoxGeometry(16, 0.8, 14);
+    const baseMesh = new THREE.Mesh(baseGeo, mudMaterial);
+    baseMesh.position.set(0, 0.4, 0);
+    baseMesh.castShadow = true;
+    baseMesh.receiveShadow = true;
+    mosqueGroup.add(baseMesh);
+
+    // ب. جدران قاعة الصلاة السفلية (Prayer Hall Outer Walls)
+    const wallsGroup = new THREE.Group();
+    mosqueGroup.add(wallsGroup);
+
+    // الجدار الشمالي (القبلة والمحراب)
+    const qiblaWallGeo = new THREE.BoxGeometry(15, 5, 1.2);
+    const qiblaWall = new THREE.Mesh(qiblaWallGeo, mudMaterial);
+    qiblaWall.position.set(0, 3.3, -6.4);
+    qiblaWall.castShadow = true;
+    qiblaWall.receiveShadow = true;
+    wallsGroup.add(qiblaWall);
+
+    // تجويف المحراب البارز للخارج (Mihrab Niche)
+    const mihrabGeo = new THREE.CylinderGeometry(1.4, 1.5, 4.8, 16, 1, false, 0, Math.PI);
+    const mihrabMesh = new THREE.Mesh(mihrabGeo, plasterMaterial);
+    mihrabMesh.rotation.y = -Math.PI / 2;
+    mihrabMesh.position.set(0, 3.2, -6.8);
+    mihrabMesh.castShadow = true;
+    wallsGroup.add(mihrabMesh);
+
+    // الجدار الجنوبي (المدخل وباب التوبة)
+    const southWallLeftGeo = new THREE.BoxGeometry(5.5, 5, 1.2);
+    const southWallLeft = new THREE.Mesh(southWallLeftGeo, mudMaterial);
+    southWallLeft.position.set(-4.75, 3.3, 6.4);
+    southWallLeft.castShadow = true;
+    wallsGroup.add(southWallLeft);
+
+    const southWallRightGeo = new THREE.BoxGeometry(5.5, 5, 1.2);
+    const southWallRight = new THREE.Mesh(southWallRightGeo, mudMaterial);
+    southWallRight.position.set(4.75, 3.3, 6.4);
+    southWallRight.castShadow = true;
+    wallsGroup.add(southWallRight);
+
+    // قوس مدخل الباب العتيق
+    const doorArchGeo = new THREE.BoxGeometry(4, 1.2, 1.2);
+    const doorArch = new THREE.Mesh(doorArchGeo, mudMaterial);
+    doorArch.position.set(0, 5.2, 6.4);
+    doorArch.castShadow = true;
+    wallsGroup.add(doorArch);
+
+    // باب التوبة الخشبي الأثري المنقوش (Carved Door)
+    const doorGeo = new THREE.BoxGeometry(3, 4.4, 0.3);
+    const doorMesh = new THREE.Mesh(doorGeo, woodMaterial);
+    doorMesh.position.set(0, 3.0, 6.3);
+    doorMesh.castShadow = true;
+    wallsGroup.add(doorMesh);
+
+    // نقش الإفريز الخشبي فوق الباب (العبارة الخالدة)
+    const lintelGeo = new THREE.BoxGeometry(3.6, 0.45, 0.45);
+    const lintelMesh = new THREE.Mesh(lintelGeo, bronzeMaterial);
+    lintelMesh.position.set(0, 4.8, 6.5);
+    wallsGroup.add(lintelMesh);
+
+    // الجدار الشرقي والغربي
+    const eastWallGeo = new THREE.BoxGeometry(1.2, 5, 12);
+    const eastWall = new THREE.Mesh(eastWallGeo, mudMaterial);
+    eastWall.position.set(7.5, 3.3, 0);
+    eastWall.castShadow = true;
+    wallsGroup.add(eastWall);
+
+    const westWallGeo = new THREE.BoxGeometry(1.2, 5, 12);
+    const westWall = new THREE.Mesh(westWallGeo, mudMaterial);
+    westWall.position.set(-7.5, 3.3, 0);
+    westWall.castShadow = true;
+    wallsGroup.add(westWall);
+
+    // ج. الأعمدة اللولبية الداخلية وحلقة العزابة (Internal Spiral Columns & Azzaba Ring)
+    const internalGroup = new THREE.Group();
+    mosqueGroup.add(internalGroup);
+
+    // 6 أعمدة لولبية جصية داخل قاعة الصلاة
+    const columnPositions = [
+      [-3.5, -2], [0, -2], [3.5, -2],
+      [-3.5, 2], [0, 2], [3.5, 2]
+    ];
+
+    columnPositions.forEach(([cx, cz]) => {
+      // قاعدة العمود
+      const colBase = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.65, 0.6, 12), mudMaterial);
+      colBase.position.set(cx, 1.1, cz);
+      internalGroup.add(colBase);
+
+      // جسم العمود اللولبي الجصي
+      const colBody = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.45, 4.0, 16), plasterMaterial);
+      colBody.position.set(cx, 3.2, cz);
+      colBody.castShadow = true;
+      internalGroup.add(colBody);
+
+      // تاج القوس الملتوي
+      const colCapital = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 1.1), plasterMaterial);
+      colCapital.position.set(cx, 5.3, cz);
+      internalGroup.add(colCapital);
+    });
+
+    // حلقة شيوخ العزابة الاثني عشر في وسط المسجد (12 Seats Council)
+    const azzabaRing = new THREE.Group();
+    internalGroup.add(azzabaRing);
+
+    const seatRadius = 2.4;
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const sx = Math.cos(angle) * seatRadius;
+      const sz = Math.sin(angle) * seatRadius;
+
+      // وسادة طينية/جلدية لمقعد الشيخ
+      const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.35, 12), woodMaterial);
+      seat.position.set(sx, 0.95, sz);
+      seat.castShadow = true;
+      azzabaRing.add(seat);
+    }
+
+    // مصحف أو كتاب وسطي في حلقة الشورى
+    const centerStand = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.55, 0.6, 8), bronzeMaterial);
+    centerStand.position.set(0, 1.1, 0);
+    azzabaRing.add(centerStand);
+
+    // د. السقف التفكيكي مع القباب الصحراوية (Exploded Roof & Domes Group)
+    const roofGroup = new THREE.Group();
+    mosqueGroup.add(roofGroup);
+
+    // بلاطة السقف الأساسية (سقف من جذوع النخيل والطين)
+    const roofSlab = new THREE.Mesh(new THREE.BoxGeometry(16.5, 0.7, 14.5), mudMaterial);
+    roofSlab.position.set(0, 5.9, 0);
+    roofSlab.castShadow = true;
+    roofSlab.receiveShadow = true;
+    roofGroup.add(roofSlab);
+
+    // جذوع النخيل البارزة من واجهة السقف (Palm Rafters)
+    for (let r = -7.5; r <= 7.5; r += 1.2) {
+      const beamFront = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.8, 8), woodMaterial);
+      beamFront.rotation.x = Math.PI / 2;
+      beamFront.position.set(r, 5.8, 7.4);
+      beamFront.castShadow = true;
+      roofGroup.add(beamFront);
+
+      const beamBack = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.8, 8), woodMaterial);
+      beamBack.rotation.x = Math.PI / 2;
+      beamBack.position.set(r, 5.8, -7.4);
+      beamBack.castShadow = true;
+      roofGroup.add(beamBack);
+    }
+
+    // القباب الطينية الست فوق السقف (Domes)
+    const domePositions = [
+      [0, -4.5, 1.8], // قبة المحراب الكبرى
+      [-4.5, -2, 1.2], [4.5, -2, 1.2],
+      [-4.5, 2.5, 1.2], [0, 2.5, 1.4], [4.5, 2.5, 1.2]
+    ];
+
+    domePositions.forEach(([dx, dz, dSize]) => {
+      const domeBase = new THREE.Mesh(new THREE.CylinderGeometry(dSize * 0.9, dSize, 0.5, 16), mudMaterial);
+      domeBase.position.set(dx, 6.3, dz);
+      roofGroup.add(domeBase);
+
+      const domeCap = new THREE.Mesh(new THREE.SphereGeometry(dSize * 0.88, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), plasterMaterial);
+      domeCap.position.set(dx, 6.55, dz);
+      domeCap.castShadow = true;
+      roofGroup.add(domeCap);
+    });
+
+    // هـ. المئذنة الصومعية الهرمية المدرجة (Stepped Pyramid Minaret)
+    const minaretGroup = new THREE.Group();
+    mosqueGroup.add(minaretGroup);
+    minaretGroup.position.set(-6.5, 0.8, 5.5); // الزاوية الجنوبية الغربية
+
+    // القاعدة المربعة العريضة
+    const mBase1 = new THREE.Mesh(new THREE.BoxGeometry(3.8, 3.5, 3.8), mudMaterial);
+    mBase1.position.set(0, 1.75, 0);
+    mBase1.castShadow = true;
+    minaretGroup.add(mBase1);
+
+    // الطبقة الثانية المتراجعة (Tapered Stage 2)
+    const mStage2 = new THREE.Mesh(new THREE.BoxGeometry(3.0, 3.8, 3.0), mudMaterial);
+    mStage2.position.set(0, 5.4, 0);
+    mStage2.castShadow = true;
+    minaretGroup.add(mStage2);
+
+    // الطبقة الثالثة
+    const mStage3 = new THREE.Mesh(new THREE.BoxGeometry(2.3, 3.2, 2.3), mudMaterial);
+    mStage3.position.set(0, 8.9, 0);
+    mStage3.castShadow = true;
+    minaretGroup.add(mStage3);
+
+    // شرفة المؤذن وفتحات التهوية (Balcony & Archlets)
+    const mBalcony = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.4, 2.5), woodMaterial);
+    mBalcony.position.set(0, 10.7, 0);
+    minaretGroup.add(mBalcony);
+
+    // القمة الهرمية الصحرواية (Pyramid Finial)
+    const mTop = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2.2, 4), plasterMaterial);
+    mTop.rotation.y = Math.PI / 4;
+    mTop.position.set(0, 11.9, 0);
+    mTop.castShadow = true;
+    minaretGroup.add(mTop);
+
+    // هلال وقضيب من النحاس في قمة الصومعة
+    const finialSpire = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 8), bronzeMaterial);
+    finialSpire.position.set(0, 13.4, 0);
+    minaretGroup.add(finialSpire);
+
+    // و. أشجار نخيل تكميلية للواحة حول المسجد (Oasis Date Palms)
+    function createPalmTree(x, z, scale = 1) {
+      const palm = new THREE.Group();
+      palm.position.set(x, 0, z);
+      palm.scale.set(scale, scale, scale);
+
+      // جذع النخلة المائل قليلاً
+      const trunkCurve = new THREE.CubicBezierCurve3(
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0.3, 3, 0.2),
+        new THREE.Vector3(0.6, 6, 0.4),
+        new THREE.Vector3(0.8, 8.5, 0.5)
+      );
+      const trunkGeo = new THREE.TubeGeometry(trunkCurve, 12, 0.35, 8, false);
+      const trunk = new THREE.Mesh(trunkGeo, woodMaterial);
+      trunk.castShadow = true;
+      palm.add(trunk);
+
+      // سعف النخيل
+      const frondMat = new THREE.MeshStandardMaterial({ color: 0x2e6b36, roughness: 0.8, side: THREE.DoubleSide });
+      for (let i = 0; i < 9; i++) {
+        const angle = (i / 9) * Math.PI * 2;
+        const frondGeo = new THREE.PlaneGeometry(1.2, 4.2);
+        const frond = new THREE.Mesh(frondGeo, frondMat);
+        frond.position.set(0.8, 8.4, 0.5);
+        frond.rotation.set(0.6, angle, -0.4);
+        frond.castShadow = true;
+        palm.add(frond);
+      }
+      return palm;
+    }
+
+    scene.add(createPalmTree(14, -8, 1.1));
+    scene.add(createPalmTree(12, 8, 0.9));
+    scene.add(createPalmTree(-14, -6, 1.0));
+    scene.add(createPalmTree(-12, 10, 0.85));
+
+    // 4. الإضاءة النهارية والغروب والليل (Lighting Presets)
+    const ambientLight = new THREE.AmbientLight(0xffeedd, 0.7);
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfffaed, 1.4);
+    sunLight.position.set(35, 45, 25);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.bias = -0.0005;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 120;
+    sunLight.shadow.camera.left = -25;
+    sunLight.shadow.camera.right = 25;
+    sunLight.shadow.camera.top = 25;
+    sunLight.shadow.camera.bottom = -25;
+    scene.add(sunLight);
+
+    // ضوء المسجد الداخلي (مصباح دافئ في حلقة العزابة)
+    const interiorLight = new THREE.PointLight(0xf59e0b, 1.8, 14);
+    interiorLight.position.set(0, 3.2, 0);
+    scene.add(interiorLight);
+
+    // تبديل بيئات الإضاءة
+    function setLightingPreset(preset) {
+      if (preset === 'day') {
+        scene.background.set(0x0e1422);
+        scene.fog.color.set(0x0e1422);
+        ambientLight.color.set(0xffeedd);
+        ambientLight.intensity = 0.7;
+        sunLight.color.set(0xfffaed);
+        sunLight.intensity = 1.4;
+        sunLight.position.set(35, 45, 25);
+        interiorLight.intensity = 1.2;
+      } else if (preset === 'sunset') {
+        scene.background.set(0x281210);
+        scene.fog.color.set(0x281210);
+        ambientLight.color.set(0xff9966);
+        ambientLight.intensity = 0.55;
+        sunLight.color.set(0xf97316);
+        sunLight.intensity = 2.0;
+        sunLight.position.set(45, 12, 15);
+        interiorLight.intensity = 2.4;
+      } else if (preset === 'night') {
+        scene.background.set(0x05070d);
+        scene.fog.color.set(0x05070d);
+        ambientLight.color.set(0x223355);
+        ambientLight.intensity = 0.25;
+        sunLight.color.set(0x4466aa);
+        sunLight.intensity = 0.4;
+        sunLight.position.set(-20, 30, -20);
+        interiorLight.intensity = 3.2; // قنديل وهاج في عتمة الليل
+      }
+    }
+
+    // 5. التفكيك المعماري للسقف (Exploded View Animation)
+    let isExploded = false;
+    let targetRoofY = 0; // إزاحة السقف
+    let currentRoofY = 0;
+
+    function toggleExplodedView() {
+      isExploded = !isExploded;
+      targetRoofY = isExploded ? 6.5 : 0;
+      document.getElementById('explode-badge').innerText = isExploded ? 'مكشوف' : 'مغلق';
+      document.getElementById('explode-badge').className = isExploded
+        ? 'text-[10px] bg-amber-500 text-slate-950 font-bold px-2 py-0.5 rounded-md'
+        : 'text-[10px] bg-white/10 px-2 py-0.5 rounded-md';
+
+      if (isExploded) {
+        setInfo(
+          'كشف قاعة الصلاة وحلقة العزابة',
+          'تم رفع السقف والقباب الطينية للأعلى؛ انظر إلى الداخل حيث تظهر الأعمدة اللولبية الستة وحلقة المقاعد الاثني عشر التي كان يجتمع فيها شيوخ هيئة العزابة لإقرار الشورى.'
+        );
+      } else {
+        setInfo(
+          'جامع لالة عزة العتيق',
+          'المسجد التاريخي الجامع بقصر وارجلان. تأمل كتلته الطينية وعمارته البيئية المتفردة التي تقهر لهيب شمس الصحراء.'
+        );
+      }
+    }
+
+    // 6. التحليق والتركيز على أجزاء المسجد (Camera Focus Hotspots)
+    function focusCameraOn(targetPos, camPos, title, desc) {
+      controls.autoRotate = false;
+      document.getElementById('rotation-status').innerText = 'تركيز موضعي';
+
+      // انتقال ناعم بالكاميرا
+      const startCam = camera.position.clone();
+      const startTarget = controls.target.clone();
+      let t = 0;
+
+      function animFocus() {
+        t += 0.04;
+        if (t <= 1) {
+          camera.position.lerpVectors(startCam, camPos, t);
+          controls.target.lerpVectors(startTarget, targetPos, t);
+          requestAnimationFrame(animFocus);
+        } else {
+          camera.position.copy(camPos);
+          controls.target.copy(targetPos);
+        }
+      }
+      animFocus();
+      setInfo(title, desc);
+    }
+
+    function setInfo(title, desc) {
+      const panel = document.getElementById('info-panel');
+      panel.style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('info-title').innerText = title;
+        document.getElementById('info-desc').innerText = desc;
+        panel.style.opacity = '1';
+      }, 150);
+    }
+
+    // 7. ربط عناصر واجهة المستخدم (Event Listeners)
+    document.getElementById('btn-day').addEventListener('click', function() {
+      setLightingPreset('day');
+      updateActiveBtn(this);
+    });
+    document.getElementById('btn-sunset').addEventListener('click', function() {
+      setLightingPreset('sunset');
+      updateActiveBtn(this);
+    });
+    document.getElementById('btn-night').addEventListener('click', function() {
+      setLightingPreset('night');
+      updateActiveBtn(this);
+    });
+
+    function updateActiveBtn(btn) {
+      document.querySelectorAll('#btn-day, #btn-sunset, #btn-night').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    document.getElementById('btn-toggle-explode').addEventListener('click', toggleExplodedView);
+
+    document.getElementById('btn-focus-minaret').addEventListener('click', () => {
+      focusCameraOn(
+        new THREE.Vector3(-6.5, 7.5, 5.5),
+        new THREE.Vector3(-14, 12, 16),
+        'الصومعة الهرمية المدرجة (المئذنة)',
+        'تتميز بهندستها الهرمية المتراجعة المبتكرة في عمارة الواحات بالصحراء، تعلوها شرفة خشبية للآذان وقضيب هلال نحاسي تقليدي.'
+      );
+    });
+
+    document.getElementById('btn-focus-door').addEventListener('click', () => {
+      focusCameraOn(
+        new THREE.Vector3(0, 3.2, 6.4),
+        new THREE.Vector3(0, 4.0, 13),
+        'باب التوبة الخشبي المنقوش',
+        'باب أثري عتيق نُقشت عليه بالخط المغربي العبارة التاريخية: «بادروا بالصلاة قبل الفوت، وبادروا بالتوبة قبل الموت»، ويمثل معلماً روحياً للمسجد.'
+      );
+    });
+
+    document.getElementById('btn-focus-mihrab').addEventListener('click', () => {
+      if (!isExploded) toggleExplodedView();
+      focusCameraOn(
+        new THREE.Vector3(0, 3.5, -4.5),
+        new THREE.Vector3(0, 7.0, 5),
+        'المحراب العتيق وأعمدة الجبس اللولبية',
+        'محراب طيني مجصص يتجه بدقة نحو القبلة، تحيط به أعمدة لولبية منحوتة بنقوش جصية تجمع بين الطابع العباسي والأندلسي المتفرد.'
+      );
+    });
+
+    document.getElementById('btn-focus-azzaba').addEventListener('click', () => {
+      if (!isExploded) toggleExplodedView();
+      focusCameraOn(
+        new THREE.Vector3(0, 1.8, 0),
+        new THREE.Vector3(4, 5.5, 5),
+        'حلقة شيوخ العزابة (12 مقعداً)',
+        'مجلس الشورى التضامني المكون من 12 عضواً من أحبار الواحة برئاسة شيخ الحلقة، لإدارة الأوقاف والتعليم وفض النزاعات بعدل وتكافل.'
+      );
+    });
+
+    document.getElementById('btn-reset-cam').addEventListener('click', () => {
+      controls.autoRotate = true;
+      document.getElementById('rotation-status').innerText = 'دوران حي 360°';
+      focusCameraOn(
+        new THREE.Vector3(0, 3.5, 0),
+        new THREE.Vector3(22, 16, 26),
+        'جامع لالة عزة العتيق',
+        'منارة الشورى وباب التوبة المنحوت في قلب القصر العتيق بورقلة.'
+      );
+    });
+
+    // تشغيل صوت جورج المباشر
+    const audioEl = document.getElementById('audio-el');
+    const audioBtn = document.getElementById('btn-audio-play');
+    const audioText = document.getElementById('audio-text');
+    const audioIcon = document.getElementById('audio-icon');
+
+    audioBtn.addEventListener('click', () => {
+      if (audioEl.paused) {
+        audioEl.play();
+        audioText.innerText = 'إيقاف الشرح الصوتي المؤقت';
+        audioIcon.setAttribute('data-lucide', 'pause');
+        lucide.createIcons();
+      } else {
+        audioEl.pause();
+        audioText.innerText = 'استمع لشرح جورج الوثائقي (ElevenLabs)';
+        audioIcon.setAttribute('data-lucide', 'play');
+        lucide.createIcons();
+      }
+    });
+
+    audioEl.addEventListener('ended', () => {
+      audioText.innerText = 'استمع لشرح جورج الوثائقي (ElevenLabs)';
+      audioIcon.setAttribute('data-lucide', 'play');
+      lucide.createIcons();
+    });
+
+    // ─── 8. نظام الجولة السينمائية التلقائية وتسجيل الفيديو ───
+    let isCinematicTourActive = false;
+    let cinematicTimeout = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
+    const btnCinematic = document.getElementById('btn-cinematic-tour');
+    const btnRecord = document.getElementById('btn-record-video');
+    const recDot = document.getElementById('rec-dot');
+    const recIcon = document.getElementById('rec-icon');
+    const recText = document.getElementById('rec-text');
+
+    async function startCinematicTour() {
+      if (isCinematicTourActive) {
+        stopCinematicTour();
+        return;
+      }
+
+      isCinematicTourActive = true;
+      btnCinematic.classList.add('bg-amber-500', 'text-slate-950');
+      btnCinematic.innerHTML = '<i data-lucide="square" class="w-4 h-4 fill-current"></i><span>إيقاف العرض السينمائي</span>';
+      lucide.createIcons();
+
+      // تشغيل الصوت الوثائقي
+      try {
+        audioEl.currentTime = 0;
+        await audioEl.play();
+        audioText.innerText = 'جاري الشرح الصوتي لجورج...';
+        audioIcon.setAttribute('data-lucide', 'volume-2');
+        lucide.createIcons();
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+
+      // تسلسل اللقطات السينمائية المبرمجة
+      const sequence = [
+        // 1. المشهد العام للمسجد وواحة ورقلة في وقت الغروب
+        () => {
+          setLightingPreset('sunset');
+          updateActiveBtn(document.getElementById('btn-sunset'));
+          if (isExploded) toggleExplodedView();
+          focusCameraOn(
+            new THREE.Vector3(0, 3.5, 0),
+            new THREE.Vector3(26, 14, 28),
+            'جامع لَالَّا عَزَّة • عمارة الطين والخلود',
+            'تحفة العمارة الواحاتية في القصر العتيق بورقلة، شُيد ليكون مركز الإشعاع الحضاري ومجلس شورى العزابة.'
+          );
+        },
+        // 2. اقتراب سينمائي من المئذنة الهرمية المدرجة
+        () => {
+          focusCameraOn(
+            new THREE.Vector3(-6.5, 8.5, 5.5),
+            new THREE.Vector3(-15, 13, 17),
+            'الصومعة الهرمية المدرجة',
+            'بُنيت بمدرجات طينية مدروسة لتفادي مقاومة الرياح الصحراوية والحرارة، وتعلوها شرفة خشبية عتيقة.'
+          );
+        },
+        // 3. نزول سلس نحو باب التوبة الخشبي المنقوش
+        () => {
+          focusCameraOn(
+            new THREE.Vector3(0, 3.2, 6.4),
+            new THREE.Vector3(0, 3.8, 12),
+            'باب التوبة المنقوش (القرن 5هـ)',
+            'باب تاريخي منحوت بعبارة: «بادروا بالصلاة قبل الفوت وبادروا بالتوبة قبل الموت»، يجسد الروح الزناتية المتسامحة.'
+          );
+        },
+        // 4. رفع السقف للأعلى وكشف الداخل (Exploded View)
+        () => {
+          if (!isExploded) toggleExplodedView();
+          focusCameraOn(
+            new THREE.Vector3(0, 2.5, 0),
+            new THREE.Vector3(6, 12, 10),
+            'رفع السقف: كشف قلب المسجد التاريخي',
+            'هندسة فريدة تضم أعمدة جصية لولبية مستوحاة من عمارة سدراتة، مع فتحات إضاءة شمسية طبيعية.'
+          );
+        },
+        // 5. التركيز على حلقة شيوخ العزابة الـ 12
+        () => {
+          focusCameraOn(
+            new THREE.Vector3(0, 1.8, 0),
+            new THREE.Vector3(3.5, 4.8, 4.5),
+            'حلقة شيوخ العزابة (12 مقعداً)',
+            'مجلس الإدارة الاجتماعية والأوقاف والقضاء، حيث كان يجتمع 12 شيخاً لإدارة شؤون قصر ورقلة بروح الشورى والتكافل.'
+          );
+        },
+        // 6. المشهد الختامي الهادئ وإعادة السقف
+        () => {
+          if (isExploded) toggleExplodedView();
+          setLightingPreset('night');
+          updateActiveBtn(document.getElementById('btn-night'));
+          focusCameraOn(
+            new THREE.Vector3(0, 3.5, 0),
+            new THREE.Vector3(22, 16, 26),
+            'جامع لَالَّا عَزَّة • مسك الختام',
+            'معلم شامخ يشهد على ألف عام من الحضارة والتعايش في وادي ميا بورقلة.'
+          );
+        }
+      ];
+
+      let step = 0;
+      function runNextStep() {
+        if (!isCinematicTourActive) return;
+        if (step < sequence.length) {
+          sequence[step]();
+          step++;
+          cinematicTimeout = setTimeout(runNextStep, 6500); // 6.5 ثوانٍ لكل لقطة
+        } else {
+          stopCinematicTour();
+        }
+      }
+
+      runNextStep();
+    }
+
+    function stopCinematicTour() {
+      isCinematicTourActive = false;
+      if (cinematicTimeout) clearTimeout(cinematicTimeout);
+      btnCinematic.classList.remove('bg-amber-500', 'text-slate-950');
+      btnCinematic.innerHTML = '<i data-lucide="video" class="w-4 h-4 text-amber-400"></i><span>عرض فيديو سينمائي تلقائي</span>';
+      lucide.createIcons();
+      controls.autoRotate = true;
+    }
+
+    btnCinematic.addEventListener('click', startCinematicTour);
+
+    // تسجيل الفيديو من الكانفاس WebM
+    btnRecord.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        return;
+      }
+
+      try {
+        const canvas = renderer.domElement;
+        const stream = canvas.captureStream(30); // 30 FPS
+
+        recordedChunks = [];
+        const mimeTypes = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+        let selectedMime = mimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || '';
+
+        mediaRecorder = new MediaRecorder(stream, selectedMime ? { mimeType: selectedMime } : undefined);
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstart = () => {
+          recDot.classList.remove('hidden');
+          recIcon.classList.add('hidden');
+          recText.innerText = 'جاري التسجيل... (اضغط للإنهاء)';
+          btnRecord.classList.add('bg-rose-500/20', 'border-rose-500');
+
+          // تشغيل العرض السينمائي تلقائياً أثناء التسجيل للحصول على فيديو احترافي
+          if (!isCinematicTourActive) {
+            startCinematicTour();
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          recDot.classList.add('hidden');
+          recIcon.classList.remove('hidden');
+          recText.innerText = 'تسجيل فيديو (WebM)';
+          btnRecord.classList.remove('bg-rose-500/20', 'border-rose-500');
+
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'مجسم_جامع_لالة_عزة_ورقلة_3D.webm';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }, 100);
+
+          setInfo('تم حفظ الفيديو بنجاح', 'تم تنزيل فيديو ثلاثي الأبعاد للمجسم المعماري بدقة عالية مباشرة إلى جهازك.');
+        };
+
+        mediaRecorder.start();
+
+      } catch (err) {
+        console.error('Recording failed:', err);
+        alert('المتصفح لا يدعم تسجيل Canvas المباشر، يمكنك استخدام زر العرض السينمائي المباشر.');
+      }
+    });
+
+    // 8. حلقة التحديث والتصيير المستمرة (Animation Render Loop)
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // حركة رفع وتنزيل السقف بنعومة
+      currentRoofY += (targetRoofY - currentRoofY) * 0.08;
+      roofGroup.position.y = currentRoofY;
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // 9. تجاوب النافذة مع الشاشة
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // تفعيل أيقونات Lucide
+    lucide.createIcons();
+  </script>
+</body>
+</html>
