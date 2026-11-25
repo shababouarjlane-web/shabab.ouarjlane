@@ -27,6 +27,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^1.8.0",
     "mammoth": "^1.13.0",
+    "maplibre-gl": "^6.19.0",
     "pdfjs-dist": "^6.5.438",
     "prop-types": "^15.8.1",
     "qrcode.react": "^4.2.0",

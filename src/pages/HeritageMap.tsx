@@ -1,25 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import L from 'leaflet';
+import * as maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { supabase } from '@/lib/supabase';
-import { 
-  resolveOuarglaLocationCoords, 
+import {
+  resolveOuarglaLocationCoords,
   buildGoogleMapsDirectionsUrl,
   HERITAGE_CATEGORIES,
   packHeritageMeta,
-  parseHeritageMeta
+  parseHeritageMeta,
 } from '@/lib/helpers';
-import { 
-  ArrowRight, 
-  MapPin, 
-  BookOpen, 
-  ZoomIn, 
-  History, 
-  Star, 
-  Sliders, 
-  RotateCcw, 
-  Copy, 
-  Check, 
+import { createMapLibre3DModelLayer } from '@/lib/maplibre3dLayer';
+import {
+  ArrowRight,
+  MapPin,
+  BookOpen,
+  ZoomIn,
+  History,
+  Star,
+  Sliders,
+  RotateCcw,
+  Copy,
+  Check,
   X,
   Calendar,
   Compass,
@@ -27,7 +29,10 @@ import {
   Sparkles,
   PlusCircle,
   Send,
-  Headphones
+  Headphones,
+  Box,
+  RotateCw,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +42,7 @@ import {
   DialogContent,
   DialogTitle,
   DialogHeader,
-  DialogDescription
+  DialogDescription,
 } from '@/components/ui/dialog';
 import UnifiedHeader from '@/components/UnifiedHeader';
 import {
@@ -63,6 +68,7 @@ interface Landmark {
   image: string;
   description: string;
   category: 'mosque' | 'urban' | 'ruins';
+  has3dModel?: boolean;
   /** إحداثيات مضلع لتمثيل المنطقة الكاملة (اختياري) */
   polygon?: [number, number][];
 }
@@ -70,24 +76,24 @@ interface Landmark {
 // مركز القصر العتيق المعتمد
 const KSAR_CENTER = [31.9661, 5.3270] as const;
 
-// الإحداثيات المعتمدة لمحيط القصر العتيق الكامل (الدائرة الحمراء المضبوطة بدقة فوق القمر الصناعي)
+// الإحداثيات المعتمدة لمحيط القصر العتيق الكامل
 const DEFAULT_KSAR_POLYGON: [number, number][] = [
-  [31.970313, 5.328037], // شمال القصر
+  [31.970313, 5.328037],
   [31.969671, 5.329096],
   [31.968774, 5.329951],
   [31.967639, 5.330545],
-  [31.966208, 5.330546], // شرق القصر
+  [31.966208, 5.330546],
   [31.964754, 5.330102],
   [31.963586, 5.329243],
   [31.962722, 5.327912],
-  [31.962218, 5.326441], // جنوب-شرق
-  [31.962058, 5.324886], // أقصى جنوب القصر
+  [31.962218, 5.326441],
+  [31.962058, 5.324886],
   [31.962880, 5.323757],
-  [31.964143, 5.323264], // جنوب-غرب
+  [31.964143, 5.323264],
   [31.965737, 5.323250],
-  [31.967353, 5.323681], // غرب القصر
+  [31.967353, 5.323681],
   [31.968829, 5.324572],
-  [31.969857, 5.325890], // شمال-غرب
+  [31.969857, 5.325890],
   [31.970285, 5.327087],
 ];
 
@@ -106,13 +112,10 @@ function computeTransformedPolygon(
   const sin = Math.sin(rad);
 
   return base.map(([lat, lng]) => {
-    // القياس انطلاقاً من المركز
     const dLat = (lat - center[0]) * scaleLat;
     const dLng = (lng - center[1]) * scaleLng;
-    // الدوران
     const rotLat = dLat * cos - dLng * sin;
     const rotLng = dLat * sin + dLng * cos;
-    // التحريك
     return [
       Number((center[0] + offsetLat + rotLat).toFixed(6)),
       Number((center[1] + offsetLng + rotLng).toFixed(6)),
@@ -120,7 +123,23 @@ function computeTransformedPolygon(
   });
 }
 
-// الإحداثيات الدقيقة لمحيط مسجد لالة عزة الإباضي (المربع الذهبي)
+// تحويل مصفوفة [lat, lng] إلى GeoJSON Polygon مغلق بترتيب [lng, lat]
+function toGeoJsonPolygon(coords: [number, number][]) {
+  const ring = coords.map(([lat, lng]) => [lng, lat]);
+  if (ring.length > 0) {
+    ring.push(ring[0]);
+  }
+  return {
+    type: 'Feature' as const,
+    properties: {},
+    geometry: {
+      type: 'Polygon' as const,
+      coordinates: [ring],
+    },
+  };
+}
+
+// الإحداثيات الدقيقة لمحيط مسجد لالة عزة الإباضي
 const LALLA_AZZA_POLYGON: [number, number][] = [
   [31.966461, 5.327037],
   [31.966318, 5.326621],
@@ -128,7 +147,7 @@ const LALLA_AZZA_POLYGON: [number, number][] = [
   [31.966751, 5.326867],
 ];
 
-// المعالم التاريخية (الترتيب: 1. مسجد لالة عزة، 2. القصر العتيق، 3. مدينة سدراتة)
+// المعالم التاريخية
 const LANDMARKS: Landmark[] = [
   {
     id: 'lalla-azza',
@@ -177,10 +196,10 @@ const LANDMARKS: Landmark[] = [
     description:
       'العاصمة الثانية للدولة الرستمية الإباضية بعد سقوط تيهرت سنة 909م. كانت قطباً حضارياً واقتصادياً عالمياً ومفترق طرق تجارة الذهب والقوافل عبر الصحراء الإفريقية. تميزت بنسيجها العمراني الفريد وقصورها المزينة بأعظم الزخارف الجصية المنحوتة في شمال إفريقيا، والتي دفنتها الرمال بعد خرابها في القرن 11/13م لتظل شاهدة على عصر ذهبي وارجلاني أصيل.',
     category: 'ruins',
+    has3dModel: true,
   },
 ];
 
-// ألوان الفئات
 const CATEGORY_COLORS: Record<Landmark['category'], string> = {
   mosque: '#b87a29',
   urban: '#ef4444',
@@ -193,43 +212,64 @@ const CATEGORY_LABELS: Record<Landmark['category'], string> = {
   ruins: 'موقع أثري',
 };
 
-// ─── إنشاء أيقونة SVG مخصصة ─────────────────────────────────────────
-function createCustomIcon(color: string) {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="38" height="46" viewBox="0 0 38 46">
-      <filter id="glow">
-        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <ellipse cx="19" cy="43" rx="7" ry="3" fill="rgba(0,0,0,0.18)"/>
-      <path d="M19 2 C10.163 2 3 9.163 3 18 C3 29 19 44 19 44 C19 44 35 29 35 18 C35 9.163 27.837 2 19 2Z"
-        fill="${color}" filter="url(#glow)" stroke="#fdfbf7" stroke-width="2.5"/>
-      <circle cx="19" cy="18" r="7" fill="#fdfbf7" opacity="0.92"/>
-      <circle cx="19" cy="18" r="4" fill="${color}" opacity="0.7"/>
-    </svg>
-  `;
-  return L.divIcon({
-    html: svg,
-    className: '',
-    iconSize: [38, 46],
-    iconAnchor: [19, 46],
-    popupAnchor: [0, -48],
-  });
+// إنشاء عنصر ماركر مخصص لـ MapLibre GL
+function createMarkerElement(
+  color: string,
+  label: string,
+  options?: { is3d?: boolean; isEvent?: boolean }
+): HTMLDivElement {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'group relative flex flex-col items-center cursor-pointer select-none';
+
+  // شارة الاسم العائمة فوق الماركر
+  const badge = document.createElement('div');
+  badge.dir = 'rtl';
+  badge.className = options?.is3d
+    ? 'mb-1.5 px-3 py-1 rounded-full bg-[#121722]/90 backdrop-blur-md text-amber-300 text-[11px] font-bold shadow-xl ring-1 ring-amber-400/50 whitespace-nowrap flex items-center gap-1.5 transition-transform group-hover:scale-105'
+    : 'mb-1 px-2.5 py-0.5 rounded-full bg-[#121722]/85 backdrop-blur-md text-stone-100 text-[11px] font-bold shadow-lg ring-1 ring-white/15 whitespace-nowrap opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all';
+
+  badge.innerHTML = options?.is3d
+    ? `<span style="display:inline-block;width:7px;height:7px;border-radius:9999px;background:#fbbf24;box-shadow:0 0 8px #fbbf24"></span><span>${label}</span><span style="font-size:9px;background:#fbbf24;color:#111827;padding:1px 6px;border-radius:9999px;font-weight:800">3D</span>`
+    : options?.isEvent
+    ? `<span>📅 ${label}</span>`
+    : `<span>${label}</span>`;
+
+  wrapper.appendChild(badge);
+
+  // دبوس SVG أنيق (نخفيه جزئياً في حالة مجسم 3D لكي لا يغطي المجسم عند التقريب، ونبقي قاعدة ضوئية ناعمة)
+  if (options?.is3d) {
+    const stem = document.createElement('div');
+    stem.style.cssText =
+      'width:2px;height:18px;background:linear-gradient(to bottom,#fbbf24,transparent);';
+    wrapper.appendChild(stem);
+  } else {
+    const pin = document.createElement('div');
+    pin.className = 'transition-transform duration-200 group-hover:scale-110';
+    pin.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="34" height="42" viewBox="0 0 38 46">
+        <ellipse cx="19" cy="43" rx="7" ry="3" fill="rgba(0,0,0,0.28)"/>
+        <path d="M19 2 C10.163 2 3 9.163 3 18 C3 29 19 44 19 44 C19 44 35 29 35 18 C35 9.163 27.837 2 19 2Z"
+          fill="${color}" stroke="#fdfbf7" stroke-width="2.5"/>
+        <circle cx="19" cy="18" r="6.5" fill="#fdfbf7" opacity="0.94"/>
+        <circle cx="19" cy="18" r="3.5" fill="${color}" opacity="0.8"/>
+      </svg>
+    `;
+    wrapper.appendChild(pin);
+  }
+
+  return wrapper;
 }
 
 // ─── المكوّن الرئيسي ─────────────────────────────────────────────────
 export default function HeritageMap() {
   const navigate = useNavigate();
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<Record<string, L.Marker>>({});
-  const eventMarkersRef = useRef<L.Marker[]>([]);
-  const ksarPolygonRef = useRef<L.Polygon | null>(null);
-  const ksarGlowRef = useRef<L.Polygon | null>(null);
-  const lallaAzzaPolygonRef = useRef<L.Polygon | null>(null);
-  const lallaAzzaGlowRef = useRef<L.Polygon | null>(null);
+  const landmarkMarkersRef = useRef<Record<string, maplibregl.Marker>>({});
+  const eventMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const orbitFrameRef = useRef<number | null>(null);
 
-  const [selected, setSelected] = useState<Landmark>(LANDMARKS[0]);
+  const [selected, setSelected] = useState<Landmark>(LANDMARKS[2]); // البدء بسدراتة لإبراز المجسم 3D
   const [dynamicLandmarks, setDynamicLandmarks] = useState<Landmark[]>([]);
   const [focusedLandmarkId, setFocusedLandmarkId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
@@ -237,10 +277,17 @@ export default function HeritageMap() {
   const [layerFilter, setLayerFilter] = useState<'all' | 'landmarks' | 'events'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [floatingBarOpen, setFloatingBarOpen] = useState<boolean>(true);
+  const [mapReady, setMapReady] = useState<boolean>(false);
+
+  // حالات الكاميرا ثلاثية الأبعاد وتحميل المجسم فوق الخريطة
+  const [is3DMode, setIs3DMode] = useState<boolean>(true);
+  const [isOrbiting, setIsOrbiting] = useState<boolean>(false);
+  const [model3DProgress, setModel3DProgress] = useState<number>(0);
+  const [model3DLoaded, setModel3DLoaded] = useState<boolean>(false);
 
   const allLandmarks = [...LANDMARKS, ...dynamicLandmarks];
 
-  // ─── التحقق الفعلي من صلاحيات الأدمن المسجل حالياً فقط ───
+  // ─── التحقق الفعلي من صلاحيات الأدمن ───
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
@@ -273,7 +320,7 @@ export default function HeritageMap() {
         });
     });
 
-    // جلب الفعاليات النشطة لإسقاطها على الخريطة التفاعلية
+    // جلب الفعاليات النشطة
     supabase
       .from('events')
       .select('*, associations(id, name)')
@@ -290,7 +337,7 @@ export default function HeritageMap() {
         }
       });
 
-    // جلب المعالم المعتمدة من الأدمن لإضافتها ديناميكياً على خريطة التراث
+    // جلب المعالم المعتمدة ديناميكياً
     supabase
       .from('heritage_archive')
       .select('*')
@@ -334,7 +381,7 @@ export default function HeritageMap() {
       });
   }, []);
 
-  // ─── حالات التحكم بمحيط القصر (تموضع + حجم + دوران) ───────────────────
+  // ─── حالات التحكم بمحيط القصر (أدمن فقط) ───────────────────
   const [showControls, setShowControls] = useState(false);
   const [offsetLat, setOffsetLat] = useState<number>(() => {
     const v = localStorage.getItem('ksar_v2_offsetLat');
@@ -358,7 +405,7 @@ export default function HeritageMap() {
   });
   const [copied, setCopied] = useState(false);
 
-  // ─── نافذة اقتراح معلم تاريخي جديد للخريطة ───────────────────────────
+  // ─── نافذة اقتراح معلم تاريخي جديد ───────────────────────────
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [sugTitle, setSugTitle] = useState('');
   const [sugCategory, setSugCategory] = useState<string>(HERITAGE_CATEGORIES[0]);
@@ -387,14 +434,16 @@ export default function HeritageMap() {
       const packedContent = packHeritageMeta(sugContent, {
         category: sugCategory,
         contributor: sugContributor.trim() || 'مساهم من المجتمع',
-        status: 'pending'
+        status: 'pending',
       });
 
-      const { error } = await supabase.from('heritage_archive').insert([{
-        title: sugTitle.trim(),
-        content: packedContent,
-        image_url: finalImageUrl || null
-      }]);
+      const { error } = await supabase.from('heritage_archive').insert([
+        {
+          title: sugTitle.trim(),
+          content: packedContent,
+          image_url: finalImageUrl || null,
+        },
+      ]);
 
       if (error) throw error;
 
@@ -412,7 +461,7 @@ export default function HeritageMap() {
     }
   };
 
-  // إغلاق البطاقة الجانبية تلقائياً عند بدء الاستماع للصوت حتى تبقى الخريطة مكشوفة بالكامل
+  // إغلاق البطاقة الجانبية تلقائياً عند بدء الاستماع للصوت
   useEffect(() => {
     const unsubscribe = spatialAudio.subscribe((st) => {
       if (st.isPlaying && !st.isPaused) {
@@ -422,191 +471,273 @@ export default function HeritageMap() {
     return unsubscribe;
   }, []);
 
-  // تحديث المحيط لحظياً عند تعديل أي قيمة من شرائط التحكم
+  // تحديث مضلع القصر العتيق لحظياً عند تعديل أشرطة الأدمن
   useEffect(() => {
-    const newCoords = computeTransformedPolygon(
-      DEFAULT_KSAR_POLYGON,
-      KSAR_CENTER,
-      offsetLat,
-      offsetLng,
-      scaleLat,
-      scaleLng,
-      rotation
-    );
-
-    if (ksarPolygonRef.current) {
-      ksarPolygonRef.current.setLatLngs(newCoords);
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    const src = map.getSource('ksar-polygon') as maplibregl.GeoJSONSource | undefined;
+    if (src) {
+      const newCoords = computeTransformedPolygon(
+        DEFAULT_KSAR_POLYGON,
+        KSAR_CENTER,
+        offsetLat,
+        offsetLng,
+        scaleLat,
+        scaleLng,
+        rotation
+      );
+      src.setData(toGeoJsonPolygon(newCoords));
     }
-    if (ksarGlowRef.current) {
-      ksarGlowRef.current.setLatLngs(newCoords);
-    }
 
-    // حفظ في localStorage للاحتفاظ بالإعدادات
     localStorage.setItem('ksar_v2_offsetLat', String(offsetLat));
     localStorage.setItem('ksar_v2_offsetLng', String(offsetLng));
     localStorage.setItem('ksar_v2_scaleLat', String(scaleLat));
     localStorage.setItem('ksar_v2_scaleLng', String(scaleLng));
     localStorage.setItem('ksar_v2_rotation', String(rotation));
-  }, [offsetLat, offsetLng, scaleLat, scaleLng, rotation]);
+  }, [offsetLat, offsetLng, scaleLat, scaleLng, rotation, mapReady]);
 
-  // تهيئة الخريطة
+  // حلقة الدوران السينمائي 360° حول المعلم
+  useEffect(() => {
+    if (!isOrbiting || !mapRef.current) {
+      if (orbitFrameRef.current) {
+        cancelAnimationFrame(orbitFrameRef.current);
+        orbitFrameRef.current = null;
+      }
+      return;
+    }
+
+    const map = mapRef.current;
+    const rotateCamera = () => {
+      if (!mapRef.current) return;
+      map.rotateTo((map.getBearing() + 0.25) % 360, { duration: 0 });
+      orbitFrameRef.current = requestAnimationFrame(rotateCamera);
+    };
+    orbitFrameRef.current = requestAnimationFrame(rotateCamera);
+
+    return () => {
+      if (orbitFrameRef.current) {
+        cancelAnimationFrame(orbitFrameRef.current);
+        orbitFrameRef.current = null;
+      }
+    };
+  }, [isOrbiting]);
+
+  // ─── تهيئة خريطة MapLibre GL 3D + طبقة مجسم سدراتة Three.js ───
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
 
-    const map = L.map(mapContainerRef.current, {
-      center: [31.93, 5.318],
-      zoom: 12,
-      zoomControl: false,
-      attributionControl: true,
+    const sedrata = LANDMARKS.find((l) => l.id === 'sedrata')!;
+
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: {
+        version: 8,
+        sources: {
+          'esri-satellite': {
+            type: 'raster',
+            tiles: [
+              'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            ],
+            tileSize: 256,
+            maxzoom: 17,
+            attribution: 'Esri, Maxar, Earthstar Geographics | تواصل صحراء — وارجلان',
+          },
+        },
+        layers: [
+          {
+            id: 'esri-satellite-layer',
+            type: 'raster',
+            source: 'esri-satellite',
+            minzoom: 0,
+            maxzoom: 22,
+          },
+        ],
+      },
+      // نبدأ فوق سدراتة بزاوية 3D مائلة لرؤية المجسم الحقيقي فوق الصحراء مباشرة
+      center: [sedrata.lng, sedrata.lat],
+      zoom: 15.8,
+      pitch: 60,
+      bearing: -22,
+      maxPitch: 78,
+      canvasContextAttributes: { antialias: true },
     });
 
-    // طبقة أقمار صناعية — ESRI World Imagery (مجانية بدون مفتاح API)
-    L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {
-        attribution: 'Esri, Maxar, Earthstar Geographics | تواصل صحراء — وارجلان',
-        maxNativeZoom: 17,
-        maxZoom: 19,
-      }
-    ).addTo(map);
+    // أدوات التكبير والبوصلة 3D
+    map.addControl(
+      new maplibregl.NavigationControl({
+        visualizePitch: true,
+        showCompass: true,
+        showZoom: true,
+      }),
+      'bottom-left'
+    );
 
-    // التحكم في التكبير — جانب أيسر
-    L.control.zoom({ position: 'bottomleft' }).addTo(map);
+    // إيقاف الدوران التلقائي عند لمس المستخدم للخريطة
+    map.on('mousedown', () => setIsOrbiting(false));
+    map.on('touchstart', () => setIsOrbiting(false));
 
-    // إضافة الماركرات
-    LANDMARKS.forEach((lm) => {
-      const color = CATEGORY_COLORS[lm.category];
-      const marker = L.marker([lm.lat, lm.lng], {
-        icon: createCustomIcon(color),
-        title: lm.nameAr,
-      }).addTo(map);
-
-      // Tooltip
-      marker.bindTooltip(
-        `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:700;font-size:13px;color:#301809;padding:4px 8px;border-radius:8px">${lm.nameAr}</div>`,
-        { direction: 'top', permanent: false, opacity: 0.97 }
+    map.on('load', () => {
+      // 1. مضلع القصر العتيق الأحمر
+      const initialKsarCoords = computeTransformedPolygon(
+        DEFAULT_KSAR_POLYGON,
+        KSAR_CENTER,
+        offsetLat,
+        offsetLng,
+        scaleLat,
+        scaleLng,
+        rotation
       );
 
-      marker.on('click', () => {
-        setSelectedEvent(null);
-        setSelected(lm);
-        setFloatingBarOpen(true);
-        setSidebarOpen(false);
-        map.flyTo([lm.lat, lm.lng], lm.id === 'lalla-azza' ? 17 : 15, { duration: 1.1 });
+      map.addSource('ksar-polygon', {
+        type: 'geojson',
+        data: toGeoJsonPolygon(initialKsarCoords),
       });
 
-      markersRef.current[lm.id] = marker;
-    });
+      map.addLayer({
+        id: 'ksar-polygon-fill',
+        type: 'fill',
+        source: 'ksar-polygon',
+        paint: {
+          'fill-color': '#ef4444',
+          'fill-opacity': 0.16,
+        },
+      });
 
-    // ── رسم مضلع القصر العتيق المُضاء باللون الأحمر ───────────────────
-    const initialCoords = computeTransformedPolygon(
-      DEFAULT_KSAR_POLYGON,
-      KSAR_CENTER,
-      offsetLat,
-      offsetLng,
-      scaleLat,
-      scaleLng,
-      rotation
-    );
+      map.addLayer({
+        id: 'ksar-polygon-glow',
+        type: 'line',
+        source: 'ksar-polygon',
+        paint: {
+          'line-color': '#ef4444',
+          'line-width': 10,
+          'line-opacity': 0.25,
+          'line-blur': 4,
+        },
+      });
 
-    // المضلع الأساسي — الدائرة الحمراء
-    const ksarPolygon = L.polygon(initialCoords, {
-      color: '#ef4444',
-      weight: 3.5,
-      opacity: 0.95,
-      fillColor: '#ef4444',
-      fillOpacity: 0.16,
-      lineJoin: 'round',
-    }).addTo(map);
+      map.addLayer({
+        id: 'ksar-polygon-outline',
+        type: 'line',
+        source: 'ksar-polygon',
+        paint: {
+          'line-color': '#ef4444',
+          'line-width': 3,
+          'line-opacity': 0.95,
+        },
+      });
 
-    // تأثير وهج خارجي (glow)
-    const ksarGlow = L.polygon(initialCoords, {
-      color: '#ef4444',
-      weight: 12,
-      opacity: 0.25,
-      fillOpacity: 0,
-      lineJoin: 'round',
-      interactive: false,
-    }).addTo(map);
-
-    ksarPolygonRef.current = ksarPolygon;
-    ksarGlowRef.current = ksarGlow;
-
-    // Tooltip مميز عند الـ hover على المضلع
-    ksarPolygon.bindTooltip(
-      `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:800;font-size:13px;color:#301809;padding:6px 12px;border-radius:10px;border:2px solid #ef4444">
-        🏛️ محيط القصر العتيق بوارجلان
-        <div style="font-size:10px;color:#723c11;font-weight:600;margin-top:2px">ⴰⵖⵔⴰⵎ ⴰⵇⴱⵓⵔ</div>
-      </div>`,
-      { direction: 'top', sticky: true, opacity: 0.97 }
-    );
-
-    const ksarLandmark = LANDMARKS.find((lm) => lm.id === 'ksar-atiq');
-    ksarPolygon.on('click', () => {
-      if (ksarLandmark) {
+      const ksarLandmark = LANDMARKS.find((lm) => lm.id === 'ksar-atiq');
+      map.on('click', 'ksar-polygon-fill', () => {
+        if (!ksarLandmark) return;
+        setIsOrbiting(false);
         setSelectedEvent(null);
         setSelected(ksarLandmark);
         setFloatingBarOpen(true);
         setSidebarOpen(false);
-        map.flyTo([ksarLandmark.lat, ksarLandmark.lng], 15, { duration: 1.1 });
-      }
-    });
+        map.flyTo({
+          center: [ksarLandmark.lng, ksarLandmark.lat],
+          zoom: 15.5,
+          pitch: is3DMode ? 55 : 0,
+          duration: 1200,
+        });
+      });
 
-    // ── رسم مربع محيط مسجد لالة عزة الإباضي ────────────────────────────
-    const lallaAzzaPolygon = L.polygon(LALLA_AZZA_POLYGON, {
-      color: '#efa83f',
-      weight: 3.5,
-      opacity: 0.98,
-      fillColor: '#efa83f',
-      fillOpacity: 0.22,
-      lineJoin: 'round',
-    }).addTo(map);
+      map.on('mouseenter', 'ksar-polygon-fill', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'ksar-polygon-fill', () => {
+        map.getCanvas().style.cursor = '';
+      });
 
-    const lallaAzzaGlow = L.polygon(LALLA_AZZA_POLYGON, {
-      color: '#b87a29',
-      weight: 10,
-      opacity: 0.32,
-      fillOpacity: 0,
-      lineJoin: 'round',
-      interactive: false,
-    }).addTo(map);
+      // 2. مربع محيط جامع لالة عزة الذهبي
+      map.addSource('lalla-azza-polygon', {
+        type: 'geojson',
+        data: toGeoJsonPolygon(LALLA_AZZA_POLYGON),
+      });
 
-    lallaAzzaPolygonRef.current = lallaAzzaPolygon;
-    lallaAzzaGlowRef.current = lallaAzzaGlow;
+      map.addLayer({
+        id: 'lalla-azza-fill',
+        type: 'fill',
+        source: 'lalla-azza-polygon',
+        paint: {
+          'fill-color': '#efa83f',
+          'fill-opacity': 0.24,
+        },
+      });
 
-    lallaAzzaPolygon.bindTooltip(
-      `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:800;font-size:13px;color:#301809;padding:6px 12px;border-radius:10px;border:2px solid #b87a29">
-        🕌 محيط مسجد لالة عزة الإباضي
-        <div style="font-size:10px;color:#723c11;font-weight:600;margin-top:2px">ⵜⴰⵎⵣⴳⵉⴷⴰ ⵏ ⵍⴰⵍⵍⴰ ⵄⵣⵣⴰ</div>
-      </div>`,
-      { direction: 'top', sticky: true, opacity: 0.97 }
-    );
+      map.addLayer({
+        id: 'lalla-azza-outline',
+        type: 'line',
+        source: 'lalla-azza-polygon',
+        paint: {
+          'line-color': '#efa83f',
+          'line-width': 3.5,
+          'line-opacity': 0.98,
+        },
+      });
 
-    const lallaAzzaLandmark = LANDMARKS.find((lm) => lm.id === 'lalla-azza');
-    lallaAzzaPolygon.on('click', () => {
-      if (lallaAzzaLandmark) {
+      const lallaLandmark = LANDMARKS.find((lm) => lm.id === 'lalla-azza');
+      map.on('click', 'lalla-azza-fill', () => {
+        if (!lallaLandmark) return;
+        setIsOrbiting(false);
         setSelectedEvent(null);
-        setSelected(lallaAzzaLandmark);
+        setSelected(lallaLandmark);
         setFloatingBarOpen(true);
         setSidebarOpen(false);
-        map.flyTo([lallaAzzaLandmark.lat, lallaAzzaLandmark.lng], 17, { duration: 1.1 });
-      }
+        map.flyTo({
+          center: [lallaLandmark.lng, lallaLandmark.lat],
+          zoom: 17.2,
+          pitch: is3DMode ? 60 : 0,
+          duration: 1200,
+        });
+      });
+
+      // 3. دمج مجسم سدراتة الحقيقي ثلاثي الأبعاد (.glb) مباشرة فوق إحداثيات سدراتة!
+      const sedrata3DLayer = createMapLibre3DModelLayer({
+        id: 'sedrata-3d-model-layer',
+        modelUrl: '/models/base_basic_pbr.glb',
+        lng: sedrata.lng,
+        lat: sedrata.lat,
+        altitude: 0,
+        sizeMeters: 230,
+        rotationDeg: 25,
+        onLoadStart: () => {
+          setModel3DLoaded(false);
+          setModel3DProgress(5);
+        },
+        onProgress: (p) => setModel3DProgress(p),
+        onLoadComplete: () => {
+          setModel3DProgress(100);
+          setModel3DLoaded(true);
+        },
+        onError: () => {
+          setModel3DLoaded(true);
+        },
+      });
+      map.addLayer(sedrata3DLayer);
+
+      setMapReady(true);
     });
 
     mapRef.current = map;
 
     return () => {
+      if (orbitFrameRef.current) cancelAnimationFrame(orbitFrameRef.current);
+      Object.values(landmarkMarkersRef.current).forEach((m) => m.remove());
+      landmarkMarkersRef.current = {};
+      eventMarkersRef.current.forEach((m) => m.remove());
+      eventMarkersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
-  // رسم ماركرات الفعاليات الميدانية وتحديث ظهور الطبقات والمعلم المحدد
+  // ─── تحديث ماركرات المعالم والفعاليات وطبقات المضلعات حسب الفلتر ───
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !mapReady) return;
 
-    // إزالة ماركرات الفعاليات السابقة
+    // 1. إزالة ماركرات الفعاليات السابقة وإعادة بنائها
     eventMarkersRef.current.forEach((m) => m.remove());
     eventMarkersRef.current = [];
 
@@ -616,115 +747,126 @@ export default function HeritageMap() {
     if (showEventsLayer) {
       mapEvents.forEach((ev) => {
         if (selectedEvent && selectedEvent.id !== ev.id) return;
-        const marker = L.marker([ev.lat, ev.lng], {
-          icon: createCustomIcon('#10b981'),
-          title: ev.title,
-        }).addTo(map);
-
-        marker.bindTooltip(
-          `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:700;font-size:12px;color:#065f46;padding:4px 8px;border-radius:8px">📅 فعالية: ${ev.title}</div>`,
-          { direction: 'top', permanent: false, opacity: 0.97 }
-        );
-
-        marker.on('click', () => {
+        const el = createMarkerElement('#10b981', ev.title, { isEvent: true });
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setIsOrbiting(false);
           setFocusedLandmarkId(null);
           setSelectedEvent(ev);
           setSidebarOpen(true);
+          map.flyTo({
+            center: [ev.lng, ev.lat],
+            zoom: 15.5,
+            pitch: is3DMode ? 50 : 0,
+            duration: 1200,
+          });
         });
 
+        const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([ev.lng, ev.lat])
+          .addTo(map);
         eventMarkersRef.current.push(marker);
       });
     }
 
-    // إظهار أو إخفاء المعالم التاريخية ومضلع القصر ومربع مسجد لالة عزة حسب الاختيار
+    // 2. إظهار / إخفاء المعالم التاريخية
     const showLandmarksLayer =
       (layerFilter === 'all' || layerFilter === 'landmarks') && !selectedEvent;
 
-    // التأكد من إنشاء ماركرات للمعالم الديناميكية الجديدة المعتمدة من لوحة الإدارة
-    dynamicLandmarks.forEach((lm) => {
-      if (!markersRef.current[lm.id]) {
-        const color = CATEGORY_COLORS[lm.category];
-        const marker = L.marker([lm.lat, lm.lng], {
-          icon: createCustomIcon(color),
-          title: lm.nameAr,
+    // إعادة بناء ماركرات المعالم
+    Object.values(landmarkMarkersRef.current).forEach((m) => m.remove());
+    landmarkMarkersRef.current = {};
+
+    if (showLandmarksLayer) {
+      allLandmarks.forEach((lm) => {
+        if (focusedLandmarkId && focusedLandmarkId !== lm.id) return;
+        const el = createMarkerElement(CATEGORY_COLORS[lm.category], lm.nameAr, {
+          is3d: Boolean(lm.has3dModel),
         });
-        marker.bindTooltip(
-          `<div style="font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;font-weight:700;font-size:13px;color:#301809;padding:4px 8px;border-radius:8px">${lm.nameAr}</div>`,
-          { direction: 'top', permanent: false, opacity: 0.97 }
-        );
-        marker.on('click', () => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setIsOrbiting(false);
           setSelectedEvent(null);
           setSelected(lm);
           setFloatingBarOpen(true);
           setSidebarOpen(false);
-          map.flyTo([lm.lat, lm.lng], 16, { duration: 1.1 });
+          map.flyTo({
+            center: [lm.lng, lm.lat],
+            zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 17.2 : 15.5,
+            pitch: is3DMode ? (lm.has3dModel ? 64 : 55) : 0,
+            bearing: lm.has3dModel ? -22 : map.getBearing(),
+            duration: 1300,
+          });
         });
-        markersRef.current[lm.id] = marker;
-      }
-    });
 
-    Object.entries(markersRef.current).forEach(([lmId, m]) => {
-      const shouldShowThisMarker =
-        showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === lmId);
-      if (shouldShowThisMarker) {
-        if (!map.hasLayer(m)) m.addTo(map);
-      } else {
-        if (map.hasLayer(m)) m.remove();
-      }
-    });
+        const marker = new maplibregl.Marker({
+          element: el,
+          anchor: 'bottom',
+          offset: lm.has3dModel ? [0, -34] : [0, 0],
+        })
+          .setLngLat([lm.lng, lm.lat])
+          .addTo(map);
 
-    if (ksarPolygonRef.current && ksarGlowRef.current) {
-      const shouldShowKsarPolygon =
-        showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === 'ksar-atiq');
-      if (shouldShowKsarPolygon) {
-        if (!map.hasLayer(ksarPolygonRef.current)) ksarPolygonRef.current.addTo(map);
-        if (!map.hasLayer(ksarGlowRef.current)) ksarGlowRef.current.addTo(map);
-      } else {
-        if (map.hasLayer(ksarPolygonRef.current)) ksarPolygonRef.current.remove();
-        if (map.hasLayer(ksarGlowRef.current)) ksarGlowRef.current.remove();
-      }
+        landmarkMarkersRef.current[lm.id] = marker;
+      });
     }
 
-    if (lallaAzzaPolygonRef.current && lallaAzzaGlowRef.current) {
-      const shouldShowLallaAzzaPolygon =
-        showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === 'lalla-azza');
-      if (shouldShowLallaAzzaPolygon) {
-        if (!map.hasLayer(lallaAzzaPolygonRef.current)) lallaAzzaPolygonRef.current.addTo(map);
-        if (!map.hasLayer(lallaAzzaGlowRef.current)) lallaAzzaGlowRef.current.addTo(map);
-      } else {
-        if (map.hasLayer(lallaAzzaPolygonRef.current)) lallaAzzaPolygonRef.current.remove();
-        if (map.hasLayer(lallaAzzaGlowRef.current)) lallaAzzaGlowRef.current.remove();
+    // 3. التحكم بظهور المضلعات وطبقات 3D
+    const setLayerVis = (layerId: string, visible: boolean) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
       }
-    }
-  }, [mapEvents, dynamicLandmarks, layerFilter, focusedLandmarkId, selectedEvent]);
+    };
 
-  // التحليق إلى المعلم المحدد وفتح البطاقة الصوتية العائمة
+    const showKsar =
+      showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === 'ksar-atiq');
+    setLayerVis('ksar-polygon-fill', showKsar);
+    setLayerVis('ksar-polygon-glow', showKsar);
+    setLayerVis('ksar-polygon-outline', showKsar);
+
+    const showLalla =
+      showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === 'lalla-azza');
+    setLayerVis('lalla-azza-fill', showLalla);
+    setLayerVis('lalla-azza-outline', showLalla);
+
+    const showSedrata3D =
+      showLandmarksLayer && (!focusedLandmarkId || focusedLandmarkId === 'sedrata');
+    setLayerVis('sedrata-3d-model-layer', showSedrata3D);
+  }, [mapEvents, dynamicLandmarks, layerFilter, focusedLandmarkId, selectedEvent, mapReady, is3DMode]);
+
+  // تبديل وضع الكاميرا 3D / 2D
+  const toggle3DView = () => {
+    const next = !is3DMode;
+    setIs3DMode(next);
+    if (!next) setIsOrbiting(false);
+    mapRef.current?.easeTo({
+      pitch: next ? 60 : 0,
+      bearing: next ? -20 : 0,
+      duration: 900,
+    });
+  };
+
+  // التحليق إلى المعلم المحدد
   const flyTo = (lm: Landmark) => {
+    setIsOrbiting(false);
     setSelectedEvent(null);
     setSelected(lm);
     setFloatingBarOpen(true);
     setSidebarOpen(false);
-    if (lm.id === 'ksar-atiq' && mapRef.current) {
-      const currentCoords = computeTransformedPolygon(
-        DEFAULT_KSAR_POLYGON,
-        KSAR_CENTER,
-        offsetLat,
-        offsetLng,
-        scaleLat,
-        scaleLng,
-        rotation
-      );
-      const bounds = L.latLngBounds(currentCoords.map(([lat, lng]) => L.latLng(lat, lng)));
-      mapRef.current.fitBounds(bounds, { padding: [60, 60], animate: true, duration: 1.2 });
-    } else if (lm.id === 'lalla-azza' && mapRef.current) {
-      mapRef.current.flyTo([lm.lat, lm.lng], 17, { duration: 1.3 });
-    } else {
-      mapRef.current?.flyTo([lm.lat, lm.lng], 16, { duration: 1.4 });
-    }
+    if (!mapRef.current) return;
+
+    mapRef.current.flyTo({
+      center: [lm.lng, lm.lat],
+      zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 17.2 : 15.5,
+      pitch: is3DMode ? (lm.has3dModel ? 64 : 56) : 0,
+      bearing: lm.has3dModel ? -22 : -10,
+      duration: 1350,
+    });
   };
 
-  // التحليق إلى محطة من محطات الجولة الصوتية (التالي / السابق)
+  // التحليق إلى محطة من محطات الجولة الصوتية
   const handleSelectTourStop = (stop: AudioTourStop) => {
+    setIsOrbiting(false);
     setSelectedEvent(null);
     const matched =
       stop.id === 'stop-lalla-azza'
@@ -747,35 +889,51 @@ export default function HeritageMap() {
         lat: stop.lat,
         lng: stop.lng,
         period: stop.period,
-        image: '/hero-bg.jpg',
+        image: stop.image || '/hero-bg.jpg',
         description: stop.audioNarrationText,
         category: stop.category === 'ruins' ? 'ruins' : 'urban',
       });
     }
 
     setFloatingBarOpen(true);
-    mapRef.current?.flyTo([stop.lat, stop.lng], 16, { duration: 1.3 });
+    mapRef.current?.flyTo({
+      center: [stop.lng, stop.lat],
+      zoom: stop.id === 'stop-sedrata-ruins' ? 16.3 : 16,
+      pitch: is3DMode ? 62 : 0,
+      duration: 1300,
+    });
   };
 
-  // إعادة إظهار جميع المعالم على الخريطة
+  // إعادة إظهار جميع المعالم
   const showAllLandmarks = () => {
+    setIsOrbiting(false);
     setFocusedLandmarkId(null);
     setSelectedEvent(null);
-    if (mapRef.current) {
-      const allBounds = L.latLngBounds(allLandmarks.map((l) => L.latLng(l.lat, l.lng)));
-      mapRef.current.fitBounds(allBounds, { padding: [70, 70], animate: true, duration: 1.2 });
+    if (mapRef.current && allLandmarks.length > 0) {
+      const bounds = new maplibregl.LngLatBounds();
+      allLandmarks.forEach((l) => bounds.extend([l.lng, l.lat]));
+      mapRef.current.fitBounds(bounds, {
+        padding: 90,
+        pitch: is3DMode ? 45 : 0,
+        duration: 1200,
+      });
     }
   };
 
-  // التحليق إلى الفعالية المحددة
+  // التحليق إلى فعالية
   const flyToEvent = (ev: any) => {
+    setIsOrbiting(false);
     setFocusedLandmarkId(null);
     setSelectedEvent(ev);
     setSidebarOpen(true);
-    mapRef.current?.flyTo([ev.lat, ev.lng], 15, { duration: 1.3 });
+    mapRef.current?.flyTo({
+      center: [ev.lng, ev.lat],
+      zoom: 15.5,
+      pitch: is3DMode ? 50 : 0,
+      duration: 1200,
+    });
   };
 
-  // نسخ الإحداثيات المعدلة
   const handleCopyCoords = () => {
     const currentCoords = computeTransformedPolygon(
       DEFAULT_KSAR_POLYGON,
@@ -792,7 +950,6 @@ export default function HeritageMap() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // إعادة ضبط المحيط
   const handleReset = () => {
     setOffsetLat(0);
     setOffsetLng(0);
@@ -804,17 +961,11 @@ export default function HeritageMap() {
     localStorage.removeItem('ksar_v2_scaleLat');
     localStorage.removeItem('ksar_v2_scaleLng');
     localStorage.removeItem('ksar_v2_rotation');
-    localStorage.removeItem('ksar_offsetLat');
-    localStorage.removeItem('ksar_offsetLng');
-    localStorage.removeItem('ksar_scaleLat');
-    localStorage.removeItem('ksar_scaleLng');
-    localStorage.removeItem('ksar_rotation');
     toast.info('تمت إعادة ضبط المحيط إلى الإحداثيات المعتمدة');
   };
 
   return (
     <div className="h-screen w-full flex flex-col bg-[#fdfbf7] overflow-hidden" dir="rtl">
-
       {/* ── الشريط العلوي الموحّد ─────────────────────────────────────── */}
       <UnifiedHeader
         rightSlot={
@@ -856,9 +1007,8 @@ export default function HeritageMap() {
 
       {/* ── جسم الصفحة ───────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden relative">
-
-        {/* ── الخريطة ───────────────────────────── */}
-        <div ref={mapContainerRef} className="flex-1 z-10" />
+        {/* ── خريطة MapLibre 3D ───────────────────────────── */}
+        <div ref={mapContainerRef} className="flex-1 z-10 w-full h-full" />
 
         {/* ── كبسولة الفلاتر الموحدة العائمة أعلى الخريطة (Glassmorphism) ── */}
         <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-1.5rem)]">
@@ -866,7 +1016,7 @@ export default function HeritageMap() {
             {[
               { id: 'all', label: 'الكل' },
               { id: 'landmarks', label: 'المعالم التراثية' },
-              { id: 'events', label: `الفعاليات الميدانية (${mapEvents.length})` }
+              { id: 'events', label: `الفعاليات الميدانية (${mapEvents.length})` },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -884,7 +1034,49 @@ export default function HeritageMap() {
           </div>
         </div>
 
-        {/* ── لوحة التحكم التفاعلية في المحيط والتموضع (محصورة للأدمن فقط) ── */}
+        {/* ── أزرار التحكم بالمنظور ثلاثي الأبعاد والدوران (أعلى اليمين) ── */}
+        <div className="absolute top-16 sm:top-3.5 right-3.5 z-20 flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={toggle3DView}
+            className={`px-3 py-2 rounded-2xl backdrop-blur-xl text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer ring-1 ${
+              is3DMode
+                ? 'bg-amber-400 text-stone-950 ring-amber-300'
+                : 'bg-[#121722]/90 text-stone-200 hover:text-white ring-white/15'
+            }`}
+            title="تبديل المنظور ثلاثي الأبعاد / المسطح"
+          >
+            <Box className="w-3.5 h-3.5" />
+            <span>{is3DMode ? 'منظور 3D' : 'منظور 2D'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!is3DMode) setIs3DMode(true);
+              setIsOrbiting((v) => !v);
+            }}
+            className={`px-3 py-2 rounded-2xl backdrop-blur-xl text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer ring-1 ${
+              isOrbiting
+                ? 'bg-emerald-400 text-stone-950 ring-emerald-300'
+                : 'bg-[#121722]/90 text-stone-200 hover:text-white ring-white/15'
+            }`}
+            title="دوران سينمائي 360° حول المعلم"
+          >
+            <RotateCw className={`w-3.5 h-3.5 ${isOrbiting ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isOrbiting ? 'إيقاف الدوران' : 'دوران 360°'}</span>
+          </button>
+        </div>
+
+        {/* شارة تحميل مجسم سدراتة 3D فوق الخريطة */}
+        {!model3DLoaded && model3DProgress > 0 && (
+          <div className="absolute top-28 sm:top-16 right-3.5 z-20 bg-[#121722]/90 backdrop-blur-xl text-amber-300 px-3.5 py-2 rounded-2xl shadow-xl ring-1 ring-amber-400/30 flex items-center gap-2 text-[11px] font-thmanyah font-bold">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <span>جاري تثبيت مجسم سدراتة 3D على الخريطة... {model3DProgress}%</span>
+          </div>
+        )}
+
+        {/* ── لوحة التحكم التفاعلية في المحيط (للأدمن فقط) ── */}
         {showControls && isAdmin && (
           <div className="absolute top-4 left-4 z-40 w-80 bg-[#301809]/95 backdrop-blur-xl border border-[#efa83f]/40 rounded-2xl shadow-2xl p-4 text-white animate-in fade-in duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-[#fae1b7]/15 mb-3">
@@ -902,17 +1094,12 @@ export default function HeritageMap() {
               </button>
             </div>
 
-            <p className="text-[11px] text-[#fae1b7]/70 leading-relaxed mb-3">
-              عدّل الشرائط لمعاينة تحريك وتكبير الدائرة الحمراء فورياً فوق صور الأقمار الصناعية:
-            </p>
-
             <div className="space-y-3 text-xs">
-              {/* تحريك شمال / جنوب */}
               <div>
                 <div className="flex justify-between text-[11px] mb-1">
                   <span className="text-[#fae1b7]/80">↕️ إزاحة شمال / جنوب:</span>
                   <span className="font-mono text-[#efa83f]" dir="ltr">
-                    {(offsetLat * 111000).toFixed(0)} م ({offsetLat > 0 ? '+' : ''}{offsetLat.toFixed(4)}°)
+                    {(offsetLat * 111000).toFixed(0)} م
                   </span>
                 </div>
                 <input
@@ -926,12 +1113,11 @@ export default function HeritageMap() {
                 />
               </div>
 
-              {/* تحريك شرق / غرب */}
               <div>
                 <div className="flex justify-between text-[11px] mb-1">
                   <span className="text-[#fae1b7]/80">↔️ إزاحة شرق / غرب:</span>
                   <span className="font-mono text-[#efa83f]" dir="ltr">
-                    {(offsetLng * 94000).toFixed(0)} م ({offsetLng > 0 ? '+' : ''}{offsetLng.toFixed(4)}°)
+                    {(offsetLng * 94000).toFixed(0)} م
                   </span>
                 </div>
                 <input
@@ -945,10 +1131,9 @@ export default function HeritageMap() {
                 />
               </div>
 
-              {/* الامتداد الطولي */}
               <div>
                 <div className="flex justify-between text-[11px] mb-1">
-                  <span className="text-[#fae1b7]/80">📏 الحجم الطولي (ارتفاع):</span>
+                  <span className="text-[#fae1b7]/80">📏 الحجم الطولي:</span>
                   <span className="font-mono text-[#efa83f]">{(scaleLat * 100).toFixed(0)}%</span>
                 </div>
                 <input
@@ -962,10 +1147,9 @@ export default function HeritageMap() {
                 />
               </div>
 
-              {/* الامتداد العرضي */}
               <div>
                 <div className="flex justify-between text-[11px] mb-1">
-                  <span className="text-[#fae1b7]/80">📐 الحجم العرضي (عرض):</span>
+                  <span className="text-[#fae1b7]/80">📐 الحجم العرضي:</span>
                   <span className="font-mono text-[#efa83f]">{(scaleLng * 100).toFixed(0)}%</span>
                 </div>
                 <input
@@ -979,7 +1163,6 @@ export default function HeritageMap() {
                 />
               </div>
 
-              {/* زاوية الدوران */}
               <div>
                 <div className="flex justify-between text-[11px] mb-1">
                   <span className="text-[#fae1b7]/80">🔄 زاوية الدوران:</span>
@@ -997,7 +1180,6 @@ export default function HeritageMap() {
               </div>
             </div>
 
-            {/* أزرار الإجراءات */}
             <div className="flex items-center gap-2 pt-3 mt-3 border-t border-[#fae1b7]/15">
               <Button
                 variant="ghost"
@@ -1021,8 +1203,6 @@ export default function HeritageMap() {
           </div>
         )}
 
-        {/* تم إزالة عمود الأيقونات الدائرية المكدسة لتنظيف مساحة الخريطة واستبدالها بالمشغل السفلي المدمج */}
-
         {/* ── بطاقة الدليل الجانبية العائمة (Drawer Card) ───────────────────── */}
         <aside
           className={`
@@ -1036,7 +1216,6 @@ export default function HeritageMap() {
         >
           {selectedEvent ? (
             <>
-              {/* رأس الشريط للفعالية الميدانية */}
               <div className="flex-shrink-0 bg-gradient-to-b from-emerald-900 to-[#301809] px-5 pt-5 pb-6">
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-emerald-500 text-white">
@@ -1049,11 +1228,11 @@ export default function HeritageMap() {
                     إظهار جميع المعالم ←
                   </button>
                 </div>
-                <h2 className="text-xl font-bold text-white leading-snug mb-1" style={{ fontFamily: '"Thmanyah Serif Display", serif' }}>
+                <h2 className="text-xl font-thmanyah font-bold text-white leading-snug mb-1">
                   {selectedEvent.title}
                 </h2>
                 <p className="text-[#efa83f] text-xs font-bold">
-                  🏛️ تنظيم: {selectedEvent.associations?.name || 'جمعية محلية معتمدة'}
+                  تنظيم: {selectedEvent.associations?.name || 'جمعية محلية معتمدة'}
                 </p>
               </div>
 
@@ -1079,7 +1258,7 @@ export default function HeritageMap() {
                     <Calendar className="w-4 h-4 text-emerald-700" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">تاريخ وموعد الانعقاد</p>
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold mb-0.5">تاريخ وموعد الانعقاد</p>
                     <p className="text-sm font-bold text-[#301809]">{selectedEvent.date}</p>
                   </div>
                 </div>
@@ -1089,7 +1268,7 @@ export default function HeritageMap() {
                     <MapPin className="w-4 h-4 text-[#b87a29]" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الموقع الميداني</p>
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold mb-0.5">الموقع الميداني</p>
                     <p className="text-xs font-bold text-[#301809]">{selectedEvent.location}</p>
                   </div>
                 </div>
@@ -1101,7 +1280,7 @@ export default function HeritageMap() {
                 <div className="space-y-2.5 pt-1">
                   <Button
                     onClick={() => navigate(`/event/${selectedEvent.id}`)}
-                    className="w-full h-11 rounded-xl bg-gradient-to-r from-[#b87a29] to-[#efa83f] text-[#301809] font-black text-xs gap-2 shadow-md cursor-pointer"
+                    className="w-full h-11 rounded-xl bg-gradient-to-r from-[#b87a29] to-[#efa83f] text-[#301809] font-thmanyah font-bold text-xs gap-2 shadow-md cursor-pointer"
                   >
                     <Ticket className="w-4 h-4" />
                     عرض تفاصيل الفعالية وحجز تذكرة QR
@@ -1113,16 +1292,14 @@ export default function HeritageMap() {
                     className="w-full h-10 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
                   >
                     <Compass className="w-4 h-4 text-emerald-700" />
-                    🧭 التوجيه عبر Google Maps
+                    التوجيه عبر Google Maps
                   </a>
                 </div>
               </div>
             </>
           ) : (
             <>
-              {/* رأس الشريط للمعلم التراثي */}
               <div className="flex-shrink-0 bg-gradient-to-b from-[#301809] to-[#4a2510] px-5 pt-5 pb-6">
-                {/* بادج الفئة */}
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${selected.badgeColor ?? 'bg-[#efa83f] text-[#301809]'}`}>
@@ -1132,22 +1309,17 @@ export default function HeritageMap() {
                       {CATEGORY_LABELS[selected.category]}
                     </span>
                   </div>
-                  {focusedLandmarkId && (
-                    <button
-                      onClick={showAllLandmarks}
-                      className="text-[10px] bg-white/10 hover:bg-white/20 text-[#fae1b7] px-2.5 py-1 rounded-lg font-bold transition-colors cursor-pointer"
-                    >
-                      إظهار كل المعالم
-                    </button>
-                  )}
+                  <button
+                    onClick={showAllLandmarks}
+                    className="text-[10px] bg-white/10 hover:bg-white/20 text-[#fae1b7] px-2.5 py-1 rounded-lg font-bold transition-colors cursor-pointer"
+                  >
+                    عرض الكل
+                  </button>
                 </div>
 
-                {/* الاسم العربي */}
-                <h2 className="text-xl font-bold text-white leading-snug mb-1" style={{ fontFamily: '"Thmanyah Serif Display", serif' }}>
+                <h2 className="text-xl font-thmanyah font-bold text-white leading-snug mb-1">
                   {selected.nameAr}
                 </h2>
-
-                {/* الاسم الأمازيغي بالتيفيناغ */}
                 <p className="text-[#efa83f] text-sm font-semibold tracking-wider mb-0.5" dir="ltr">
                   {selected.nameTifinagh}
                 </p>
@@ -1156,7 +1328,6 @@ export default function HeritageMap() {
                 </p>
               </div>
 
-              {/* صورة المعلم */}
               <div className="flex-shrink-0 relative h-44 overflow-hidden">
                 <img
                   src={selected.image}
@@ -1164,46 +1335,36 @@ export default function HeritageMap() {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#fdfbf7]" />
-                {/* زر التحليق */}
                 <button
                   onClick={() => flyTo(selected)}
-                  className="absolute bottom-3 left-3 bg-[#efa83f] text-[#301809] font-bold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg hover:bg-[#d4a035] transition-colors"
+                  className="absolute bottom-3 left-3 bg-[#efa83f] text-[#301809] font-thmanyah font-bold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg hover:bg-[#d4a035] transition-colors cursor-pointer"
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
-                  تحليق للموقع
+                  تحليق 3D للموقع
                 </button>
               </div>
 
-              {/* محتوى التفاصيل */}
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-
-                {/* الفترة الزمنية */}
                 <div className="flex items-start gap-2.5">
                   <div className="w-8 h-8 rounded-lg bg-[#fae1b7] flex items-center justify-center flex-shrink-0 mt-0.5">
                     <History className="w-4 h-4 text-[#b87a29]" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الحقبة التاريخية</p>
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold mb-0.5">الحقبة التاريخية</p>
                     <p className="text-sm font-bold text-[#301809]">{selected.period}</p>
                   </div>
                 </div>
 
-                {/* الإحداثيات + زر Google Maps */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-start gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-[#fae1b7] flex items-center justify-center flex-shrink-0 mt-0.5">
                       <MapPin className="w-4 h-4 text-[#b87a29]" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider mb-0.5">الإحداثيات والموقع</p>
+                      <p className="text-[10px] text-[#723c11]/70 font-semibold mb-0.5">الإحداثيات والموقع</p>
                       <p className="text-xs font-mono text-[#301809]/70" dir="ltr">
                         {selected.lat.toFixed(4)}° N, {selected.lng.toFixed(4)}° E
                       </p>
-                      {selected.plusCode && (
-                        <p className="text-[11px] font-bold text-[#b87a29] mt-0.5">
-                          📍 {selected.plusCode}
-                        </p>
-                      )}
                     </div>
                   </div>
                   <a
@@ -1217,19 +1378,17 @@ export default function HeritageMap() {
                   </a>
                 </div>
 
-                {/* الوصف التاريخي */}
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
                     <BookOpen className="w-3.5 h-3.5 text-[#b87a29]" />
-                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider">السياق التاريخي</p>
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold">السياق التاريخي</p>
                   </div>
                   <p className="text-sm text-[#301809]/80 leading-relaxed">
                     {selected.description}
                   </p>
                 </div>
 
-                {/* زر الربط الموحد بالباحث التاريخي والأرشيف التراثي */}
-                <div className="pt-1">
+                <div className="space-y-2">
                   <button
                     onClick={() =>
                       navigate(
@@ -1238,18 +1397,15 @@ export default function HeritageMap() {
                         )}`
                       )
                     }
-                    className="w-full bg-gradient-to-r from-[#301809] to-[#4a2510] hover:from-[#4a2510] hover:to-[#301809] border border-[#efa83f] text-[#fae1b7] font-bold rounded-2xl text-xs py-3.5 px-4 flex items-center justify-between transition-all shadow-md group cursor-pointer"
+                    className="w-full bg-gradient-to-r from-[#301809] to-[#4a2510] hover:from-[#4a2510] hover:to-[#301809] border border-[#efa83f] text-[#fae1b7] font-thmanyah font-bold rounded-2xl text-xs py-3.5 px-4 flex items-center justify-between transition-all shadow-md group cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-[#efa83f] shrink-0" />
-                      <span>📖 اقرأ ما ذُكر عن «{selected.nameAr}» في المراجع</span>
+                      <span>اقرأ ما ذُكر عن «{selected.nameAr}» في المراجع</span>
                     </div>
                     <ArrowRight className="w-4 h-4 rotate-180 text-[#efa83f] group-hover:-translate-x-1 transition-transform shrink-0" />
                   </button>
-                </div>
 
-                {/* زر الاستماع المباشر عبر المشغل السفلي المدمج */}
-                <div className="pt-2">
                   <button
                     onClick={() => {
                       const stop = resolveAudioStopForLandmark(selected.id);
@@ -1273,29 +1429,21 @@ export default function HeritageMap() {
                   </button>
                 </div>
 
-                {/* ─ قائمة المعالم مرتبة بدقة ─ */}
+                {/* قائمة المعالم */}
                 <div className="border-t border-[#dbc397]/50 pt-4">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[10px] text-[#723c11]/70 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                    <p className="text-[10px] text-[#723c11]/70 font-semibold flex items-center gap-1.5">
                       <Star className="w-3 h-3 text-[#efa83f]" />
                       المعالم التاريخية ({allLandmarks.length})
                     </p>
-                    {focusedLandmarkId && (
-                      <button
-                        onClick={showAllLandmarks}
-                        className="text-[10px] font-bold text-[#b87a29] hover:text-[#301809] underline cursor-pointer"
-                      >
-                        عرض الكل على الخريطة
-                      </button>
-                    )}
                   </div>
                   <div className="space-y-2">
                     {allLandmarks.map((lm, idx) => (
                       <button
                         key={lm.id}
                         onClick={() => flyTo(lm)}
-                        className={`w-full text-right flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm ${
-                          focusedLandmarkId === lm.id
+                        className={`w-full text-right flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm cursor-pointer ${
+                          selected.id === lm.id
                             ? 'bg-[#301809] text-white shadow-md'
                             : 'bg-white border border-[#dbc397]/50 text-[#301809] hover:border-[#efa83f]/60 hover:bg-[#fae1b7]/30'
                         }`}
@@ -1307,38 +1455,29 @@ export default function HeritageMap() {
                           className="w-3 h-3 rounded-full flex-shrink-0"
                           style={{ backgroundColor: CATEGORY_COLORS[lm.category] }}
                         />
-                        <span className="font-semibold flex-1 text-right truncate">{lm.nameAr}</span>
-                        {lm.badge && (
-                          <span
-                            className="text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
-                            style={{
-                              backgroundColor:
-                                focusedLandmarkId === lm.id ? 'rgba(255,255,255,0.15)' : CATEGORY_COLORS[lm.category] + '22',
-                              color: focusedLandmarkId === lm.id ? '#fae1b7' : CATEGORY_COLORS[lm.category],
-                            }}
-                          >
-                            {CATEGORY_LABELS[lm.category]}
+                        <span className="font-thmanyah font-bold flex-1 text-right truncate">{lm.nameAr}</span>
+                        {lm.has3dModel && (
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-400 text-stone-950">
+                            3D
                           </span>
                         )}
                       </button>
                     ))}
                   </div>
 
-                  {/* زر اقتراح معلم تراثي جديد مباشرة تحت قائمة المعالم */}
                   <button
                     type="button"
                     onClick={() => setSuggestOpen(true)}
-                    className="mt-3 w-full bg-[#fae1b7]/45 hover:bg-[#fae1b7] border border-dashed border-[#b87a29] text-[#301809] font-bold rounded-xl text-xs py-2.5 px-3.5 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
+                    className="mt-3 w-full bg-[#fae1b7]/45 hover:bg-[#fae1b7] border border-dashed border-[#b87a29] text-[#301809] font-thmanyah font-bold rounded-xl text-xs py-2.5 px-3.5 flex items-center justify-center gap-2 transition-all cursor-pointer"
                   >
                     <PlusCircle className="w-4 h-4 text-[#b87a29] shrink-0" />
-                    <span>هل تعرف معلماً تاريخياً آخر؟ اقترح إضافته للخريطة</span>
+                    <span>هل تعرف معلماً تاريخياً آخر؟ اقترح إضافته</span>
                   </button>
                 </div>
 
-                {/* ─ قائمة الفعاليات الميدانية على الخريطة ─ */}
                 {mapEvents.length > 0 && (
                   <div className="border-t border-[#dbc397]/50 pt-4">
-                    <p className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <p className="text-[10px] text-emerald-800 font-bold mb-3 flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-emerald-600" />
                       الفعاليات الميدانية الجارية ({mapEvents.length})
                     </p>
@@ -1359,35 +1498,32 @@ export default function HeritageMap() {
                     </div>
                   </div>
                 )}
-
               </div>
             </>
           )}
 
-          {/* ذيل الشريط */}
           <div className="flex-shrink-0 px-5 py-3 border-t border-[#dbc397]/40 bg-[#fdfbf7] flex items-center justify-between">
             <span className="text-[10px] text-[#723c11]/50 font-medium">وارجلان — ⵡⴰⵔⴵⵍⴰⵏ</span>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="text-[10px] text-[#723c11]/60 hover:text-[#b87a29] transition-colors font-semibold"
+              className="text-[10px] text-[#723c11]/60 hover:text-[#b87a29] transition-colors font-semibold cursor-pointer"
             >
-              طيّ القائمة ←
+              طيّ الدليل ←
             </button>
           </div>
         </aside>
-
       </div>
 
-      {/* ─── نافذة اقتراح معلم تاريخي جديد للخريطة ─────────────────── */}
+      {/* ─── نافذة اقتراح معلم تاريخي جديد ─────────────────── */}
       <Dialog open={suggestOpen} onOpenChange={setSuggestOpen}>
         <DialogContent className="sm:max-w-[520px] rounded-3xl border-2 border-[#dbc397] font-sans" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-[#301809] flex items-center gap-2">
+            <DialogTitle className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
               <PlusCircle className="w-5 h-5 text-[#b87a29]" />
               <span>اقترح معلماً تاريخياً لإضافته إلى خريطة التراث</span>
             </DialogTitle>
             <DialogDescription className="text-xs font-bold text-[#723c11]/80">
-              ساهم معنا في توثيق المعالم، القصور، المساجد العتيقة، أو المواقع الأثرية في وارجلان وسدراتة. ستتم مراجعة مقترحك من طرف الإدارة.
+              ساهم معنا في توثيق المعالم، القصور، المساجد العتيقة، أو المواقع الأثرية في وارجلان وسدراتة.
             </DialogDescription>
           </DialogHeader>
 
@@ -1397,7 +1533,7 @@ export default function HeritageMap() {
               <Input
                 required
                 value={sugTitle}
-                onChange={e => setSugTitle(e.target.value)}
+                onChange={(e) => setSugTitle(e.target.value)}
                 placeholder="مثال: باب عمي وعمران / قصر أنقوصة العتيق / عين الصفا"
                 className="rounded-xl border-[#dbc397]"
               />
@@ -1408,11 +1544,13 @@ export default function HeritageMap() {
                 <label className="text-xs font-bold text-[#301809] mb-1 block">تصنيف المعلم *</label>
                 <select
                   value={sugCategory}
-                  onChange={e => setSugCategory(e.target.value)}
+                  onChange={(e) => setSugCategory(e.target.value)}
                   className="w-full h-10 rounded-xl border border-[#dbc397] bg-white px-3 text-xs font-bold text-[#301809]"
                 >
-                  {HERITAGE_CATEGORIES.map(c => (
-                    <option key={c} value={c}>{c}</option>
+                  {HERITAGE_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1420,7 +1558,7 @@ export default function HeritageMap() {
                 <label className="text-xs font-bold text-[#301809] mb-1 block">اسم المساهم / الجمعية (اختياري)</label>
                 <Input
                   value={sugContributor}
-                  onChange={e => setSugContributor(e.target.value)}
+                  onChange={(e) => setSugContributor(e.target.value)}
                   placeholder="اسمك أو اسم جمعيتك"
                   className="rounded-xl border-[#dbc397]"
                 />
@@ -1432,24 +1570,24 @@ export default function HeritageMap() {
               <Textarea
                 required
                 value={sugContent}
-                onChange={e => setSugContent(e.target.value)}
+                onChange={(e) => setSugContent(e.target.value)}
                 placeholder="اذكر موقع المعلم (أو إحداثياته إن وجدت) وأهم المعلومات التاريخية المعروفة عنه..."
                 className="rounded-xl border-[#dbc397] min-h-[110px]"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#301809] block">صورة للمعلم (رفع من جهازك أو رابط مباشر - اختياري)</label>
+              <label className="text-xs font-bold text-[#301809] block">صورة للمعلم (اختياري)</label>
               <Input
                 type="file"
                 accept="image/*"
-                onChange={e => setSugImageFile(e.target.files?.[0] || null)}
+                onChange={(e) => setSugImageFile(e.target.files?.[0] || null)}
                 className="rounded-xl border-[#dbc397] text-xs cursor-pointer"
               />
               <Input
                 value={sugImageUrl}
-                onChange={e => setSugImageUrl(e.target.value)}
-                placeholder="أو ضع رابط صورة أو موقع Google Maps مباشر https://..."
+                onChange={(e) => setSugImageUrl(e.target.value)}
+                placeholder="أو ضع رابط صورة مباشر https://..."
                 dir="ltr"
                 className="rounded-xl border-[#dbc397] text-xs"
               />
@@ -1458,7 +1596,7 @@ export default function HeritageMap() {
             <Button
               type="submit"
               disabled={submittingSug}
-              className="w-full bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] font-black h-12 rounded-xl gap-2 cursor-pointer"
+              className="w-full bg-[#301809] hover:bg-[#723c11] text-[#fae1b7] font-thmanyah font-bold h-12 rounded-xl gap-2 cursor-pointer"
             >
               <Send className="w-4 h-4 text-[#efa83f]" />
               {submittingSug ? 'جاري إرسال المقترح...' : 'إرسال المعلم المقترح للإدارة'}
@@ -1475,9 +1613,7 @@ export default function HeritageMap() {
           onClose={() => setFloatingBarOpen(false)}
           onOpenTour={() => setFloatingBarOpen(true)}
           onSelectTourStop={handleSelectTourStop}
-          onOpenResearch={(query) =>
-            navigate(`/heritage?q=${encodeURIComponent(query)}`)
-          }
+          onOpenResearch={(query) => navigate(`/heritage?q=${encodeURIComponent(query)}`)}
           onOpenFullSidebar={() => setSidebarOpen(true)}
           hasFocusFilter={Boolean(focusedLandmarkId)}
           onShowAllLandmarks={showAllLandmarks}
