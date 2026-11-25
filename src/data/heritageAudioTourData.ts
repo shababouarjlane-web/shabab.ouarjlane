@@ -20,6 +20,7 @@ export interface AudioTourStop {
   tags: string[];
   ambientPreset: 'desert_wind' | 'market_caravan' | 'water_spring' | 'sacred_mosque' | 'library_scrolls';
   audioFileUrl: string;
+  image?: string;
   audioNarrationText: string;
   soundscapeDescription: string;
   historicalInsights: string[];
@@ -95,6 +96,7 @@ export const AUDIO_TOUR_STOPS: AudioTourStop[] = [
     tags: ['سدراتة', 'الرستميون', 'فان برشم', 'الجص المنحوت', 'بومبي الصحراء'],
     ambientPreset: 'desert_wind',
     audioFileUrl: '/audio/tour/sedrata_ruins.mp3',
+    image: '/sedrata-cinematic.jpg',
     soundscapeDescription: 'نسيم الصحراء المنساب بين التلال الرملية، وجلال الصمت المهيب فوق بقايا القصور الرستمية.',
     audioNarrationText:
       'فِي هَذِهِ البُقْعَةِ الصَّحْرَاوِيَّةِ السَّاحِرَةِ، كَانَتْ تَنْبِضُ مَدِينَةُ «سِدْرَاتَة»، العَاصِمَةُ الثَّانِيَةُ الَّتِي أَسَّسَهَا الإِبَاضِيُّونَ بَعْدَ سُقُوطِ تِيهَرْتْ سَنَةَ تِسْعِمِائَةٍ وَتِسْعٍ لِلْمِيلَادْ. عُرِفَتْ سِدْرَاتَة بِقُصُورِهَا البَاذِخَةِ وَجُدْرَانِهَا المُزَخْرَفَةِ بِأَرْوَعِ نُقُوشِ الجِصِّ الكُوفِيِّ فِي المَغْرِبِ الإِسْلَامِيّْ، حَتَّى لُقِّبَتْ بِـ«بُومْبِي الصَّحْرَاءْ». وَحِينَ كَشَفَتِ المُنَقِّبَةُ السُّوَيْسْرِيَّةُ «مَارْغْرِيتْ فَانْ بَرْشِمْ» عَنْ هَذِهِ الآثَارْ، انْبَهَرَ العَالَمُ بِرَوْعَةِ الفَنِّ العِمَارِيِّ الدَّفِينِ تَحْتَ رِمَالِ وَارْجْلَانْ.',

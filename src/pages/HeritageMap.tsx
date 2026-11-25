@@ -862,7 +862,7 @@ export default function HeritageMap() {
 
         {/* ── كبسولة الفلاتر الموحدة العائمة أعلى الخريطة (Glassmorphism) ── */}
         <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-1.5rem)]">
-          <div className="flex items-center gap-1 bg-[#121722]/82 backdrop-blur-xl p-1 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] ring-1 ring-white/15">
+          <div className="flex items-center gap-1 bg-[#121722]/90 backdrop-blur-xl p-1 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] ring-1 ring-white/15">
             {[
               { id: 'all', label: 'الكل' },
               { id: 'landmarks', label: 'المعالم التراثية' },
@@ -1030,7 +1030,7 @@ export default function HeritageMap() {
             transition-all duration-300 ease-out
             ${sidebarOpen ? 'translate-x-0 opacity-100 pointer-events-auto' : '-translate-x-[115%] opacity-0 pointer-events-none'}
             w-[calc(100%-1.5rem)] sm:w-[360px]
-            bg-[#fdfbf7]/96 backdrop-blur-xl shadow-[0_24px_65px_rgba(0,0,0,0.45)] rounded-3xl ring-1 ring-[#dbc397]/60
+            bg-[#fdfbf7]/95 backdrop-blur-xl shadow-[0_24px_65px_rgba(0,0,0,0.45)] rounded-3xl ring-1 ring-[#dbc397]/60
             flex flex-col overflow-hidden
           `}
         >

@@ -131,7 +131,7 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
   const displaySubtitle =
     activeLandmark?.nameTifinagh || activeStop.subtitleAr;
   const displayPeriod = activeLandmark?.period || activeStop.period;
-  const displayImage = activeLandmark?.image || '/hero-bg.jpg';
+  const displayImage = activeStop.image || activeLandmark?.image || '/hero-bg.jpg';
   const displayDescription =
     activeLandmark?.description || activeStop.audioNarrationText;
   const displayLat = activeLandmark?.lat ?? activeStop.lat;
@@ -221,7 +221,7 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
         <button
           type="button"
           onClick={onOpenTour}
-          className="bg-[#141a26]/92 hover:bg-[#1b2333] backdrop-blur-xl text-stone-100 px-5 py-3 rounded-2xl shadow-[0_14px_40px_rgba(0,0,0,0.45)] flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer font-thmanyah font-bold text-xs sm:text-sm"
+          className="bg-[#141a26]/95 hover:bg-[#1b2333] backdrop-blur-xl text-stone-100 px-5 py-3 rounded-2xl shadow-[0_14px_40px_rgba(0,0,0,0.45)] flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer font-thmanyah font-bold text-xs sm:text-sm"
         >
           <span className="w-8 h-8 rounded-xl bg-amber-400 text-stone-950 flex items-center justify-center shrink-0 shadow-md">
             <Headphones className="w-4 h-4" />
@@ -240,7 +240,7 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
           <button
             type="button"
             onClick={onShowAllLandmarks}
-            className="bg-[#301809]/92 hover:bg-[#4a2510] backdrop-blur-xl text-[#fae1b7] px-3.5 py-3 rounded-2xl shadow-xl flex items-center gap-1.5 text-xs font-thmanyah font-bold cursor-pointer transition-all"
+            className="bg-[#301809]/95 hover:bg-[#4a2510] backdrop-blur-xl text-[#fae1b7] px-3.5 py-3 rounded-2xl shadow-xl flex items-center gap-1.5 text-xs font-thmanyah font-bold cursor-pointer transition-all"
             title="إظهار جميع المعالم"
           >
             <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
@@ -256,7 +256,7 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
       dir="rtl"
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] max-w-2xl transition-all duration-300"
     >
-      <div className="bg-[#121722]/94 backdrop-blur-2xl text-stone-100 rounded-3xl shadow-[0_24px_70px_rgba(0,0,0,0.65)] overflow-hidden ring-1 ring-amber-400/20">
+      <div className="bg-[#121722]/95 backdrop-blur-2xl text-stone-100 rounded-3xl shadow-[0_24px_70px_rgba(0,0,0,0.65)] overflow-hidden ring-1 ring-amber-400/20">
         {/* ── الجزء الموسّع للأعلى (الصور + الوصف + النص المسموع + المحطات) ── */}
         {isExpanded && (
           <div className="border-b border-white/10 bg-[#0d111a]/80 max-h-[52vh] overflow-y-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
@@ -520,7 +520,7 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
               <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 text-amber-300 flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-amber-300 flex items-center justify-center transition-colors cursor-pointer"
                 title={isExpanded ? 'تصغير التفاصيل' : 'عرض الصور والنص والمراجع'}
               >
                 {isExpanded ? (
@@ -550,7 +550,7 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
             <div
               ref={progressBarRef}
               onClick={handleSeek}
-              className="flex-1 h-1.5 bg-white/12 rounded-full overflow-hidden cursor-pointer group hover:h-2 transition-all"
+              className="flex-1 h-1.5 bg-white/15 rounded-full overflow-hidden cursor-pointer group hover:h-2 transition-all"
               title="اسحب أو اضغط للانتقال في التسجيل الصوتي"
             >
               <div
