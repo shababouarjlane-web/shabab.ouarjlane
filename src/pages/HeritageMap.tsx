@@ -198,6 +198,51 @@ const LANDMARKS: Landmark[] = [
     category: 'ruins',
     has3dModel: true,
   },
+  {
+    id: 'stop-secret-tunnel',
+    nameAr: 'نفق سدراتة المائي السري',
+    nameTifinagh: 'ⵜⵉⵙⴽⴼⵉⵏ ⵏ ⵉⵙⴷⵔⴰⵜⵏ',
+    nameTranslit: 'Tiskfin n Isedraten',
+    badge: 'هندسة مائية معجزة',
+    badgeColor: 'bg-sky-600 text-white',
+    lat: 31.928000,
+    lng: 5.320000,
+    period: 'القرن الرابع إلى السادس الهجري',
+    image: '/sedrata-cinematic.jpg',
+    description:
+      'نفق مائي مسقوف يمتد لثمانية كيلومترات تحت الرمال ليربط بين واحة سدراتة والقصر العتيق. شكّل شرياناً حيوياً لتدفق المياه العذبة وممراً دفاعياً آمناً لنقل الإمدادات أيام الحصار.',
+    category: 'ruins',
+  },
+  {
+    id: 'stop-seven-gates',
+    nameAr: 'بوابات القصر السبع',
+    nameTifinagh: 'ⵜⵉⴱⴱⵓⵔⴰ ⵏ ⵓⵖⵔⴰⵎ',
+    nameTranslit: 'Tibbura n Ughram',
+    badge: 'طرق التجارة العالمية',
+    badgeColor: 'bg-amber-700 text-white',
+    lat: 31.968800,
+    lng: 5.324500,
+    period: 'القرن الثالث إلى الثامن الهجري',
+    image: '/hero-bg.jpg',
+    description:
+      'باب السلطان وباب البستان وباب عامر وغيرها من البوابات السبع التي كانت تستقبل قوافل الذهب والملح القادمة من ممالك غانة وتادمكت لتلتقي بتجار تلمسان والقيروان.',
+    category: 'urban',
+  },
+  {
+    id: 'stop-wamm-library',
+    nameAr: 'خزانة قصر «وَمّ» والمخطوطات',
+    nameTifinagh: 'ⵜⴰⵎⴽⵜⴰⴱⵜ ⵏ ⵡⴰⵎⵎ',
+    nameTranslit: 'Tamktabt n Wamm',
+    badge: 'خزائن العلم والمخطوطات',
+    badgeColor: 'bg-indigo-700 text-white',
+    lat: 31.965000,
+    lng: 5.328000,
+    period: 'القرن السادس الهجري (عصر أبي يعقوب)',
+    image: '/hero-bg.jpg',
+    description:
+      'إحدى أعظم خزائن الكتب والمخطوطات في صحراء المغرب الإسلامي، حيث طالع عالم وارجلان 33 ألف جزء في أربعة أشهر، ومنها برز الإمام أبو يعقوب يوسف الوارجلاني.',
+    category: 'mosque',
+  },
 ];
 
 const CATEGORY_COLORS: Record<Landmark['category'], string> = {
@@ -276,7 +321,8 @@ export default function HeritageMap() {
   const [mapEvents, setMapEvents] = useState<any[]>([]);
   const [layerFilter, setLayerFilter] = useState<'all' | 'landmarks' | 'events'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [floatingBarOpen, setFloatingBarOpen] = useState<boolean>(true);
+  const [floatingBarOpen, setFloatingBarOpen] = useState<boolean>(false);
+  const [cardExpandTrigger, setCardExpandTrigger] = useState<number>(0);
   const [mapReady, setMapReady] = useState<boolean>(false);
 
   // حالات الكاميرا ثلاثية الأبعاد وتحميل المجسم فوق الخريطة
@@ -632,7 +678,9 @@ export default function HeritageMap() {
         setIsOrbiting(false);
         setSelectedEvent(null);
         setSelected(ksarLandmark);
+        setFocusedLandmarkId(ksarLandmark.id);
         setFloatingBarOpen(true);
+        setCardExpandTrigger((n) => n + 1);
         setSidebarOpen(false);
         map.flyTo({
           center: [ksarLandmark.lng, ksarLandmark.lat],
@@ -682,7 +730,9 @@ export default function HeritageMap() {
         setIsOrbiting(false);
         setSelectedEvent(null);
         setSelected(lallaLandmark);
+        setFocusedLandmarkId(lallaLandmark.id);
         setFloatingBarOpen(true);
+        setCardExpandTrigger((n) => n + 1);
         setSidebarOpen(false);
         map.flyTo({
           center: [lallaLandmark.lng, lallaLandmark.lat],
@@ -788,12 +838,14 @@ export default function HeritageMap() {
           setIsOrbiting(false);
           setSelectedEvent(null);
           setSelected(lm);
+          setFocusedLandmarkId(lm.id);
           setFloatingBarOpen(true);
+          setCardExpandTrigger((n) => n + 1);
           setSidebarOpen(false);
           map.flyTo({
             center: [lm.lng, lm.lat],
-            zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 17.2 : 15.5,
-            pitch: is3DMode ? (lm.has3dModel ? 64 : 55) : 0,
+            zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 17.2 : 15.8,
+            pitch: is3DMode ? (lm.has3dModel ? 64 : 56) : 0,
             bearing: lm.has3dModel ? -22 : map.getBearing(),
             duration: 1300,
           });
@@ -846,18 +898,20 @@ export default function HeritageMap() {
     });
   };
 
-  // التحليق إلى المعلم المحدد
+  // التحليق إلى المعلم المحدد وإخفاء بقية المعالم وفتح بطاقة الصورة والصوت
   const flyTo = (lm: Landmark) => {
     setIsOrbiting(false);
     setSelectedEvent(null);
     setSelected(lm);
+    setFocusedLandmarkId(lm.id);
     setFloatingBarOpen(true);
+    setCardExpandTrigger((n) => n + 1);
     setSidebarOpen(false);
     if (!mapRef.current) return;
 
     mapRef.current.flyTo({
       center: [lm.lng, lm.lat],
-      zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 17.2 : 15.5,
+      zoom: lm.has3dModel ? 16.3 : lm.id === 'lalla-azza' ? 17.2 : 15.8,
       pitch: is3DMode ? (lm.has3dModel ? 64 : 56) : 0,
       bearing: lm.has3dModel ? -22 : -10,
       duration: 1350,
@@ -875,10 +929,11 @@ export default function HeritageMap() {
         ? LANDMARKS.find((l) => l.id === 'ksar-atiq')
         : stop.id === 'stop-sedrata-ruins'
         ? LANDMARKS.find((l) => l.id === 'sedrata')
-        : undefined;
+        : LANDMARKS.find((l) => l.id === stop.id);
 
     if (matched) {
       setSelected(matched);
+      setFocusedLandmarkId(matched.id);
     } else {
       setSelected({
         id: stop.id,
@@ -893,9 +948,11 @@ export default function HeritageMap() {
         description: stop.audioNarrationText,
         category: stop.category === 'ruins' ? 'ruins' : 'urban',
       });
+      setFocusedLandmarkId(stop.id);
     }
 
     setFloatingBarOpen(true);
+    setCardExpandTrigger((n) => n + 1);
     mapRef.current?.flyTo({
       center: [stop.lng, stop.lat],
       zoom: stop.id === 'stop-sedrata-ruins' ? 16.3 : 16,
@@ -1035,7 +1092,19 @@ export default function HeritageMap() {
         </div>
 
         {/* ── أزرار التحكم بالمنظور ثلاثي الأبعاد والدوران (أعلى اليمين) ── */}
-        <div className="absolute top-16 sm:top-3.5 right-3.5 z-20 flex items-center gap-1.5">
+        <div className="absolute top-16 sm:top-3.5 right-3.5 z-20 flex flex-wrap items-center gap-1.5">
+          {focusedLandmarkId && (
+            <button
+              type="button"
+              onClick={showAllLandmarks}
+              className="px-3.5 py-2 rounded-2xl bg-[#301809]/95 hover:bg-[#4a2510] backdrop-blur-xl text-[#fae1b7] text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer ring-1 ring-amber-400/50"
+              title="إظهار جميع المعالم على الخريطة"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+              <span>إظهار جميع المعالم</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={toggle3DView}
@@ -1610,8 +1679,14 @@ export default function HeritageMap() {
         <FloatingAudioBar
           activeLandmark={selected}
           isOpen={floatingBarOpen}
-          onClose={() => setFloatingBarOpen(false)}
-          onOpenTour={() => setFloatingBarOpen(true)}
+          autoExpandTrigger={cardExpandTrigger}
+          onClose={() => {
+            setFloatingBarOpen(false);
+          }}
+          onOpenTour={() => {
+            setFloatingBarOpen(true);
+            setCardExpandTrigger((n) => n + 1);
+          }}
           onSelectTourStop={handleSelectTourStop}
           onOpenResearch={(query) => navigate(`/heritage?q=${encodeURIComponent(query)}`)}
           onOpenFullSidebar={() => setSidebarOpen(true)}

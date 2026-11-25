@@ -47,6 +47,8 @@ interface FloatingAudioBarProps {
   activeLandmark: FloatingLandmarkInfo | null;
   /** هل البطاقة ظاهرة أم مصغّرة */
   isOpen: boolean;
+  /** فتح قسم الصورة والنبذة تلقائياً عند اختيار معلم */
+  autoExpandTrigger?: number;
   /** إغلاق/تصغير البطاقة */
   onClose: () => void;
   /** فتح البطاقة والبدء بالجولة */
@@ -81,6 +83,7 @@ export function resolveAudioStopForLandmark(landmarkId?: string | null): AudioTo
 export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
   activeLandmark,
   isOpen,
+  autoExpandTrigger,
   onClose,
   onOpenTour,
   onSelectTourStop,
@@ -107,6 +110,14 @@ export const FloatingAudioBar: React.FC<FloatingAudioBarProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedTab, setExpandedTab] = useState<'story' | 'model3d' | 'transcript' | 'stops'>('story');
   const progressBarRef = useRef<HTMLDivElement>(null);
+
+  // عند النقر على أي ماركر على الخريطة: تفتح بطاقة الصورة والصوت تلقائياً
+  useEffect(() => {
+    if (autoExpandTrigger && autoExpandTrigger > 0) {
+      setIsExpanded(true);
+      setExpandedTab('story');
+    }
+  }, [autoExpandTrigger]);
 
   useEffect(() => {
     const unsubscribe = spatialAudio.subscribe((st) => {
