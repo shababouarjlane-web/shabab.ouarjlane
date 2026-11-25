@@ -198,51 +198,6 @@ const LANDMARKS: Landmark[] = [
     category: 'ruins',
     has3dModel: true,
   },
-  {
-    id: 'stop-secret-tunnel',
-    nameAr: 'نفق سدراتة المائي السري',
-    nameTifinagh: 'ⵜⵉⵙⴽⴼⵉⵏ ⵏ ⵉⵙⴷⵔⴰⵜⵏ',
-    nameTranslit: 'Tiskfin n Isedraten',
-    badge: 'هندسة مائية معجزة',
-    badgeColor: 'bg-sky-600 text-white',
-    lat: 31.928000,
-    lng: 5.320000,
-    period: 'القرن الرابع إلى السادس الهجري',
-    image: '/sedrata-cinematic.jpg',
-    description:
-      'نفق مائي مسقوف يمتد لثمانية كيلومترات تحت الرمال ليربط بين واحة سدراتة والقصر العتيق. شكّل شرياناً حيوياً لتدفق المياه العذبة وممراً دفاعياً آمناً لنقل الإمدادات أيام الحصار.',
-    category: 'ruins',
-  },
-  {
-    id: 'stop-seven-gates',
-    nameAr: 'بوابات القصر السبع',
-    nameTifinagh: 'ⵜⵉⴱⴱⵓⵔⴰ ⵏ ⵓⵖⵔⴰⵎ',
-    nameTranslit: 'Tibbura n Ughram',
-    badge: 'طرق التجارة العالمية',
-    badgeColor: 'bg-amber-700 text-white',
-    lat: 31.968800,
-    lng: 5.324500,
-    period: 'القرن الثالث إلى الثامن الهجري',
-    image: '/hero-bg.jpg',
-    description:
-      'باب السلطان وباب البستان وباب عامر وغيرها من البوابات السبع التي كانت تستقبل قوافل الذهب والملح القادمة من ممالك غانة وتادمكت لتلتقي بتجار تلمسان والقيروان.',
-    category: 'urban',
-  },
-  {
-    id: 'stop-wamm-library',
-    nameAr: 'خزانة قصر «وَمّ» والمخطوطات',
-    nameTifinagh: 'ⵜⴰⵎⴽⵜⴰⴱⵜ ⵏ ⵡⴰⵎⵎ',
-    nameTranslit: 'Tamktabt n Wamm',
-    badge: 'خزائن العلم والمخطوطات',
-    badgeColor: 'bg-indigo-700 text-white',
-    lat: 31.965000,
-    lng: 5.328000,
-    period: 'القرن السادس الهجري (عصر أبي يعقوب)',
-    image: '/hero-bg.jpg',
-    description:
-      'إحدى أعظم خزائن الكتب والمخطوطات في صحراء المغرب الإسلامي، حيث طالع عالم وارجلان 33 ألف جزء في أربعة أشهر، ومنها برز الإمام أبو يعقوب يوسف الوارجلاني.',
-    category: 'mosque',
-  },
 ];
 
 const CATEGORY_COLORS: Record<Landmark['category'], string> = {
@@ -258,20 +213,34 @@ const CATEGORY_LABELS: Record<Landmark['category'], string> = {
 };
 
 // إنشاء عنصر ماركر مخصص لـ MapLibre GL
+// يدعم وضع "نقطة ذهبية تومض" للمعالم غير المختارة عند التركيز على معلم آخر
 function createMarkerElement(
   color: string,
   label: string,
-  options?: { is3d?: boolean; isEvent?: boolean }
+  options?: { is3d?: boolean; isEvent?: boolean; isPulsingDot?: boolean }
 ): HTMLDivElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'group relative flex flex-col items-center cursor-pointer select-none';
+
+  // وضع النقطة الذهبية الوامضة للمعالم الأخرى عند التركيز على معلم
+  if (options?.isPulsingDot) {
+    wrapper.title = label;
+    wrapper.innerHTML = `
+      <div class="relative flex items-center justify-center w-8 h-8">
+        <span class="absolute inline-flex h-7 w-7 rounded-full bg-amber-400/55 animate-ping"></span>
+        <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-400 ring-2 ring-white shadow-[0_0_14px_rgba(251,191,36,0.95)] transition-transform duration-200 group-hover:scale-125"></span>
+        <span dir="rtl" class="pointer-events-none absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity px-2.5 py-0.5 rounded-full bg-[#111318]/90 backdrop-blur-md text-amber-300 text-[10px] font-bold whitespace-nowrap border border-white/15 shadow-lg">${label}</span>
+      </div>
+    `;
+    return wrapper;
+  }
 
   // شارة الاسم العائمة فوق الماركر
   const badge = document.createElement('div');
   badge.dir = 'rtl';
   badge.className = options?.is3d
-    ? 'mb-1.5 px-3 py-1 rounded-full bg-[#121722]/90 backdrop-blur-md text-amber-300 text-[11px] font-bold shadow-xl ring-1 ring-amber-400/50 whitespace-nowrap flex items-center gap-1.5 transition-transform group-hover:scale-105'
-    : 'mb-1 px-2.5 py-0.5 rounded-full bg-[#121722]/85 backdrop-blur-md text-stone-100 text-[11px] font-bold shadow-lg ring-1 ring-white/15 whitespace-nowrap opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all';
+    ? 'mb-1.5 px-3 py-1 rounded-full bg-[#111318]/85 backdrop-blur-xl text-amber-300 text-[11px] font-bold shadow-xl border border-amber-400/40 whitespace-nowrap flex items-center gap-1.5 transition-transform group-hover:scale-105'
+    : 'mb-1 px-2.5 py-0.5 rounded-full bg-[#111318]/80 backdrop-blur-xl text-stone-100 text-[11px] font-bold shadow-lg border border-white/15 whitespace-nowrap opacity-95 group-hover:opacity-100 group-hover:scale-105 transition-all';
 
   badge.innerHTML = options?.is3d
     ? `<span style="display:inline-block;width:7px;height:7px;border-radius:9999px;background:#fbbf24;box-shadow:0 0 8px #fbbf24"></span><span>${label}</span><span style="font-size:9px;background:#fbbf24;color:#111827;padding:1px 6px;border-radius:9999px;font-weight:800">3D</span>`
@@ -281,7 +250,6 @@ function createMarkerElement(
 
   wrapper.appendChild(badge);
 
-  // دبوس SVG أنيق (نخفيه جزئياً في حالة مجسم 3D لكي لا يغطي المجسم عند التقريب، ونبقي قاعدة ضوئية ناعمة)
   if (options?.is3d) {
     const stem = document.createElement('div');
     stem.style.cssText =
@@ -291,7 +259,7 @@ function createMarkerElement(
     const pin = document.createElement('div');
     pin.className = 'transition-transform duration-200 group-hover:scale-110';
     pin.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="34" height="42" viewBox="0 0 38 46">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 38 46">
         <ellipse cx="19" cy="43" rx="7" ry="3" fill="rgba(0,0,0,0.28)"/>
         <path d="M19 2 C10.163 2 3 9.163 3 18 C3 29 19 44 19 44 C19 44 35 29 35 18 C35 9.163 27.837 2 19 2Z"
           fill="${color}" stroke="#fdfbf7" stroke-width="2.5"/>
@@ -322,7 +290,6 @@ export default function HeritageMap() {
   const [layerFilter, setLayerFilter] = useState<'all' | 'landmarks' | 'events'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [floatingBarOpen, setFloatingBarOpen] = useState<boolean>(false);
-  const [cardExpandTrigger, setCardExpandTrigger] = useState<number>(0);
   const [mapReady, setMapReady] = useState<boolean>(false);
 
   // حالات الكاميرا ثلاثية الأبعاد وتحميل المجسم فوق الخريطة
@@ -599,11 +566,11 @@ export default function HeritageMap() {
           },
         ],
       },
-      // نبدأ فوق سدراتة بزاوية 3D مائلة لرؤية المجسم الحقيقي فوق الصحراء مباشرة
-      center: [sedrata.lng, sedrata.lat],
-      zoom: 15.8,
-      pitch: 60,
-      bearing: -22,
+      // نظرة شاملة أنيقة على المعالم الثلاثة عند الفتح
+      center: [5.318, 31.932],
+      zoom: 12.1,
+      pitch: 42,
+      bearing: -12,
       maxPitch: 78,
       canvasContextAttributes: { antialias: true },
     });
@@ -680,7 +647,6 @@ export default function HeritageMap() {
         setSelected(ksarLandmark);
         setFocusedLandmarkId(ksarLandmark.id);
         setFloatingBarOpen(true);
-        setCardExpandTrigger((n) => n + 1);
         setSidebarOpen(false);
         map.flyTo({
           center: [ksarLandmark.lng, ksarLandmark.lat],
@@ -732,7 +698,6 @@ export default function HeritageMap() {
         setSelected(lallaLandmark);
         setFocusedLandmarkId(lallaLandmark.id);
         setFloatingBarOpen(true);
-        setCardExpandTrigger((n) => n + 1);
         setSidebarOpen(false);
         map.flyTo({
           center: [lallaLandmark.lng, lallaLandmark.lat],
@@ -829,9 +794,12 @@ export default function HeritageMap() {
 
     if (showLandmarksLayer) {
       allLandmarks.forEach((lm) => {
-        if (focusedLandmarkId && focusedLandmarkId !== lm.id) return;
+        const isOtherWhileFocused = Boolean(focusedLandmarkId && focusedLandmarkId !== lm.id);
+        // وسم 3D يظهر حصرياً عند الضغط على سدراتة
+        const show3dTag = Boolean(lm.has3dModel && focusedLandmarkId === 'sedrata');
         const el = createMarkerElement(CATEGORY_COLORS[lm.category], lm.nameAr, {
-          is3d: Boolean(lm.has3dModel),
+          is3d: show3dTag,
+          isPulsingDot: isOtherWhileFocused,
         });
         el.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -840,7 +808,6 @@ export default function HeritageMap() {
           setSelected(lm);
           setFocusedLandmarkId(lm.id);
           setFloatingBarOpen(true);
-          setCardExpandTrigger((n) => n + 1);
           setSidebarOpen(false);
           map.flyTo({
             center: [lm.lng, lm.lat],
@@ -853,8 +820,8 @@ export default function HeritageMap() {
 
         const marker = new maplibregl.Marker({
           element: el,
-          anchor: 'bottom',
-          offset: lm.has3dModel ? [0, -34] : [0, 0],
+          anchor: isOtherWhileFocused ? 'center' : 'bottom',
+          offset: show3dTag ? [0, -34] : [0, 0],
         })
           .setLngLat([lm.lng, lm.lat])
           .addTo(map);
@@ -905,7 +872,6 @@ export default function HeritageMap() {
     setSelected(lm);
     setFocusedLandmarkId(lm.id);
     setFloatingBarOpen(true);
-    setCardExpandTrigger((n) => n + 1);
     setSidebarOpen(false);
     if (!mapRef.current) return;
 
@@ -952,7 +918,6 @@ export default function HeritageMap() {
     }
 
     setFloatingBarOpen(true);
-    setCardExpandTrigger((n) => n + 1);
     mapRef.current?.flyTo({
       center: [stop.lng, stop.lat],
       zoom: stop.id === 'stop-sedrata-ruins' ? 16.3 : 16,
@@ -1067,22 +1032,70 @@ export default function HeritageMap() {
         {/* ── خريطة MapLibre 3D ───────────────────────────── */}
         <div ref={mapContainerRef} className="flex-1 z-10 w-full h-full" />
 
-        {/* ── كبسولة الفلاتر الموحدة العائمة أعلى الخريطة (Glassmorphism) ── */}
-        <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-1.5rem)]">
-          <div className="flex items-center gap-1 bg-[#121722]/90 backdrop-blur-xl p-1 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.35)] ring-1 ring-white/15">
+        {/* ── شريط التحكم العلوي النظيف (بدون أي تداخل بين الأزرار) ── */}
+        <div className="absolute top-3.5 right-3.5 left-3.5 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+          {/* يمين: زر العودة لكل المعالم + أزرار 3D (تظهر فقط عند اختيار سدراتة) */}
+          <div className="flex items-center gap-1.5 pointer-events-auto">
+            {focusedLandmarkId && (
+              <button
+                type="button"
+                onClick={showAllLandmarks}
+                className="px-3.5 py-1.5 rounded-full bg-[#111318]/85 hover:bg-[#111318] backdrop-blur-xl text-white text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer border border-white/15"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                <span>كل المعالم</span>
+              </button>
+            )}
+
+            {focusedLandmarkId === 'sedrata' && (
+              <>
+                <button
+                  type="button"
+                  onClick={toggle3DView}
+                  className={`px-3 py-1.5 rounded-full backdrop-blur-xl text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer border ${
+                    is3DMode
+                      ? 'bg-amber-400 text-stone-950 border-amber-300'
+                      : 'bg-[#111318]/85 text-white/90 hover:text-white border-white/15'
+                  }`}
+                >
+                  <Box className="w-3.5 h-3.5" />
+                  <span>{is3DMode ? '3D' : '2D'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!is3DMode) setIs3DMode(true);
+                    setIsOrbiting((v) => !v);
+                  }}
+                  className={`px-3 py-1.5 rounded-full backdrop-blur-xl text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer border ${
+                    isOrbiting
+                      ? 'bg-emerald-400 text-stone-950 border-emerald-300'
+                      : 'bg-[#111318]/85 text-white/90 hover:text-white border-white/15'
+                  }`}
+                >
+                  <RotateCw className={`w-3.5 h-3.5 ${isOrbiting ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">{isOrbiting ? 'إيقاف' : 'دوران 360°'}</span>
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* يسار: كبسولة الفلاتر الزجاجية الموحدة */}
+          <div className="pointer-events-auto flex items-center gap-1 bg-[#111318]/80 backdrop-blur-2xl p-1 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.35)] border border-white/15">
             {[
               { id: 'all', label: 'الكل' },
-              { id: 'landmarks', label: 'المعالم التراثية' },
-              { id: 'events', label: `الفعاليات الميدانية (${mapEvents.length})` },
+              { id: 'landmarks', label: 'المعالم' },
+              { id: 'events', label: `الفعاليات (${mapEvents.length})` },
             ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setLayerFilter(tab.id as any)}
-                className={`px-3 sm:px-4 py-1.5 rounded-xl text-[11px] sm:text-xs font-thmanyah font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1 rounded-full text-[11px] font-thmanyah font-bold transition-all cursor-pointer whitespace-nowrap ${
                   layerFilter === tab.id
-                    ? 'bg-amber-400 text-stone-950 shadow-sm'
-                    : 'text-stone-200 hover:text-white hover:bg-white/10'
+                    ? 'bg-white text-stone-950 shadow-sm'
+                    : 'text-white/75 hover:text-white'
                 }`}
               >
                 {tab.label}
@@ -1091,57 +1104,11 @@ export default function HeritageMap() {
           </div>
         </div>
 
-        {/* ── أزرار التحكم بالمنظور ثلاثي الأبعاد والدوران (أعلى اليمين) ── */}
-        <div className="absolute top-16 sm:top-3.5 right-3.5 z-20 flex flex-wrap items-center gap-1.5">
-          {focusedLandmarkId && (
-            <button
-              type="button"
-              onClick={showAllLandmarks}
-              className="px-3.5 py-2 rounded-2xl bg-[#301809]/95 hover:bg-[#4a2510] backdrop-blur-xl text-[#fae1b7] text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer ring-1 ring-amber-400/50"
-              title="إظهار جميع المعالم على الخريطة"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-              <span>إظهار جميع المعالم</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={toggle3DView}
-            className={`px-3 py-2 rounded-2xl backdrop-blur-xl text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer ring-1 ${
-              is3DMode
-                ? 'bg-amber-400 text-stone-950 ring-amber-300'
-                : 'bg-[#121722]/90 text-stone-200 hover:text-white ring-white/15'
-            }`}
-            title="تبديل المنظور ثلاثي الأبعاد / المسطح"
-          >
-            <Box className="w-3.5 h-3.5" />
-            <span>{is3DMode ? 'منظور 3D' : 'منظور 2D'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (!is3DMode) setIs3DMode(true);
-              setIsOrbiting((v) => !v);
-            }}
-            className={`px-3 py-2 rounded-2xl backdrop-blur-xl text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-lg transition-all cursor-pointer ring-1 ${
-              isOrbiting
-                ? 'bg-emerald-400 text-stone-950 ring-emerald-300'
-                : 'bg-[#121722]/90 text-stone-200 hover:text-white ring-white/15'
-            }`}
-            title="دوران سينمائي 360° حول المعلم"
-          >
-            <RotateCw className={`w-3.5 h-3.5 ${isOrbiting ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">{isOrbiting ? 'إيقاف الدوران' : 'دوران 360°'}</span>
-          </button>
-        </div>
-
         {/* شارة تحميل مجسم سدراتة 3D فوق الخريطة */}
-        {!model3DLoaded && model3DProgress > 0 && (
-          <div className="absolute top-28 sm:top-16 right-3.5 z-20 bg-[#121722]/90 backdrop-blur-xl text-amber-300 px-3.5 py-2 rounded-2xl shadow-xl ring-1 ring-amber-400/30 flex items-center gap-2 text-[11px] font-thmanyah font-bold">
+        {!model3DLoaded && model3DProgress > 0 && focusedLandmarkId === 'sedrata' && (
+          <div className="absolute top-16 right-3.5 z-20 bg-[#111318]/85 backdrop-blur-xl text-amber-300 px-3.5 py-1.5 rounded-full shadow-xl border border-amber-400/30 flex items-center gap-2 text-[11px] font-thmanyah font-bold">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            <span>جاري تثبيت مجسم سدراتة 3D على الخريطة... {model3DProgress}%</span>
+            <span>تحميل مجسم سدراتة 3D... {model3DProgress}%</span>
           </div>
         )}
 
@@ -1674,24 +1641,15 @@ export default function HeritageMap() {
         </DialogContent>
       </Dialog>
 
-      {/* ── المشغل السفلي المدمج فائق السلاسة (Floating Audio Bar) ── */}
+      {/* ── المشغل السفلي المدمج بأسلوب Apple ── */}
       {!selectedEvent && (
         <FloatingAudioBar
           activeLandmark={selected}
           isOpen={floatingBarOpen}
-          autoExpandTrigger={cardExpandTrigger}
-          onClose={() => {
-            setFloatingBarOpen(false);
-          }}
-          onOpenTour={() => {
-            setFloatingBarOpen(true);
-            setCardExpandTrigger((n) => n + 1);
-          }}
+          onClose={() => setFloatingBarOpen(false)}
+          onOpenTour={() => setFloatingBarOpen(true)}
           onSelectTourStop={handleSelectTourStop}
           onOpenResearch={(query) => navigate(`/heritage?q=${encodeURIComponent(query)}`)}
-          onOpenFullSidebar={() => setSidebarOpen(true)}
-          hasFocusFilter={Boolean(focusedLandmarkId)}
-          onShowAllLandmarks={showAllLandmarks}
         />
       )}
     </div>
