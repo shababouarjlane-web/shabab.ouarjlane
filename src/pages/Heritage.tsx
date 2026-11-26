@@ -143,60 +143,68 @@ export default function Heritage() {
       <UnifiedHeader />
 
       <main className="flex-1 container mx-auto px-4 sm:px-6 py-10 sm:py-16 max-w-3xl flex flex-col justify-between">
-        {/* ── 1. منطقة البحث الرئيسية بهوية تواصل صحراء ── */}
-        <section className="space-y-7">
-          <div className="text-center space-y-2.5">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#fae1b7]/70 border border-[#dbc397] text-[#301809] text-xs font-thmanyah font-bold">
-              <BookOpen className="w-3.5 h-3.5 text-[#b87a29]" />
-              <span>أرشيف وارجلان وسدراتة الموثق</span>
-            </div>
-            <h1 className="font-thmanyah font-bold text-3xl sm:text-4xl text-[#301809] tracking-tight">
-              الباحث التاريخي
-            </h1>
-            <p className="text-sm text-[#723c11]/85 max-w-lg mx-auto">
-              اسأل عن تاريخ القصر العتيق، سدراتة، أو أعلام الواحة، واحصل على إجابة موثقة بالمصدر ورقم الصفحة.
-            </p>
-          </div>
+        {/* ── 1. منطقة البحث الرئيسية بهوية تواصل صحراء الأصيلة ── */}
+        <section className="space-y-6">
+          <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#301809] via-[#4a250e] to-[#261206] p-7 sm:p-10 shadow-[0_22px_55px_rgba(48,24,9,0.22)] ring-1 ring-[#efa83f]/35 space-y-6">
+            {/* توهّج ذهبي صحراوي خفيف */}
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(239,168,63,0.22),_transparent_62%)]" />
 
-          {/* شريط البحث النظيف الموحّد بألوان الهوية */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleAsk();
-            }}
-            className="bg-white rounded-2xl border border-[#dbc397] shadow-[0_12px_36px_rgba(48,24,9,0.08)] p-2 flex items-center gap-2 focus-within:border-[#b87a29] focus-within:ring-4 focus-within:ring-[#efa83f]/20 transition-all"
-          >
-            <Search className="w-5 h-5 text-[#b87a29] mr-3 shrink-0" />
-            <input
-              type="search"
-              name="historical-reference-question"
-              autoComplete="off"
-              value={assistantQuery}
-              onChange={(e) => setAssistantQuery(e.target.value)}
-              placeholder="اكتب سؤالك... (مثال: متى تأسست سدراتة؟ أو ما هي أبواب القصر؟)"
-              className="flex-1 h-11 bg-transparent text-sm sm:text-base text-[#301809] placeholder:text-[#723c11]/50 focus:outline-none min-w-0"
-            />
-            {assistantQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setAssistantQuery('');
-                  setActiveAnswer(null);
-                }}
-                className="w-8 h-8 rounded-full hover:bg-[#fae1b7]/50 text-[#723c11] flex items-center justify-center shrink-0 cursor-pointer"
-                title="مسح"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-            <button
-              type="submit"
-              disabled={!assistantQuery.trim() || isThinking}
-              className="h-11 px-5 sm:px-6 rounded-xl bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#a56b20] hover:to-[#e59b2d] disabled:opacity-40 text-[#301809] font-thmanyah font-bold text-sm transition-all shadow-sm cursor-pointer shrink-0"
+            <div className="relative z-10 text-center space-y-2.5">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#efa83f]/15 border border-[#efa83f]/35 text-[#fae1b7] text-xs font-thmanyah font-bold">
+                <BookOpen className="w-3.5 h-3.5 text-[#efa83f]" />
+                <span>أرشيف وارجلان وسدراتة الموثق</span>
+              </div>
+              <h1 className="font-thmanyah font-bold text-3xl sm:text-4xl text-white tracking-tight">
+                الباحث{' '}
+                <span className="bg-gradient-to-l from-[#fae1b7] to-[#efa83f] bg-clip-text text-transparent">
+                  التاريخي
+                </span>
+              </h1>
+              <p className="text-xs sm:text-sm text-[#fae1b7]/80 max-w-lg mx-auto leading-relaxed">
+                اسأل عن تاريخ القصر العتيق، سدراتة، أو أعلام الواحة، واحصل على إجابة موثقة بالمصدر ورقم الصفحة.
+              </p>
+            </div>
+
+            {/* شريط البحث المتوهّج بألوان الهوية */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAsk();
+              }}
+              className="relative z-10 bg-[#fdfbf7] rounded-2xl p-1.5 sm:p-2 flex items-center gap-2 shadow-[0_14px_35px_rgba(0,0,0,0.3)] ring-2 ring-[#efa83f]/45 focus-within:ring-[#efa83f] transition-all"
             >
-              بحث
-            </button>
-          </form>
+              <Search className="w-5 h-5 text-[#b87a29] mr-3 shrink-0" />
+              <input
+                type="search"
+                name="historical-reference-question"
+                autoComplete="off"
+                value={assistantQuery}
+                onChange={(e) => setAssistantQuery(e.target.value)}
+                placeholder="اكتب سؤالك... (مثال: متى تأسست سدراتة؟ أو ما هي أبواب القصر؟)"
+                className="flex-1 h-11 bg-transparent text-sm sm:text-base text-[#301809] font-medium placeholder:text-[#723c11]/55 focus:outline-none min-w-0"
+              />
+              {assistantQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAssistantQuery('');
+                    setActiveAnswer(null);
+                  }}
+                  className="w-8 h-8 rounded-full hover:bg-[#fae1b7]/60 text-[#723c11] flex items-center justify-center shrink-0 cursor-pointer"
+                  title="مسح"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={!assistantQuery.trim() || isThinking}
+                className="h-11 px-6 rounded-xl bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#a56b20] hover:to-[#f5b44c] disabled:opacity-80 text-[#301809] font-thmanyah font-bold text-sm transition-all shadow-md cursor-pointer shrink-0"
+              >
+                بحث
+              </button>
+            </form>
+          </div>
 
           {/* اقتراحات سريعة ومختصرة */}
           {!activeAnswer && !isThinking && (
