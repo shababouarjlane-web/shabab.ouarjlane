@@ -41,6 +41,12 @@ import {
   Tag,
   ExternalLink,
   Layers,
+  FileDown,
+  Archive,
+  ArchiveRestore,
+  Power,
+  Star,
+  Target,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Textarea } from '../../components/ui/textarea';
@@ -63,8 +69,15 @@ import {
 import {
   HERITAGE_CATEGORIES,
   packHeritageMeta,
-  parseHeritageMeta
+  parseHeritageMeta,
+  parseAssociationMeta,
+  packAssociationMeta,
+  saveAssociationLocalOverride,
 } from '../../lib/helpers';
+import {
+  USER_INTEREST_CATEGORIES,
+  CATEGORY_ARABIC_LABELS,
+} from '../../lib/userInterests';
 import AdminHistoryRefsTab from '../../components/admin/AdminHistoryRefsTab';
 
 interface DashboardStats {
@@ -119,10 +132,37 @@ export default function AdminDashboard() {
   const [adFile, setAdFile] = useState<File | null>(null);
   const [adUploading, setAdUploading] = useState(false);
 
+  // Controlled Active Tab
+  const [activeTab, setActiveTab] = useState('overview');
+
+  // Association Edit Modal State
+  const [editingAssoc, setEditingAssoc] = useState<{
+    id: string;
+    name: string;
+    bio: string;
+    location: string;
+    phone: string;
+    website: string;
+    logo_url: string;
+  } | null>(null);
+  const [savingAssocEdit, setSavingAssocEdit] = useState(false);
+
+  // Events Moderation State
+  const [allEventsList, setAllEventsList] = useState<any[]>([]);
+  const [eventsModLoading, setEventsModLoading] = useState(false);
+  const [eventSearchQuery, setEventSearchQuery] = useState('');
+  const [eventStatusFilter, setEventStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [eventAssocFilter, setEventAssocFilter] = useState<string>('all');
+  const [featuredEventId, setFeaturedEventId] = useState<string>(
+    () => (typeof window !== 'undefined' && localStorage.getItem('sahara_featured_event_id')) || ''
+  );
+
   // Broadcast Notification States
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastBody, setBroadcastBody] = useState('');
   const [broadcastUrl, setBroadcastUrl] = useState('');
+  const [broadcastAudience, setBroadcastAudience] = useState<'all' | 'associations' | 'interest'>('all');
+  const [broadcastCategory, setBroadcastCategory] = useState<string>('Heritage');
   const [broadcasting, setBroadcasting] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState<any[]>([]);
 
@@ -130,6 +170,282 @@ export default function AdminDashboard() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [passwordUpdating, setPasswordUpdating] = useState(false);
+
+  // Helper: CSV Export with UTF-8 BOM for crisp Arabic in Excel
+  const downloadCsv = (filename: string, headers: string[], rows: (string | number | null | undefined)[][]) => {
+    const escapeCell = (val: string | number | null | undefined) => {
+      const s = val === null || val === undefined ? '' : String(val);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const csvContent =
+      '\uFEFF' +
+      [headers.map(escapeCell).join(','), ...rows.map((r) => r.map(escapeCell).join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${filename}-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('تم تصدير التقرير بنجاح بصيغة Excel / CSV');
+  };
+
+  const exportUsersCsv = () => {
+    const roleMap: Record<string, string> = {
+      super_admin: 'مدير عام',
+      association: 'ممثل جمعية',
+      attendee: 'مشارك / زائر',
+    };
+    downloadCsv(
+      'sahara-users-report',
+      ['البريد الإلكتروني', 'الرتبة', 'النقاط', 'الشارة', 'تاريخ التسجيل'],
+      usersList.map((u) => [
+        u.email || '',
+        roleMap[u.role] || u.role || '',
+        u.points ?? 0,
+        u.badge || '',
+        u.created_at ? new Date(u.created_at).toLocaleDateString('ar-DZ') : '',
+      ])
+    );
+  };
+
+  const exportAssociationsCsv = () => {
+    downloadCsv(
+      'sahara-associations-report',
+      ['اسم الجمعية', 'الحالة', 'بريد المسؤول', 'الفعاليات القادمة', 'المقر'],
+      associationsDetails.map((a) => {
+        const meta = parseAssociationMeta(a.description, a.id);
+        return [
+          a.name,
+          a.is_active === false ? 'معلّقة' : 'نشطة',
+          a.users?.email || '',
+          a.events?.filter((e: any) => e !== null).length || 0,
+          meta.location || 'ورقلة',
+        ];
+      })
+    );
+  };
+
+  const exportEventsCsv = () => {
+    downloadCsv(
+      'sahara-events-report',
+      ['عنوان الفعالية', 'الجمعية المنظمة', 'التصنيف', 'التاريخ', 'الموقع', 'الحالة', 'عدد المسجلين'],
+      allEventsList.map((ev) => [
+        ev.title,
+        ev.associations?.name || '',
+        CATEGORY_ARABIC_LABELS[ev.category] || ev.category || '',
+        ev.date || '',
+        ev.location || '',
+        ev.status === 'archived' ? 'مؤرشفة' : 'نشطة',
+        ev.rsvps?.[0]?.count || 0,
+      ])
+    );
+  };
+
+  const exportMonthlyCsv = () => {
+    downloadCsv(
+      'sahara-monthly-activity',
+      ['الشهر', 'عدد الفعاليات', 'تأكيدات الحضور'],
+      monthlyStats.map((m) => [m.name, m['الفعاليات'] || 0, m['الزوار'] || 0])
+    );
+  };
+
+  const fetchAllEvents = async () => {
+    setEventsModLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*, associations(id, name), rsvps(count)')
+        .order('date', { ascending: false });
+      if (error) throw error;
+      setAllEventsList(data || []);
+    } catch (err) {
+      console.error('Error fetching all events:', err);
+    } finally {
+      setEventsModLoading(false);
+    }
+  };
+
+  const handleToggleAssociationActive = async (assoc: any) => {
+    const nextActive = assoc.is_active === false ? true : false;
+    try {
+      const { error } = await supabase
+        .from('associations')
+        .update({ is_active: nextActive })
+        .eq('id', assoc.id);
+      if (error) throw error;
+      setAssociationsDetails((prev) =>
+        prev.map((a) => (a.id === assoc.id ? { ...a, is_active: nextActive } : a))
+      );
+      toast.success(nextActive ? `تم تفعيل جمعية «${assoc.name}»` : `تم تعليق جمعية «${assoc.name}» مؤقتاً`);
+    } catch (err: any) {
+      toast.error('تعذر تحديث حالة الجمعية: ' + (err.message || ''));
+    }
+  };
+
+  const handleOpenEditAssociation = (assoc: any) => {
+    const meta = parseAssociationMeta(assoc.description, assoc.id);
+    setEditingAssoc({
+      id: assoc.id,
+      name: assoc.name || '',
+      bio: meta.bio || '',
+      location: meta.location || 'ورقلة',
+      phone: meta.phone || '',
+      website: meta.website || '',
+      logo_url: meta.logo_url || '',
+    });
+  };
+
+  const handleSaveAssociationEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAssoc) return;
+    setSavingAssocEdit(true);
+    try {
+      const packed = packAssociationMeta(editingAssoc.bio, {
+        logo_url: editingAssoc.logo_url || undefined,
+        location: editingAssoc.location || undefined,
+        phone: editingAssoc.phone || undefined,
+        website: editingAssoc.website || undefined,
+      });
+      saveAssociationLocalOverride(editingAssoc.id, {
+        name: editingAssoc.name.trim(),
+        bio: editingAssoc.bio,
+        logo_url: editingAssoc.logo_url,
+        location: editingAssoc.location,
+        phone: editingAssoc.phone,
+        website: editingAssoc.website,
+      });
+      const { error } = await supabase
+        .from('associations')
+        .update({ name: editingAssoc.name.trim(), description: packed })
+        .eq('id', editingAssoc.id);
+      if (error) throw error;
+      toast.success('تم تحديث بيانات الجمعية بنجاح');
+      setEditingAssoc(null);
+      fetchStats();
+    } catch (err: any) {
+      toast.error('فشل تعديل الجمعية: ' + (err.message || ''));
+    } finally {
+      setSavingAssocEdit(false);
+    }
+  };
+
+  const handleDeleteAssociation = async (assoc: any) => {
+    if (!confirm(`هل أنت متأكد من حذف جمعية «${assoc.name}» نهائياً؟ سيتم حذف فعالياتها المرتبطة بها.`)) {
+      return;
+    }
+    try {
+      const { error } = await supabase.from('associations').delete().eq('id', assoc.id);
+      if (error) throw error;
+      setAssociationsDetails((prev) => prev.filter((a) => a.id !== assoc.id));
+      toast.success(`تم حذف جمعية «${assoc.name}» بنجاح`);
+      fetchStats();
+      fetchAllEvents();
+    } catch (err: any) {
+      toast.error('فشل حذف الجمعية: ' + (err.message || ''));
+    }
+  };
+
+  const handleAdminToggleEventStatus = async (ev: any) => {
+    const nextStatus = ev.status === 'archived' ? 'active' : 'archived';
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({ status: nextStatus })
+        .eq('id', ev.id);
+      if (error) throw error;
+      setAllEventsList((prev) =>
+        prev.map((item) => (item.id === ev.id ? { ...item, status: nextStatus } : item))
+      );
+      toast.success(nextStatus === 'archived' ? 'تمت أرشفة الفعالية' : 'تمت استعادة الفعالية للنشاط');
+    } catch (err: any) {
+      toast.error('تعذر تحديث حالة الفعالية: ' + (err.message || ''));
+    }
+  };
+
+  const handleAdminDeleteEvent = async (ev: any) => {
+    if (!confirm(`هل أنت متأكد من حذف فعالية «${ev.title}» نهائياً؟`)) return;
+    try {
+      const { error } = await supabase.from('events').delete().eq('id', ev.id);
+      if (error) throw error;
+      setAllEventsList((prev) => prev.filter((item) => item.id !== ev.id));
+      toast.success('تم حذف الفعالية بنجاح');
+      fetchStats();
+    } catch (err: any) {
+      toast.error('تعذر حذف الفعالية: ' + (err.message || ''));
+    }
+  };
+
+  const handleToggleFeaturedEvent = (ev: any) => {
+    const nextId = featuredEventId === ev.id ? '' : ev.id;
+    setFeaturedEventId(nextId);
+    if (nextId) {
+      localStorage.setItem('sahara_featured_event_id', nextId);
+      toast.success(`تم تثبيت «${ev.title}» كفعالية مميزة`);
+    } else {
+      localStorage.removeItem('sahara_featured_event_id');
+      toast.info('تم إلغاء تثبيت الفعالية المميزة');
+    }
+  };
+
+  const handleQuickApproveJoinRequest = async (item: any, meta: any) => {
+    const cleanTitle = (item.title || '')
+      .replace(/^طلب انضمام جمعية:\s*/i, '')
+      .replace(/^طلب انضمام:\s*/i, '')
+      .trim();
+    const email = (meta.contactEmail || '').trim().toLowerCase();
+
+    if (!email) {
+      setAssocName(cleanTitle);
+      setManagerEmail('');
+      setActiveTab('overview');
+      toast.info('تم نقل اسم الجمعية إلى نموذج الاعتماد — يرجى إدخال البريد الإلكتروني للممثل.');
+      return;
+    }
+
+    try {
+      const { data: user, error: userErr } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (userErr || !user) {
+        setAssocName(cleanTitle);
+        setManagerEmail(email);
+        setActiveTab('overview');
+        toast.warning(
+          'الممثل لم يسجل حساباً بهذا البريد بعد — تم تعبئة النموذج لك لتعديله أو اعتماده لاحقاً.'
+        );
+        return;
+      }
+
+      const packedDesc = packAssociationMeta(meta.cleanContent || '', {
+        phone: meta.contactPhone || undefined,
+        location: 'ورقلة، الجزائر',
+      });
+
+      const { error: assocErr } = await supabase.from('associations').insert({
+        name: cleanTitle || 'جمعية جديدة',
+        description: packedDesc,
+        manager_id: user.id,
+        is_active: true,
+      });
+      if (assocErr) throw assocErr;
+
+      await supabase.from('users').update({ role: 'association' }).eq('id', user.id);
+      await supabase.from('heritage_archive').delete().eq('id', item.id);
+
+      toast.success(`تم اعتماد جمعية «${cleanTitle}» وتفعيل صلاحيات ممثلها فوراً!`);
+      fetchStats();
+      fetchHeritageAndAds();
+      fetchUsers();
+    } catch (err: any) {
+      toast.error('تعذر الاعتماد التلقائي: ' + (err.message || ''));
+    }
+  };
 
   const handleSendBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,13 +460,22 @@ export default function AdminDashboard() {
       await new Promise<void>((resolve, reject) => {
         channel.subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
+            const audienceLabel =
+              broadcastAudience === 'associations'
+                ? 'مسؤولو الجمعيات'
+                : broadcastAudience === 'interest'
+                ? `مهتمو ${CATEGORY_ARABIC_LABELS[broadcastCategory] || broadcastCategory}`
+                : 'الجميع';
             const resp = await channel.send({
               type: 'broadcast',
               event: 'alert',
               payload: {
                 title: `إدارة المنصة: ${broadcastTitle}`,
                 body: broadcastBody,
-                url: broadcastUrl || undefined
+                url: broadcastUrl || undefined,
+                targetAudience: broadcastAudience,
+                targetCategory: broadcastAudience === 'interest' ? broadcastCategory : undefined,
+                audienceLabel,
               }
             });
 
@@ -202,6 +527,7 @@ export default function AdminDashboard() {
     fetchHeritageAndAds();
     fetchNotificationHistory();
     fetchUsers();
+    fetchAllEvents();
 
     const sub = supabase.channel('public-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public' }, () => {
@@ -209,6 +535,7 @@ export default function AdminDashboard() {
         fetchHeritageAndAds();
         fetchNotificationHistory();
         fetchUsers();
+        fetchAllEvents();
       })
       .subscribe();
 
@@ -779,18 +1106,68 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    className="h-11 px-4 rounded-xl bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#a06720] hover:to-[#e0982e] text-[#301809] font-thmanyah font-bold shadow-md cursor-pointer flex items-center gap-2 text-xs sm:text-sm"
+                  >
+                    <FileDown className="w-4 h-4" />
+                    <span>تصدير التقارير</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  sideOffset={8}
+                  className="w-56 bg-white/95 backdrop-blur-md rounded-2xl border border-[#dbc397] p-1.5 shadow-xl font-sans text-right"
+                >
+                  <DropdownMenuLabel className="px-3 py-1.5 text-right text-xs font-bold text-[#301809]">
+                    تصدير Excel / CSV (عربي)
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
+                  <DropdownMenuItem
+                    onClick={exportAssociationsCsv}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
+                  >
+                    <Building2 className="w-4 h-4 text-[#b87a29]" />
+                    <span>قائمة الجمعيات المعتمدة</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={exportEventsCsv}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
+                  >
+                    <Calendar className="w-4 h-4 text-[#b87a29]" />
+                    <span>تقرير الفعاليات والحضور</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={exportUsersCsv}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
+                  >
+                    <Users className="w-4 h-4 text-[#b87a29]" />
+                    <span>جدول المستخدمين والنقاط</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={exportMonthlyCsv}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
+                  >
+                    <BarChart3 className="w-4 h-4 text-[#b87a29]" />
+                    <span>ملخص النشاط الشهري</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Button
                 variant="outline"
                 onClick={() => {
                   fetchStats();
                   fetchHeritageAndAds();
                   fetchUsers();
+                  fetchAllEvents();
                   toast.success('تم تحديث البيانات المباشرة');
                 }}
                 className="h-11 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-[#fae1b7] border border-[#efa83f]/35 font-bold cursor-pointer flex items-center gap-2 text-xs sm:text-sm"
               >
                 <RefreshCw className="w-4 h-4 text-[#efa83f]" />
-                <span>تحديث الإحصائيات</span>
+                <span>تحديث</span>
               </Button>
             </div>
           </div>
@@ -848,21 +1225,28 @@ export default function AdminDashboard() {
         </section>
 
         {/* Tabs Navigation */}
-        <Tabs defaultValue="overview" className="space-y-6" dir="rtl">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" dir="rtl">
           <TabsList className="bg-white p-1.5 rounded-2xl border border-[#dbc397]/70 shadow-xs h-auto w-full flex flex-wrap gap-1">
             <TabsTrigger
               value="overview"
-              className="flex-1 min-w-[130px] px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="flex-1 min-w-[120px] px-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <BarChart3 className="w-4 h-4" />
               <span>الإحصائيات والجمعيات</span>
             </TabsTrigger>
             <TabsTrigger
+              value="events"
+              className="flex-1 min-w-[120px] px-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Calendar className="w-4 h-4" />
+              <span>إشراف الفعاليات ({allEventsList.length})</span>
+            </TabsTrigger>
+            <TabsTrigger
               value="users"
-              className="flex-1 min-w-[130px] px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="flex-1 min-w-[120px] px-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Users className="w-4 h-4" />
-              <span>المستخدمون والأدوار</span>
+              <span>المستخدمون</span>
             </TabsTrigger>
             <TabsTrigger
               value="heritage"
@@ -1069,7 +1453,7 @@ export default function AdminDashboard() {
                       className="overflow-hidden shadow-xs hover:shadow-md transition-all border border-[#e3d4b8] rounded-2xl bg-white"
                     >
                       <div
-                        className="flex items-center justify-between p-4.5 cursor-pointer bg-white hover:bg-[#fae1b7]/15 transition-colors gap-3"
+                        className="flex flex-wrap items-center justify-between p-4.5 cursor-pointer bg-white hover:bg-[#fae1b7]/15 transition-colors gap-3"
                         onClick={() => toggleAccordion(assoc.id)}
                       >
                         <div className="flex items-center gap-3.5 min-w-0">
@@ -1077,9 +1461,20 @@ export default function AdminDashboard() {
                             <Building2 className="w-5 h-5" />
                           </div>
                           <div className="min-w-0">
-                            <h3 className="text-sm sm:text-base font-thmanyah font-bold text-[#301809] truncate">
-                              {assoc.name}
-                            </h3>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-sm sm:text-base font-thmanyah font-bold text-[#301809] truncate">
+                                {assoc.name}
+                              </h3>
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                  assoc.is_active === false
+                                    ? 'bg-red-50 text-red-700 border-red-200'
+                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                }`}
+                              >
+                                {assoc.is_active === false ? 'معلّقة' : 'نشطة'}
+                              </span>
+                            </div>
                             <p
                               className="text-xs text-[#723c11]/80 font-mono truncate mt-0.5"
                               dir="ltr"
@@ -1088,7 +1483,7 @@ export default function AdminDashboard() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
                           <Button
                             type="button"
                             variant="outline"
@@ -1097,10 +1492,58 @@ export default function AdminDashboard() {
                               e.stopPropagation();
                               navigate(`/association-profile/${assoc.id}`);
                             }}
-                            className="h-8 px-3 rounded-xl border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/50 text-xs font-bold cursor-pointer gap-1"
+                            className="h-8 px-2.5 rounded-xl border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/50 text-xs font-bold cursor-pointer gap-1"
+                            title="عرض الصفحة العامة"
                           >
                             <ExternalLink className="w-3.5 h-3.5 text-[#b87a29]" />
-                            <span className="hidden sm:inline">صفحة الجمعية</span>
+                            <span className="hidden md:inline">الصفحة</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditAssociation(assoc);
+                            }}
+                            className="h-8 px-2.5 rounded-xl border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/50 text-xs font-bold cursor-pointer gap-1"
+                            title="تعديل بيانات الجمعية"
+                          >
+                            <Edit className="w-3.5 h-3.5 text-[#b87a29]" />
+                            <span className="hidden md:inline">تعديل</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleAssociationActive(assoc);
+                            }}
+                            className={`h-8 px-2.5 rounded-xl text-xs font-bold cursor-pointer gap-1 ${
+                              assoc.is_active === false
+                                ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+                                : 'border-amber-300 text-amber-800 hover:bg-amber-50'
+                            }`}
+                            title={assoc.is_active === false ? 'تفعيل الجمعية' : 'تعليق الجمعية مؤقتاً'}
+                          >
+                            <Power className="w-3.5 h-3.5" />
+                            <span className="hidden lg:inline">
+                              {assoc.is_active === false ? 'تفعيل' : 'تعليق'}
+                            </span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAssociation(assoc);
+                            }}
+                            className="h-8 w-8 p-0 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                            title="حذف الجمعية"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                           <span className="bg-[#fae1b7]/60 text-[#723c11] border border-[#dbc397] px-2.5 py-1 rounded-full text-xs font-bold">
                             {assoc.events?.filter((e: any) => e !== null).length || 0} فعالية
@@ -1149,6 +1592,305 @@ export default function AdminDashboard() {
                 )}
               </div>
             </div>
+            {/* Edit Association Modal */}
+            <Dialog open={!!editingAssoc} onOpenChange={(open) => !open && setEditingAssoc(null)}>
+              <DialogContent
+                className="sm:max-w-[500px] border border-[#dbc397] rounded-3xl bg-white"
+                dir="rtl"
+              >
+                <DialogHeader>
+                  <DialogTitle className="text-right text-xl font-thmanyah font-bold text-[#301809]">
+                    تعديل بيانات الجمعية
+                  </DialogTitle>
+                  <DialogDescription className="text-right text-xs text-[#723c11]">
+                    تحديث الاسم الرسمي والمقر والنبذة التعريفية للجمعية.
+                  </DialogDescription>
+                </DialogHeader>
+                {editingAssoc && (
+                  <form onSubmit={handleSaveAssociationEdit} className="space-y-4 text-right pt-2">
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">اسم الجمعية الرسمي</Label>
+                      <Input
+                        required
+                        value={editingAssoc.name}
+                        onChange={(e) => setEditingAssoc({ ...editingAssoc, name: e.target.value })}
+                        className="h-11 font-bold border border-[#dbc397] bg-[#fdfbf7] rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">المقر / العنوان</Label>
+                      <Input
+                        value={editingAssoc.location}
+                        onChange={(e) =>
+                          setEditingAssoc({ ...editingAssoc, location: e.target.value })
+                        }
+                        className="h-11 border border-[#dbc397] bg-[#fdfbf7] rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">نبذة تعريفية</Label>
+                      <Textarea
+                        rows={3}
+                        value={editingAssoc.bio}
+                        onChange={(e) => setEditingAssoc({ ...editingAssoc, bio: e.target.value })}
+                        className="border border-[#dbc397] bg-[#fdfbf7] rounded-xl"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setEditingAssoc(null)}
+                        className="flex-1 h-11 rounded-xl border-[#dbc397] text-[#723c11] font-bold cursor-pointer"
+                      >
+                        إلغاء
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={savingAssocEdit}
+                        className="flex-1 h-11 rounded-xl bg-gradient-to-l from-[#b87a29] to-[#efa83f] text-[#301809] font-thmanyah font-bold cursor-pointer"
+                      >
+                        {savingAssocEdit ? (
+                          <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                        ) : (
+                          'حفظ التعديلات'
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
+
+          {/* EVENTS MODERATION TAB */}
+          <TabsContent
+            value="events"
+            className="mt-0 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            {/* Toolbar: Search + Filters */}
+            <Card className="bg-white border border-[#e3d4b8] rounded-2xl shadow-xs p-4">
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3.5">
+                <div className="relative flex-1">
+                  <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#b87a29]" />
+                  <Input
+                    type="text"
+                    placeholder="ابحث باسم الفعالية، الموقع، أو الجمعية..."
+                    value={eventSearchQuery}
+                    onChange={(e) => setEventSearchQuery(e.target.value)}
+                    className="pr-10 h-10 bg-[#fdfbf7] border border-[#dbc397] rounded-xl text-sm font-medium focus-visible:border-[#b87a29]"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={eventAssocFilter}
+                    onChange={(e) => setEventAssocFilter(e.target.value)}
+                    className="h-10 rounded-xl border border-[#dbc397] bg-[#fdfbf7] px-3 text-xs font-bold text-[#301809] focus:outline-none focus:border-[#b87a29]"
+                  >
+                    <option value="all">كل الجمعيات</option>
+                    {associationsDetails.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="inline-flex items-center gap-1 bg-[#fdfbf7] p-1 rounded-xl border border-[#dbc397]">
+                    {(['all', 'active', 'archived'] as const).map((st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => setEventStatusFilter(st)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          eventStatusFilter === st
+                            ? 'bg-[#301809] text-[#fae1b7]'
+                            : 'text-[#723c11] hover:bg-[#fae1b7]/40'
+                        }`}
+                      >
+                        {st === 'all' ? 'الكل' : st === 'active' ? 'نشطة' : 'مؤرشفة'}
+                      </button>
+                    ))}
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={exportEventsCsv}
+                    className="h-10 px-3 rounded-xl border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/40 text-xs font-bold cursor-pointer gap-1.5"
+                  >
+                    <FileDown className="w-3.5 h-3.5 text-[#b87a29]" />
+                    <span>تصدير CSV</span>
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Events Table */}
+            <Card className="bg-white border border-[#e3d4b8] rounded-3xl shadow-xs overflow-hidden">
+              {eventsModLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-[#723c11]">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#b87a29]" />
+                  <p className="font-bold text-sm">جاري تحميل فعاليات المنصة...</p>
+                </div>
+              ) : (() => {
+                const filteredEvents = allEventsList.filter((ev) => {
+                  const q = eventSearchQuery.trim().toLowerCase();
+                  const matchesSearch =
+                    !q ||
+                    ev.title?.toLowerCase().includes(q) ||
+                    ev.location?.toLowerCase().includes(q) ||
+                    ev.associations?.name?.toLowerCase().includes(q);
+                  const matchesStatus =
+                    eventStatusFilter === 'all' ||
+                    (eventStatusFilter === 'archived'
+                      ? ev.status === 'archived'
+                      : ev.status !== 'archived');
+                  const matchesAssoc =
+                    eventAssocFilter === 'all' || ev.association_id === eventAssocFilter;
+                  return matchesSearch && matchesStatus && matchesAssoc;
+                });
+
+                if (filteredEvents.length === 0) {
+                  return (
+                    <div className="text-center py-16 px-4">
+                      <Calendar className="w-11 h-11 text-[#dbc397] mx-auto mb-3" />
+                      <h3 className="text-base font-thmanyah font-bold text-[#301809]">
+                        لا توجد فعاليات مطابقة
+                      </h3>
+                      <p className="text-xs text-[#723c11]/80 mt-1">
+                        جرب تعديل الفلاتر أو كلمة البحث أعلاه.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-right border-collapse">
+                      <thead>
+                        <tr className="bg-[#fdfbf7] border-b border-[#e3d4b8] text-[#723c11] text-xs font-bold">
+                          <th className="p-4">الفعالية والجمعية</th>
+                          <th className="p-4">التصنيف</th>
+                          <th className="p-4">التاريخ والموقع</th>
+                          <th className="p-4">المسجلون</th>
+                          <th className="p-4">الحالة</th>
+                          <th className="p-4 text-center">إجراءات الإشراف</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#e3d4b8]/60 text-sm">
+                        {filteredEvents.map((ev) => {
+                          const isFeatured = featuredEventId === ev.id;
+                          return (
+                            <tr
+                              key={ev.id}
+                              className={`hover:bg-[#fae1b7]/15 transition-colors ${
+                                isFeatured ? 'bg-[#fae1b7]/20' : ''
+                              }`}
+                            >
+                              <td className="p-4">
+                                <div className="min-w-0 max-w-xs">
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => navigate(`/event/${ev.id}`)}
+                                      className="font-thmanyah font-bold text-[#301809] hover:text-[#b87a29] truncate text-right cursor-pointer"
+                                    >
+                                      {ev.title}
+                                    </button>
+                                    {isFeatured && (
+                                      <span className="text-[10px] font-bold bg-[#301809] text-[#efa83f] px-2 py-0.5 rounded-full shrink-0">
+                                        مميزة
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-[#723c11]/80 truncate mt-0.5">
+                                    {ev.associations?.name || 'جمعية معتمدة'}
+                                  </p>
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                <span className="text-xs font-bold bg-[#fae1b7]/60 text-[#301809] px-2.5 py-0.5 rounded-full border border-[#dbc397]">
+                                  {CATEGORY_ARABIC_LABELS[ev.category] || 'نشاط مجتمعي'}
+                                </span>
+                              </td>
+                              <td className="p-4 text-xs text-[#723c11]">
+                                <p className="font-bold" dir="ltr">
+                                  {ev.date}
+                                </p>
+                                <p className="truncate max-w-[160px] mt-0.5">
+                                  {ev.location || 'ورقلة'}
+                                </p>
+                              </td>
+                              <td className="p-4">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-[#301809] bg-[#fdfbf7] border border-[#dbc397] px-2.5 py-1 rounded-lg">
+                                  <Users className="w-3.5 h-3.5 text-[#b87a29]" />
+                                  {ev.rsvps?.[0]?.count || 0}
+                                </span>
+                              </td>
+                              <td className="p-4">
+                                <span
+                                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                                    ev.status === 'archived'
+                                      ? 'bg-stone-100 text-stone-600 border-stone-200'
+                                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  }`}
+                                >
+                                  {ev.status === 'archived' ? 'مؤرشفة' : 'نشطة'}
+                                </span>
+                              </td>
+                              <td className="p-4">
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleToggleFeaturedEvent(ev)}
+                                    className={`h-8 w-8 rounded-xl cursor-pointer ${
+                                      isFeatured
+                                        ? 'bg-[#301809] text-[#efa83f] hover:bg-[#4a250e]'
+                                        : 'text-[#b87a29] hover:bg-[#fae1b7]/40'
+                                    }`}
+                                    title={isFeatured ? 'إلغاء التثبيت' : 'تثبيت كفعالية مميزة'}
+                                  >
+                                    <Star className={`w-4 h-4 ${isFeatured ? 'fill-[#efa83f]' : ''}`} />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleAdminToggleEventStatus(ev)}
+                                    className="h-8 w-8 rounded-xl text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
+                                    title={ev.status === 'archived' ? 'استعادة الفعالية' : 'أرشفة الفعالية'}
+                                  >
+                                    {ev.status === 'archived' ? (
+                                      <ArchiveRestore className="w-4 h-4" />
+                                    ) : (
+                                      <Archive className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleAdminDeleteEvent(ev)}
+                                    className="h-8 w-8 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                                    title="حذف الفعالية"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </Card>
           </TabsContent>
 
           {/* USERS TAB */}
@@ -1524,14 +2266,25 @@ export default function AdminDashboard() {
                                 </a>
                               )}
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteItem('heritage_archive', item.id)}
-                              className="text-red-500 hover:bg-red-50 rounded-xl h-8 px-2.5 text-xs font-bold cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 ml-1" /> أرشفة / حذف
-                            </Button>
+                            <div className="flex items-center gap-1.5">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => handleQuickApproveJoinRequest(item, meta)}
+                                className="bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-[#301809] hover:text-white rounded-xl h-8 px-3 text-xs font-bold cursor-pointer gap-1"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>اعتماد كجمعية</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteItem('heritage_archive', item.id)}
+                                className="text-red-500 hover:bg-red-50 rounded-xl h-8 px-2.5 text-xs font-bold cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 ml-1" /> حذف
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -2262,6 +3015,55 @@ export default function AdminDashboard() {
                 </div>
                 <CardContent className="p-6 md:p-7">
                   <form onSubmit={handleSendBroadcast} className="space-y-5 text-right">
+                    {/* Targeted Audience Selector */}
+                    <div className="space-y-2.5 p-4 rounded-2xl bg-[#fdfbf7] border border-[#dbc397]">
+                      <Label className="font-bold text-xs text-[#301809] flex items-center gap-1.5">
+                        <Target className="w-4 h-4 text-[#b87a29]" />
+                        <span>الجمهور المستهدف بالإشعار</span>
+                      </Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'all', label: 'الجميع' },
+                          { id: 'associations', label: 'الجمعيات فقط' },
+                          { id: 'interest', label: 'مجال محدد' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() =>
+                              setBroadcastAudience(opt.id as 'all' | 'associations' | 'interest')
+                            }
+                            className={`h-9 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                              broadcastAudience === opt.id
+                                ? 'bg-[#301809] text-[#fae1b7] border-[#301809]'
+                                : 'bg-white text-[#723c11] border-[#dbc397] hover:bg-[#fae1b7]/40'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {broadcastAudience === 'interest' && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {USER_INTEREST_CATEGORIES.map((cat) => (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => setBroadcastCategory(cat.id)}
+                              className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all cursor-pointer ${
+                                broadcastCategory === cat.id
+                                  ? 'bg-[#b87a29] text-white border-[#b87a29]'
+                                  : 'bg-white text-[#723c11] border-[#dbc397] hover:bg-[#fae1b7]/40'
+                              }`}
+                            >
+                              {cat.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="space-y-1.5">
                       <Label
                         htmlFor="admin-broadcast-title"

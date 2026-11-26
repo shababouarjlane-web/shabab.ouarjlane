@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
+import { getSavedInterests } from '../lib/userInterests';
 
 // Standard base64 URL-safe to Uint8Array helper (for VAPID keys)
 function urlBase64ToUint8Array(base64String: string) {
@@ -53,7 +54,34 @@ export function useNotifications() {
       config: { broadcast: { self: true } }
     });
 
-    channel.on('broadcast', { event: 'alert' }, ({ payload }) => {
+    channel.on('broadcast', { event: 'alert' }, async ({ payload }) => {
+      try {
+        const audience = payload?.targetAudience as string | undefined;
+        const targetCategory = payload?.targetCategory as string | undefined;
+
+        if (audience === 'associations') {
+          const demoRole = localStorage.getItem('demo_role');
+          let role = demoRole;
+          if (!role) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data } = await supabase
+                .from('users')
+                .select('role')
+                .eq('id', user.id)
+                .maybeSingle();
+              role = data?.role || null;
+            }
+          }
+          if (role !== 'association' && role !== 'super_admin') return;
+        } else if (audience === 'interest' && targetCategory) {
+          const saved = getSavedInterests();
+          if (saved.length > 0 && !saved.includes(targetCategory)) return;
+        }
+      } catch {
+        // Fallback to showing notification if check fails
+      }
+
       showNativeNotification(payload.title, payload.body, payload.url);
     });
 
