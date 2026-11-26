@@ -6,33 +6,41 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
-import { 
-  Users, 
-  Building2, 
-  Calendar, 
-  Ticket, 
-  ChevronDown, 
-  ChevronUp, 
-  History, 
-  Trash2, 
-  Megaphone, 
-  Link as LinkIcon, 
-  Edit, 
-  Smartphone, 
-  Send, 
-  Loader2, 
-  Bell, 
-  ShieldCheck, 
-  UserX, 
-  Search, 
+import UnifiedHeader from '../../components/UnifiedHeader';
+import {
+  Users,
+  Building2,
+  Calendar,
+  Ticket,
+  ChevronDown,
+  ChevronUp,
+  History,
+  Trash2,
+  Megaphone,
+  Link as LinkIcon,
+  Edit,
+  Smartphone,
+  Send,
+  Loader2,
+  Bell,
+  ShieldCheck,
+  UserX,
+  Search,
   RefreshCw,
   Settings,
   KeyRound,
   LogOut,
-  ArrowRight,
   Sparkles,
-  TrendingUp,
-  Activity
+  BarChart3,
+  MapPin,
+  BookOpen,
+  CheckCircle2,
+  Phone,
+  Mail,
+  Image as ImageIcon,
+  Tag,
+  ExternalLink,
+  Layers,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Textarea } from '../../components/ui/textarea';
@@ -519,11 +527,11 @@ export default function AdminDashboard() {
 
       const totalEvs = allEvents?.length || 0;
       const catLabels: Record<string, string> = {
-        Heritage: '🏺 تراثي',
-        Cultural: '🎨 ثقافي',
-        Educational: '📚 تعليمي',
-        Religious: '🕌 ديني',
-        Sports: '⚽ رياضي',
+        Heritage: 'تراثي وأصالة',
+        Cultural: 'ثقافي وفني',
+        Educational: 'تعليمي وتكويني',
+        Religious: 'ديني وقرآني',
+        Sports: 'رياضي وشبابي',
       };
       setCategoryStats(
         Object.entries(catCounts).map(([k, count]) => ({
@@ -641,1259 +649,1484 @@ export default function AdminDashboard() {
     return matchesSearch && matchesRole;
   });
 
+  const pendingSuggestionsCount = heritageItems.filter(
+    (item) => parseHeritageMeta(item.content, item.title).status === 'pending'
+  ).length;
+  const contactRequestsCount = heritageItems.filter(
+    (item) => parseHeritageMeta(item.content, item.title).status === 'contact_request'
+  ).length;
+
+  const accountMenuSlot = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="w-10 h-10 rounded-xl border border-[#dbc397] bg-white hover:bg-[#fae1b7]/40 text-[#301809] cursor-pointer"
+          title="الإعدادات والحساب"
+        >
+          <Settings className="w-4 h-4 text-[#723c11]" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        align="start"
+        sideOffset={8}
+        className="w-56 bg-white/95 backdrop-blur-md rounded-2xl border border-[#dbc397] p-1.5 shadow-xl font-sans text-right"
+      >
+        <DropdownMenuLabel className="px-3 py-2 text-right">
+          <p className="text-xs font-bold text-[#301809]">حساب الإدارة المركزية</p>
+          <p className="text-[11px] text-[#723c11]/75 font-mono truncate mt-0.5">
+            Super Admin
+          </p>
+        </DropdownMenuLabel>
+
+        <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
+
+        <DropdownMenuItem
+          onClick={() => setIsPasswordModalOpen(true)}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
+        >
+          <KeyRound className="w-4 h-4 text-[#b87a29]" />
+          <span>تغيير كلمة المرور</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
+
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
+        >
+          <LogOut className="w-4 h-4 text-red-500" />
+          <span>تسجيل الخروج</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
-    <div className="min-h-screen bg-[#fdfbf7] text-[#301809] font-sans pb-16 selection:bg-[#efa83f]/30" dir="rtl">
-      {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#dbc397]/50 shadow-xs">
-        <div className="container mx-auto px-4 md:px-8 h-20 flex items-center justify-between gap-4">
-          
-          {/* Logo & Platform Info */}
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] font-black text-xl shadow-md shrink-0">
-              🛡️
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg md:text-xl font-thmanyah font-bold text-[#301809] leading-none">
-                  لوحة الإدارة المركزية
-                </h1>
-                <span className="hidden sm:inline-block bg-[#efa83f]/20 text-[#723c11] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#efa83f]/40">
-                  سوبر أدمن
-                </span>
-              </div>
-              <p className="text-[11px] text-[#723c11]/80 font-medium mt-1">
-                تواصل صحراء · ولاية ورقلة (بيانات حية متزامنة)
-              </p>
-            </div>
-          </div>
+    <div
+      className="min-h-screen bg-[#fdfbf7] bg-[radial-gradient(ellipse_at_top,_rgba(239,168,63,0.12),_transparent_55%)] text-[#301809] font-sans pb-16 selection:bg-[#efa83f]/30"
+      dir="rtl"
+    >
+      {/* Unified Platform Header */}
+      <UnifiedHeader rightSlot={accountMenuSlot} />
 
-          {/* Header Action Buttons & Settings Gear */}
-          <div className="flex items-center gap-2.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="hidden sm:flex items-center gap-1.5 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 rounded-xl h-10 px-3.5 text-xs font-bold transition-all cursor-pointer"
-            >
-              <ArrowRight className="w-3.5 h-3.5 text-[#b87a29]" />
-              <span>الموقع الرئيسي</span>
-            </Button>
-
-            {/* Gear Dropdown Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="w-11 h-11 rounded-2xl border-2 border-[#dbc397] bg-white hover:bg-[#fae1b7]/30 text-[#301809] shadow-xs hover:border-[#b87a29] transition-all cursor-pointer focus-visible:ring-[#b87a29]"
-                  title="الإعدادات والحساب"
-                >
-                  <Settings className="w-5 h-5 text-[#723c11] animate-hover-spin" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="start"
-                sideOffset={8}
-                className="w-60 bg-white/95 backdrop-blur-md rounded-2xl border-2 border-[#dbc397] p-1.5 shadow-2xl font-sans text-right"
-              >
-                <DropdownMenuLabel className="px-3 py-2 text-right">
-                  <p className="text-xs font-black text-[#301809]">حساب الإدارة</p>
-                  <p className="text-[10px] text-slate-500 font-mono truncate mt-0.5">Super Admin Session</p>
-                </DropdownMenuLabel>
-
-                <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
-
-                <DropdownMenuItem
-                  onClick={() => setIsPasswordModalOpen(true)}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/50 cursor-pointer transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <KeyRound className="w-4 h-4 text-[#b87a29]" />
-                    <span>تغيير كلمة المرور</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400">🔑</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onClick={() => navigate('/')}
-                  className="sm:hidden flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/50 cursor-pointer transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <ArrowRight className="w-4 h-4 text-[#b87a29]" />
-                    <span>الانتقال للموقع الرئيسي</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400">🌐</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
-
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <LogOut className="w-4 h-4 text-red-500" />
-                    <span>تسجيل الخروج</span>
-                  </div>
-                  <span className="text-[10px] text-red-400">خروج</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 md:px-8 pt-8 space-y-8">
-
-      <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
-        <DialogContent className="font-sans" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-800 mb-2">تغيير كلمة المرور</DialogTitle>
-            <DialogDescription className="text-slate-500 font-medium">
-              أدخل كلمة المرور الجديدة لحسابك.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleUpdatePassword} className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label>كلمة المرور الجديدة</Label>
-              <Input
-                type="password"
-                required
-                minLength={6}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="******"
-                className="bg-slate-50"
-              />
-            </div>
-            <Button type="submit" disabled={passwordUpdating} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl">
-              {passwordUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : 'حفظ كلمة المرور'}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modern Dashboard KPI Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Card 1: Users */}
-        <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">إجمالي المستخدمين</span>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-600 shadow-xs group-hover:scale-110 transition-transform">
-              <Users className="w-6 h-6" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{stats.total_users}</span>
-            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" /> نشط
-            </span>
-          </div>
-          <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 rounded-full" style={{ width: '100%' }} />
-          </div>
-        </div>
-
-        {/* Card 2: Associations */}
-        <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">الجمعيات المعتمدة</span>
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-[#b87a29] shadow-xs group-hover:scale-110 transition-transform">
-              <Building2 className="w-6 h-6" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{stats.total_associations}</span>
-            <span className="text-xs font-bold text-[#b87a29] bg-amber-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" /> مرخص
-            </span>
-          </div>
-          <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] rounded-full" style={{ width: '100%' }} />
-          </div>
-        </div>
-
-        {/* Card 3: Events */}
-        <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">الفعاليات المنظمة</span>
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-600 shadow-xs group-hover:scale-110 transition-transform">
-              <Calendar className="w-6 h-6" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{stats.total_events}</span>
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-              <Activity className="w-3.5 h-3.5" /> فعالية
-            </span>
-          </div>
-          <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500 rounded-full" style={{ width: '100%' }} />
-          </div>
-        </div>
-
-        {/* Card 4: RSVPs */}
-        <div className="relative overflow-hidden bg-white rounded-3xl p-6 border-2 border-[#dbc397]/50 shadow-md hover:shadow-xl hover:border-[#b87a29] transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#723c11] uppercase tracking-wider">تأكيدات الحضور (RSVP)</span>
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-200/80 flex items-center justify-center text-purple-600 shadow-xs group-hover:scale-110 transition-transform">
-              <Ticket className="w-6 h-6" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-4xl md:text-5xl font-black text-[#301809] tracking-tight">{stats.total_rsvps}</span>
-            <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> تذكرة
-            </span>
-          </div>
-          <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-purple-500 rounded-full" style={{ width: '100%' }} />
-          </div>
-        </div>
-      </div>
-
-      <Tabs defaultValue="overview" className="space-y-8">
-        <TabsList className="bg-white/80 backdrop-blur-md p-1.5 rounded-3xl border-2 border-[#dbc397]/60 shadow-sm h-auto min-h-14 w-full max-w-5xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
-          <TabsTrigger value="overview" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
-            📊 إحصائيات ومنظمات
-          </TabsTrigger>
-          <TabsTrigger value="users" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
-            👥 المستخدمون والأدوار
-          </TabsTrigger>
-          <TabsTrigger value="heritage" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
-            🗺️ معالم الخريطة والمقترحات
-          </TabsTrigger>
-          <TabsTrigger value="history-refs" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
-            📚 مراجع الباحث التاريخي
-          </TabsTrigger>
-          <TabsTrigger value="ads" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
-            📢 إدارة الإعلانات
-          </TabsTrigger>
-          <TabsTrigger value="broadcast" className="text-xs md:text-sm font-bold rounded-2xl data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-md py-3 transition-all cursor-pointer">
-            📣 بث إشعار عام
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="lg:col-span-2 shadow-xl border-2 border-[#dbc397]/50 rounded-3xl bg-white overflow-hidden">
-              <CardHeader className="bg-[#fdfbf7] border-b border-[#dbc397]/40 pb-4">
-                <CardTitle className="text-lg md:text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
-                  <span>📈 النشاط الشهري — الفعاليات وتأكيدات الحضور</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-80 w-full pt-6" dir="ltr">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyStats} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <XAxis dataKey="name" tick={{ fill: '#723c11', fontWeight: 'bold', fontSize: 12 }} />
-                    <YAxis tick={{ fill: '#723c11', fontWeight: 'bold' }} allowDecimals={false} />
-                    <Tooltip 
-                      cursor={{ fill: 'rgba(239, 168, 63, 0.1)' }} 
-                      contentStyle={{ 
-                        borderRadius: '16px', 
-                        border: '2px border #dbc397', 
-                        boxShadow: '0 10px 25px -5px rgba(48, 24, 9, 0.15)', 
-                        fontWeight: 'bold', 
-                        direction: 'rtl', 
-                        backgroundColor: '#ffffff',
-                        color: '#301809'
-                      }}
-                      itemStyle={{ color: '#301809', fontWeight: 'bold' }}
-                      labelStyle={{ color: '#b87a29', fontWeight: 'black', marginBottom: '4px' }}
-                    />
-                    <Legend wrapperStyle={{ fontWeight: 'bold', direction: 'rtl', paddingTop: '10px' }} />
-                    <Bar dataKey="الفعاليات" fill="#b87a29" radius={[8, 8, 0, 0]} />
-                    <Bar dataKey="الزوار" fill="#10b981" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Create Association Card */}
-            <Card className="shadow-xl border-2 border-[#dbc397] rounded-3xl overflow-hidden bg-white">
-              <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] mx-auto mb-2 text-2xl shadow-sm">
-                  🏛️
-                </div>
-                <h3 className="text-lg font-black text-[#fae1b7]">اعتماد جمعية جديدة</h3>
-                <p className="text-xs text-[#d4b174] mt-1">تفعيل صلاحيات تنظيم الفعاليات لممثل جمعية</p>
-              </div>
-              <CardContent className="pt-6">
-                <form onSubmit={handleCreateAssociation} className="space-y-5 text-right">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="assocName" className="font-bold text-xs text-[#301809]">اسم الجمعية الرسمية</Label>
-                    <Input
-                      id="assocName"
-                      value={assocName}
-                      onChange={(e) => setAssocName(e.target.value)}
-                      placeholder="مثال: جمعية الإحسان للتراث"
-                      required
-                      className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="managerEmail" className="font-bold text-xs text-[#301809]">البريد الإلكتروني لممثل الجمعية</Label>
-                    <Input
-                      id="managerEmail"
-                      type="email"
-                      value={managerEmail}
-                      onChange={(e) => setManagerEmail(e.target.value)}
-                      placeholder="manager@example.com"
-                      className="h-11 text-left font-sans border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
-                      dir="ltr"
-                      required
-                    />
-                    <p className="text-[10px] text-[#723c11] font-semibold bg-[#fae1b7]/40 p-2.5 rounded-xl border border-[#dbc397]/60 mt-2 leading-relaxed">
-                      💡 ملاحظة: يجب أن يكون الممثل قد سجل دخوله مسبقاً في المنصة ليرتبط حسابه بالجمعية تلقائياً.
-                    </p>
-                  </div>
-                  <Button type="submit" disabled={loading} className="w-full h-12 text-sm font-black bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white shadow-lg rounded-xl cursor-pointer transition-all">
-                    {loading ? "جاري الاعتماد..." : "اعتماد الجمعية وتفعيل الصلاحيات"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Category Distribution Analytics Card */}
-          <Card className="shadow-xl border-2 border-[#dbc397]/60 rounded-3xl bg-white overflow-hidden">
-            <CardHeader className="bg-[#fdfbf7] border-b border-[#dbc397]/40 pb-4">
-              <CardTitle className="text-lg md:text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
-                <span>🎯 توزيع الفعاليات المعتمدة حسب المجالات والتصنيفات</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                {categoryStats.map((cat) => (
-                  <div key={cat.name} className="p-4 rounded-2xl bg-[#fdfbf7] border-2 border-[#dbc397]/60 space-y-2">
-                    <div className="flex justify-between items-center text-xs font-black text-[#301809]">
-                      <span>{cat.name}</span>
-                      <span className="bg-[#fae1b7] text-[#723c11] px-2 py-0.5 rounded-full border border-[#dbc397]">
-                        {cat.count} فعالية
-                      </span>
-                    </div>
-                    <div className="h-2.5 w-full bg-[#fae1b7]/40 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#301809] via-[#b87a29] to-[#efa83f] rounded-full transition-all duration-700"
-                        style={{ width: `${Math.max(cat.pct, cat.count > 0 ? 12 : 0)}%` }}
-                      />
-                    </div>
-                    <p className="text-[11px] text-[#723c11] font-bold text-left">{cat.pct}% من الإجمالي</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="mt-8">
-            <h2 className="text-xl md:text-2xl font-thmanyah font-bold text-[#301809] mb-5 pb-3 border-b-2 border-[#dbc397]/40 flex items-center gap-3">
-              <Building2 className="text-[#b87a29]" />
-              <span>تفاصيل الجمعيات والفعاليات المعتمدة</span>
-            </h2>
-            <div className="space-y-4">
-              {associationsDetails.length === 0 ? (
-                <div className="text-center text-[#723c11] py-12 bg-white rounded-3xl border-2 border-dashed border-[#dbc397] font-bold">
-                  لا توجد جمعيات مسجلة حتى الآن.
-                </div>
-              ) : (
-                associationsDetails.map((assoc) => (
-                  <Card key={assoc.id} className="overflow-hidden shadow-sm hover:shadow-md transition-all border-2 border-[#dbc397]/60 rounded-3xl bg-white">
-                    <div 
-                      className="flex items-center justify-between p-5 cursor-pointer bg-white hover:bg-[#fae1b7]/20 transition-colors"
-                      onClick={() => toggleAccordion(assoc.id)}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] flex items-center justify-center text-[#efa83f] font-bold text-lg shadow-sm shrink-0">
-                          🏛️
-                        </div>
-                        <div>
-                          <h3 className="text-base font-bold text-[#301809]">{assoc.name}</h3>
-                          <p className="text-xs text-[#723c11]/80 font-mono mt-0.5" dir="ltr">{assoc.users?.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/association-profile/${assoc.id}`);
-                          }}
-                          className="h-8 px-3 rounded-xl border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/50 text-xs font-bold cursor-pointer"
-                        >
-                          صفحة الجمعية
-                        </Button>
-                        <span className="bg-[#fae1b7]/70 text-[#723c11] border border-[#d4b174]/60 px-3 py-1 rounded-full text-xs font-bold shadow-2xs">
-                          {assoc.events?.filter((e: any) => e !== null).length || 0} فعالية نشطة
-                        </span>
-                        {expandedAssocId === assoc.id ? (
-                          <ChevronUp className="h-5 w-5 text-[#b87a29]" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 text-[#b87a29]" />
-                        )}
-                      </div>
-                    </div>
-                    
-                    {expandedAssocId === assoc.id && (
-                      <div className="bg-[#fdfbf7] border-t border-[#dbc397]/50 p-5">
-                        {assoc.events && assoc.events.filter((e: any) => e !== null).length > 0 ? (
-                          <ul className="space-y-3">
-                            {assoc.events.filter((e: any) => e !== null).map((event: any) => (
-                              <li key={event.id} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-[#dbc397]/60 shadow-xs">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-2.5 h-2.5 rounded-full bg-[#efa83f] animate-ping" />
-                                  <span className="font-bold text-sm text-[#301809]">{event.title}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs font-bold text-[#723c11] bg-[#fae1b7]/50 px-3 py-1.5 rounded-xl border border-[#dbc397]">
-                                  <Calendar className="h-3.5 w-3.5 text-[#b87a29]" />
-                                  <span dir="ltr">{event.date}</span>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-[#723c11]/70 text-center py-5 bg-white rounded-2xl border border-dashed border-[#dbc397] text-xs font-bold">
-                            لا توجد فعاليات قادمة لهذه الجمعية حتى الآن.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </Card>
-                ))
-              )}
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Header & Stats Banner */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-white border-2 border-[#dbc397]/50 rounded-3xl shadow-sm hover:shadow-md hover:border-[#b87a29] transition-all p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-[#723c11]">إجمالي الحسابات</p>
-                  <p className="text-3xl font-black text-[#301809] mt-1">{usersList.length}</p>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center text-[#723c11]">
-                  <Users className="w-6 h-6" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="bg-white border-2 border-[#dbc397]/50 rounded-3xl shadow-sm hover:shadow-md hover:border-[#b87a29] transition-all p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-[#723c11]">الزوار والمشاركون</p>
-                  <p className="text-3xl font-black text-[#b87a29] mt-1">
-                    {usersList.filter(u => u.role === 'attendee').length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-[#b87a29]">
-                  <Users className="w-6 h-6" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="bg-white border-2 border-[#dbc397]/50 rounded-3xl shadow-sm hover:shadow-md hover:border-[#b87a29] transition-all p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-[#723c11]">مسؤولو الجمعيات</p>
-                  <p className="text-3xl font-black text-[#723c11] mt-1">
-                    {usersList.filter(u => u.role === 'association').length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-[#fae1b7]/60 border border-[#d4b174] flex items-center justify-center text-[#723c11]">
-                  <Building2 className="w-6 h-6" />
-                </div>
-              </div>
-            </Card>
-
-            <Card className="bg-white border-2 border-[#dbc397]/50 rounded-3xl shadow-sm hover:shadow-md hover:border-[#b87a29] transition-all p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-[#723c11]">المدراء العامون</p>
-                  <p className="text-3xl font-black text-[#301809] mt-1">
-                    {usersList.filter(u => u.role === 'super_admin').length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#301809] to-[#723c11] border border-[#dbc397] flex items-center justify-center text-[#efa83f]">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Search, Filter & Actions Toolbar */}
-          <Card className="bg-white border-2 border-[#dbc397]/60 rounded-3xl shadow-sm p-4">
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-              {/* Search input */}
-              <div className="relative flex-1">
-                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#b87a29]" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+        {/* Password Change Modal */}
+        <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
+          <DialogContent
+            className="font-sans border border-[#dbc397] rounded-3xl bg-white max-w-md"
+            dir="rtl"
+          >
+            <DialogHeader>
+              <DialogTitle className="text-xl font-thmanyah font-bold text-[#301809]">
+                تغيير كلمة المرور
+              </DialogTitle>
+              <DialogDescription className="text-xs text-[#723c11] font-medium mt-1">
+                أدخل كلمة المرور الجديدة لحساب الإدارة المركزية.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdatePassword} className="space-y-4 pt-3 text-right">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-[#301809]">كلمة المرور الجديدة</Label>
                 <Input
-                  type="text"
-                  placeholder="ابحث بالبريد الإلكتروني أو المعرّف..."
-                  value={userSearchQuery}
-                  onChange={(e) => setUserSearchQuery(e.target.value)}
-                  className="pr-10 h-11 bg-[#fdfbf7] border-2 border-[#dbc397] rounded-xl font-medium focus-visible:border-[#b87a29]"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="6 أحرف على الأقل..."
+                  className="h-11 bg-[#fdfbf7] border border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
                 />
               </div>
+              <Button
+                type="submit"
+                disabled={passwordUpdating}
+                className="w-full h-11 rounded-xl bg-gradient-to-l from-[#b87a29] to-[#efa83f] text-[#301809] font-thmanyah font-bold cursor-pointer"
+              >
+                {passwordUpdating ? (
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                ) : (
+                  'حفظ كلمة المرور'
+                )}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
 
-              {/* Role filter buttons */}
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant={userRoleFilter === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setUserRoleFilter('all')}
-                  className={`rounded-xl text-xs font-bold h-10 px-4 transition-all cursor-pointer ${
-                    userRoleFilter === 'all' 
-                      ? 'bg-[#301809] text-[#fae1b7] border-[#301809] shadow-sm' 
-                      : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
-                  }`}
-                >
-                  الكل ({usersList.length})
-                </Button>
-                <Button
-                  type="button"
-                  variant={userRoleFilter === 'attendee' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setUserRoleFilter('attendee')}
-                  className={`rounded-xl text-xs font-bold h-10 px-4 transition-all cursor-pointer ${
-                    userRoleFilter === 'attendee' 
-                      ? 'bg-[#b87a29] text-white border-[#b87a29] shadow-sm' 
-                      : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
-                  }`}
-                >
-                  زوار / مشاركون
-                </Button>
-                <Button
-                  type="button"
-                  variant={userRoleFilter === 'association' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setUserRoleFilter('association')}
-                  className={`rounded-xl text-xs font-bold h-10 px-4 transition-all cursor-pointer ${
-                    userRoleFilter === 'association' 
-                      ? 'bg-[#723c11] text-[#fae1b7] border-[#723c11] shadow-sm' 
-                      : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
-                  }`}
-                >
-                  جمعيات
-                </Button>
-                <Button
-                  type="button"
-                  variant={userRoleFilter === 'super_admin' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setUserRoleFilter('super_admin')}
-                  className={`rounded-xl text-xs font-bold h-10 px-4 transition-all cursor-pointer ${
-                    userRoleFilter === 'super_admin' 
-                      ? 'bg-[#301809] text-[#efa83f] border-[#301809] shadow-sm' 
-                      : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
-                  }`}
-                >
-                  مدراء
-                </Button>
+        {/* Regal Sahara Admin Hero */}
+        <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-l from-[#301809] via-[#4a250e] to-[#2b1507] text-white p-6 md:p-7 border border-[#b87a29]/30 shadow-lg">
+          <div className="absolute -left-20 -top-20 w-64 h-64 rounded-full bg-[#efa83f]/15 blur-3xl pointer-events-none" />
 
-                {/* Refresh */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={fetchUsers}
-                  disabled={usersLoading}
-                  className="rounded-xl h-10 w-10 p-0 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30 hover:text-[#301809] cursor-pointer"
-                  title="تحديث القائمة"
-                >
-                  <RefreshCw className={`w-4 h-4 ${usersLoading ? 'animate-spin text-[#b87a29]' : ''}`} />
-                </Button>
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/45 flex items-center justify-center text-[#efa83f] shadow-sm shrink-0">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <div className="min-w-0">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#efa83f]/20 border border-[#efa83f]/40 text-[#fae1b7] text-[11px] font-bold mb-1.5">
+                  <Sparkles className="w-3 h-3 text-[#efa83f]" />
+                  <span>لوحة التحكم المركزية — سوبر أدمن</span>
+                </div>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-thmanyah font-bold text-[#fae1b7] truncate">
+                  إدارة منصة تواصل صحراء
+                </h1>
+                <p className="text-xs sm:text-sm text-[#dbc397]/90 mt-1">
+                  مراقبة حية للجمعيات والمستخدمين والفعاليات ومراجع التراث بولاية ورقلة.
+                </p>
               </div>
             </div>
-          </Card>
 
-          {/* Users Table / List */}
-          <Card className="bg-white border-2 border-[#dbc397]/60 rounded-3xl shadow-sm overflow-hidden">
-            {usersLoading ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-[#723c11]">
-                <Loader2 className="w-8 h-8 animate-spin text-[#b87a29]" />
-                <p className="font-bold text-sm">جاري تحميل بيانات المستخدمين...</p>
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  fetchStats();
+                  fetchHeritageAndAds();
+                  fetchUsers();
+                  toast.success('تم تحديث البيانات المباشرة');
+                }}
+                className="h-11 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-[#fae1b7] border border-[#efa83f]/35 font-bold cursor-pointer flex items-center gap-2 text-xs sm:text-sm"
+              >
+                <RefreshCw className="w-4 h-4 text-[#efa83f]" />
+                <span>تحديث الإحصائيات</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Inline Compact KPI Strip */}
+          <div className="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-5 border-t border-white/10">
+            <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] text-[#dbc397] font-medium">إجمالي المستخدمين</p>
+                <p className="text-2xl font-thmanyah font-bold text-white mt-0.5">
+                  {stats.total_users}
+                </p>
               </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-16 px-4">
-                <UserX className="w-12 h-12 text-[#dbc397] mx-auto mb-3" />
-                <h3 className="text-base font-bold text-[#301809]">لم يتم العثور على أي مستخدمين</h3>
-                <p className="text-xs text-[#723c11]/80 mt-1">جرب تغيير كلمات البحث أو الفلتر أعلاه</p>
+              <div className="w-9 h-9 rounded-xl bg-[#efa83f]/20 flex items-center justify-center text-[#efa83f]">
+                <Users className="w-4 h-4" />
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-right border-collapse">
-                  <thead>
-                    <tr className="bg-[#fdfbf7] border-b-2 border-[#dbc397]/50 text-[#723c11] text-xs font-bold">
-                      <th className="p-4">المستخدم</th>
-                      <th className="p-4">تاريخ التسجيل</th>
-                      <th className="p-4">النقاط والشارة</th>
-                      <th className="p-4">الرتبة الحالية</th>
-                      <th className="p-4 text-center">تغيير الرتبة</th>
-                      <th className="p-4 text-center">إجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#dbc397]/30 text-sm font-medium">
-                    {filteredUsers.map((user) => {
-                      const isCurrentUserUpdating = updatingUserId === user.id;
-                      return (
-                        <tr key={user.id} className="hover:bg-[#fae1b7]/15 transition-colors">
-                          {/* User info */}
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#fae1b7] to-[#dbc397] border border-[#d4b174] flex items-center justify-center font-black text-[#301809] uppercase shrink-0 shadow-2xs">
-                                {user.email ? user.email.charAt(0) : 'U'}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-bold text-[#301809] truncate" dir="ltr">
-                                  {user.email || 'بدون بريد'}
-                                </p>
-                                <p className="text-[11px] text-[#723c11]/70 font-mono truncate" dir="ltr">
-                                  ID: {user.id.substring(0, 8)}...
-                                </p>
-                              </div>
-                            </div>
-                          </td>
+            </div>
 
-                          {/* Created date */}
-                          <td className="p-4 text-[#723c11] text-xs font-semibold">
-                            {user.created_at ? new Date(user.created_at).toLocaleDateString('ar-DZ', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
-                            }) : '—'}
-                          </td>
+            <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] text-[#dbc397] font-medium">الجمعيات المعتمدة</p>
+                <p className="text-2xl font-thmanyah font-bold text-[#fae1b7] mt-0.5">
+                  {stats.total_associations}
+                </p>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-[#efa83f]/20 flex items-center justify-center text-[#efa83f]">
+                <Building2 className="w-4 h-4" />
+              </div>
+            </div>
 
-                          {/* Points & badge */}
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <span className="bg-[#fae1b7]/50 text-[#723c11] border border-[#dbc397] px-2.5 py-0.5 rounded-lg text-xs font-bold">
-                                {user.points ?? 0} نقطة
-                              </span>
-                              {user.badge && (
-                                <span className="text-[11px] text-[#301809] bg-[#fae1b7]/80 border border-[#d4b174] px-2 py-0.5 rounded-md font-semibold">
-                                  {user.badge}
+            <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] text-[#dbc397] font-medium">الفعاليات المنظمة</p>
+                <p className="text-2xl font-thmanyah font-bold text-white mt-0.5">
+                  {stats.total_events}
+                </p>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-[#efa83f]/20 flex items-center justify-center text-[#efa83f]">
+                <Calendar className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-[11px] text-[#dbc397] font-medium">تأكيدات الحضور</p>
+                <p className="text-2xl font-thmanyah font-bold text-[#fae1b7] mt-0.5">
+                  {stats.total_rsvps}
+                </p>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-[#efa83f]/20 flex items-center justify-center text-[#efa83f]">
+                <Ticket className="w-4 h-4" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="overview" className="space-y-6" dir="rtl">
+          <TabsList className="bg-white p-1.5 rounded-2xl border border-[#dbc397]/70 shadow-xs h-auto w-full flex flex-wrap gap-1">
+            <TabsTrigger
+              value="overview"
+              className="flex-1 min-w-[130px] px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>الإحصائيات والجمعيات</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="users"
+              className="flex-1 min-w-[130px] px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Users className="w-4 h-4" />
+              <span>المستخدمون والأدوار</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="heritage"
+              className="flex-1 min-w-[140px] px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <MapPin className="w-4 h-4" />
+              <span>المعالم والطلبات</span>
+              {pendingSuggestionsCount + contactRequestsCount > 0 && (
+                <span className="bg-[#efa83f] text-[#301809] text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                  {pendingSuggestionsCount + contactRequestsCount}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value="history-refs"
+              className="flex-1 min-w-[130px] px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>مراجع الباحث</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="ads"
+              className="flex-1 min-w-[120px] px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Megaphone className="w-4 h-4" />
+              <span>الشركاء والرعاة</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="broadcast"
+              className="flex-1 min-w-[120px] px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-[#723c11] data-[state=active]:bg-[#301809] data-[state=active]:text-[#fae1b7] data-[state=active]:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Send className="w-4 h-4" />
+              <span>بث إشعار عام</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* OVERVIEW TAB */}
+          <TabsContent
+            value="overview"
+            className="mt-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-2 shadow-xs border border-[#e3d4b8] rounded-3xl bg-white overflow-hidden">
+                <CardHeader className="bg-[#fdfbf7] border-b border-[#e3d4b8]/70 pb-4">
+                  <CardTitle className="text-base md:text-lg font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-[#b87a29]" />
+                    <span>النشاط الشهري — الفعاليات وتأكيدات الحضور</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="h-80 w-full pt-6" dir="ltr">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={monthlyStats}
+                      margin={{ top: 16, right: 24, left: 12, bottom: 5 }}
+                    >
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fill: '#723c11', fontWeight: 'bold', fontSize: 12 }}
+                      />
+                      <YAxis
+                        tick={{ fill: '#723c11', fontWeight: 'bold', fontSize: 12 }}
+                        allowDecimals={false}
+                      />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(239, 168, 63, 0.1)' }}
+                        contentStyle={{
+                          borderRadius: '16px',
+                          border: '1px solid #dbc397',
+                          boxShadow: '0 10px 25px -5px rgba(48, 24, 9, 0.12)',
+                          fontWeight: 'bold',
+                          direction: 'rtl',
+                          backgroundColor: '#ffffff',
+                          color: '#301809',
+                        }}
+                        itemStyle={{ color: '#301809', fontWeight: 'bold' }}
+                        labelStyle={{ color: '#b87a29', fontWeight: 'bold', marginBottom: '4px' }}
+                      />
+                      <Legend
+                        wrapperStyle={{ fontWeight: 'bold', direction: 'rtl', paddingTop: '10px' }}
+                      />
+                      <Bar dataKey="الفعاليات" fill="#301809" radius={[8, 8, 0, 0]} />
+                      <Bar dataKey="الزوار" fill="#efa83f" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Create Association Card */}
+              <Card className="shadow-xs border border-[#e3d4b8] rounded-3xl overflow-hidden bg-white">
+                <div className="bg-gradient-to-l from-[#301809] via-[#4a250e] to-[#2b1507] text-white p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] shrink-0">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-thmanyah font-bold text-[#fae1b7]">
+                        اعتماد جمعية جديدة
+                      </h3>
+                      <p className="text-[11px] text-[#dbc397] mt-0.5">
+                        تفعيل صلاحيات تنظيم الفعاليات لممثل جمعية
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <CardContent className="pt-5">
+                  <form onSubmit={handleCreateAssociation} className="space-y-4 text-right">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="assocName" className="font-bold text-xs text-[#301809]">
+                        اسم الجمعية الرسمية
+                      </Label>
+                      <Input
+                        id="assocName"
+                        value={assocName}
+                        onChange={(e) => setAssocName(e.target.value)}
+                        placeholder="مثال: جمعية الإحسان للتراث"
+                        required
+                        className="h-11 font-medium border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="managerEmail" className="font-bold text-xs text-[#301809]">
+                        البريد الإلكتروني لممثل الجمعية
+                      </Label>
+                      <Input
+                        id="managerEmail"
+                        type="email"
+                        value={managerEmail}
+                        onChange={(e) => setManagerEmail(e.target.value)}
+                        placeholder="manager@example.com"
+                        className="h-11 text-left font-sans border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                        dir="ltr"
+                        required
+                      />
+                      <p className="text-[11px] text-[#723c11] bg-[#fae1b7]/40 p-2.5 rounded-xl border border-[#dbc397]/60 mt-1.5 leading-relaxed">
+                        يجب أن يكون الممثل قد سجّل دخوله مسبقاً في المنصة ليرتبط حسابه بالجمعية
+                        تلقائياً.
+                      </p>
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-11 text-sm font-thmanyah font-bold bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-[#301809] hover:text-white shadow-sm rounded-xl cursor-pointer transition-all"
+                    >
+                      {loading ? 'جاري الاعتماد...' : 'اعتماد الجمعية وتفعيل الصلاحيات'}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Category Distribution Analytics Card */}
+            <Card className="shadow-xs border border-[#e3d4b8] rounded-3xl bg-white overflow-hidden">
+              <CardHeader className="bg-[#fdfbf7] border-b border-[#e3d4b8]/70 pb-4">
+                <CardTitle className="text-base md:text-lg font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-[#b87a29]" />
+                  <span>توزيع الفعاليات المعتمدة حسب المجالات</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+                  {categoryStats.map((cat) => (
+                    <div
+                      key={cat.name}
+                      className="p-4 rounded-2xl bg-[#fdfbf7] border border-[#e3d4b8] space-y-2.5"
+                    >
+                      <div className="flex justify-between items-center text-xs font-bold text-[#301809]">
+                        <span>{cat.name}</span>
+                        <span className="bg-[#fae1b7]/70 text-[#723c11] px-2 py-0.5 rounded-full border border-[#dbc397]">
+                          {cat.count}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full bg-[#fae1b7]/40 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-l from-[#301809] via-[#b87a29] to-[#efa83f] rounded-full transition-all duration-700"
+                          style={{ width: `${Math.max(cat.pct, cat.count > 0 ? 12 : 0)}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] text-[#723c11]/80 font-semibold text-left">
+                        {cat.pct}% من الإجمالي
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Associations Accordion */}
+            <div>
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#e3d4b8]">
+                <h2 className="text-lg md:text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2.5">
+                  <Building2 className="w-5 h-5 text-[#b87a29]" />
+                  <span>الجمعيات المعتمدة وفعالياتها القادمة ({associationsDetails.length})</span>
+                </h2>
+              </div>
+              <div className="space-y-3">
+                {associationsDetails.length === 0 ? (
+                  <div className="text-center text-[#723c11] py-12 bg-white rounded-3xl border border-dashed border-[#dbc397] font-bold text-sm">
+                    لا توجد جمعيات مسجلة حتى الآن.
+                  </div>
+                ) : (
+                  associationsDetails.map((assoc) => (
+                    <Card
+                      key={assoc.id}
+                      className="overflow-hidden shadow-xs hover:shadow-md transition-all border border-[#e3d4b8] rounded-2xl bg-white"
+                    >
+                      <div
+                        className="flex items-center justify-between p-4.5 cursor-pointer bg-white hover:bg-[#fae1b7]/15 transition-colors gap-3"
+                        onClick={() => toggleAccordion(assoc.id)}
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#301809] to-[#723c11] flex items-center justify-center text-[#efa83f] shrink-0">
+                            <Building2 className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-sm sm:text-base font-thmanyah font-bold text-[#301809] truncate">
+                              {assoc.name}
+                            </h3>
+                            <p
+                              className="text-xs text-[#723c11]/80 font-mono truncate mt-0.5"
+                              dir="ltr"
+                            >
+                              {assoc.users?.email}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/association-profile/${assoc.id}`);
+                            }}
+                            className="h-8 px-3 rounded-xl border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/50 text-xs font-bold cursor-pointer gap-1"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 text-[#b87a29]" />
+                            <span className="hidden sm:inline">صفحة الجمعية</span>
+                          </Button>
+                          <span className="bg-[#fae1b7]/60 text-[#723c11] border border-[#dbc397] px-2.5 py-1 rounded-full text-xs font-bold">
+                            {assoc.events?.filter((e: any) => e !== null).length || 0} فعالية
+                          </span>
+                          {expandedAssocId === assoc.id ? (
+                            <ChevronUp className="h-4 w-4 text-[#b87a29]" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-[#b87a29]" />
+                          )}
+                        </div>
+                      </div>
+
+                      {expandedAssocId === assoc.id && (
+                        <div className="bg-[#fdfbf7] border-t border-[#e3d4b8] p-4.5">
+                          {assoc.events && assoc.events.filter((e: any) => e !== null).length > 0 ? (
+                            <ul className="space-y-2.5">
+                              {assoc.events
+                                .filter((e: any) => e !== null)
+                                .map((event: any) => (
+                                  <li
+                                    key={event.id}
+                                    className="flex justify-between items-center bg-white p-3.5 rounded-xl border border-[#e3d4b8]"
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <div className="w-2 h-2 rounded-full bg-[#efa83f] shrink-0" />
+                                      <span className="font-bold text-sm text-[#301809] truncate">
+                                        {event.title}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#723c11] bg-[#fae1b7]/45 px-2.5 py-1 rounded-lg border border-[#dbc397] shrink-0">
+                                      <Calendar className="h-3.5 w-3.5 text-[#b87a29]" />
+                                      <span dir="ltr">{event.date}</span>
+                                    </div>
+                                  </li>
+                                ))}
+                            </ul>
+                          ) : (
+                            <p className="text-[#723c11]/75 text-center py-5 bg-white rounded-xl border border-dashed border-[#dbc397] text-xs font-semibold">
+                              لا توجد فعاليات قادمة لهذه الجمعية حتى الآن.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* USERS TAB */}
+          <TabsContent
+            value="users"
+            className="mt-0 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            {/* Compact Role Stats Strip */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+              <Card className="bg-white border border-[#e3d4b8] rounded-2xl shadow-xs p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-[#723c11]">إجمالي الحسابات</p>
+                    <p className="text-2xl font-thmanyah font-bold text-[#301809] mt-1">
+                      {usersList.length}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-[#fae1b7]/45 border border-[#dbc397] flex items-center justify-center text-[#723c11]">
+                    <Users className="w-5 h-5" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="bg-white border border-[#e3d4b8] rounded-2xl shadow-xs p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-[#723c11]">الزوار والمشاركون</p>
+                    <p className="text-2xl font-thmanyah font-bold text-[#b87a29] mt-1">
+                      {usersList.filter((u) => u.role === 'attendee').length}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-[#b87a29]">
+                    <Users className="w-5 h-5" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="bg-white border border-[#e3d4b8] rounded-2xl shadow-xs p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-[#723c11]">مسؤولو الجمعيات</p>
+                    <p className="text-2xl font-thmanyah font-bold text-[#723c11] mt-1">
+                      {usersList.filter((u) => u.role === 'association').length}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-[#fae1b7]/60 border border-[#dbc397] flex items-center justify-center text-[#723c11]">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="bg-white border border-[#e3d4b8] rounded-2xl shadow-xs p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-[#723c11]">المدراء العامون</p>
+                    <p className="text-2xl font-thmanyah font-bold text-[#301809] mt-1">
+                      {usersList.filter((u) => u.role === 'super_admin').length}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-[#301809] flex items-center justify-center text-[#efa83f]">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Search, Filter & Actions Toolbar */}
+            <Card className="bg-white border border-[#e3d4b8] rounded-2xl shadow-xs p-4">
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
+                <div className="relative flex-1">
+                  <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#b87a29]" />
+                  <Input
+                    type="text"
+                    placeholder="ابحث بالبريد الإلكتروني أو المعرّف..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="pr-10 h-10 bg-[#fdfbf7] border border-[#dbc397] rounded-xl font-medium text-sm focus-visible:border-[#b87a29]"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Button
+                    type="button"
+                    variant={userRoleFilter === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setUserRoleFilter('all')}
+                    className={`rounded-xl text-xs font-bold h-10 px-3.5 transition-all cursor-pointer ${
+                      userRoleFilter === 'all'
+                        ? 'bg-[#301809] text-[#fae1b7] border-[#301809]'
+                        : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
+                    }`}
+                  >
+                    الكل ({usersList.length})
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={userRoleFilter === 'attendee' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setUserRoleFilter('attendee')}
+                    className={`rounded-xl text-xs font-bold h-10 px-3.5 transition-all cursor-pointer ${
+                      userRoleFilter === 'attendee'
+                        ? 'bg-[#b87a29] text-white border-[#b87a29]'
+                        : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
+                    }`}
+                  >
+                    زوار / مشاركون
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={userRoleFilter === 'association' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setUserRoleFilter('association')}
+                    className={`rounded-xl text-xs font-bold h-10 px-3.5 transition-all cursor-pointer ${
+                      userRoleFilter === 'association'
+                        ? 'bg-[#723c11] text-[#fae1b7] border-[#723c11]'
+                        : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
+                    }`}
+                  >
+                    جمعيات
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={userRoleFilter === 'super_admin' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setUserRoleFilter('super_admin')}
+                    className={`rounded-xl text-xs font-bold h-10 px-3.5 transition-all cursor-pointer ${
+                      userRoleFilter === 'super_admin'
+                        ? 'bg-[#301809] text-[#efa83f] border-[#301809]'
+                        : 'border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30'
+                    }`}
+                  >
+                    مدراء
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchUsers}
+                    disabled={usersLoading}
+                    className="rounded-xl h-10 w-10 p-0 border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/30 hover:text-[#301809] cursor-pointer"
+                    title="تحديث القائمة"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${usersLoading ? 'animate-spin text-[#b87a29]' : ''}`}
+                    />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Users Table */}
+            <Card className="bg-white border border-[#e3d4b8] rounded-3xl shadow-xs overflow-hidden">
+              {usersLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-[#723c11]">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#b87a29]" />
+                  <p className="font-bold text-sm">جاري تحميل بيانات المستخدمين...</p>
+                </div>
+              ) : filteredUsers.length === 0 ? (
+                <div className="text-center py-16 px-4">
+                  <UserX className="w-11 h-11 text-[#dbc397] mx-auto mb-3" />
+                  <h3 className="text-base font-thmanyah font-bold text-[#301809]">
+                    لم يتم العثور على أي مستخدمين
+                  </h3>
+                  <p className="text-xs text-[#723c11]/80 mt-1">
+                    جرب تغيير كلمات البحث أو الفلتر أعلاه
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right border-collapse">
+                    <thead>
+                      <tr className="bg-[#fdfbf7] border-b border-[#e3d4b8] text-[#723c11] text-xs font-bold">
+                        <th className="p-4">المستخدم</th>
+                        <th className="p-4">تاريخ التسجيل</th>
+                        <th className="p-4">النقاط والشارة</th>
+                        <th className="p-4">الرتبة الحالية</th>
+                        <th className="p-4 text-center">تغيير الرتبة</th>
+                        <th className="p-4 text-center">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#e3d4b8]/60 text-sm font-medium">
+                      {filteredUsers.map((user) => {
+                        const isCurrentUserUpdating = updatingUserId === user.id;
+                        return (
+                          <tr
+                            key={user.id}
+                            className="hover:bg-[#fae1b7]/15 transition-colors"
+                          >
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-[#fae1b7]/70 border border-[#dbc397] flex items-center justify-center font-bold text-[#301809] uppercase shrink-0 text-xs">
+                                  {user.email ? user.email.charAt(0) : 'U'}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-[#301809] truncate text-xs sm:text-sm" dir="ltr">
+                                    {user.email || 'بدون بريد'}
+                                  </p>
+                                  <p
+                                    className="text-[11px] text-[#723c11]/65 font-mono truncate"
+                                    dir="ltr"
+                                  >
+                                    ID: {user.id.substring(0, 8)}...
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="p-4 text-[#723c11] text-xs font-semibold">
+                              {user.created_at
+                                ? new Date(user.created_at).toLocaleDateString('ar-DZ', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })
+                                : '—'}
+                            </td>
+
+                            <td className="p-4">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="bg-[#fae1b7]/50 text-[#723c11] border border-[#dbc397] px-2.5 py-0.5 rounded-lg text-xs font-bold">
+                                  {user.points ?? 0} نقطة
+                                </span>
+                                {user.badge && (
+                                  <span className="text-[11px] text-[#301809] bg-[#fdfbf7] border border-[#dbc397] px-2 py-0.5 rounded-md font-semibold">
+                                    {user.badge}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            <td className="p-4">
+                              {user.role === 'super_admin' ? (
+                                <span className="inline-flex items-center gap-1.5 bg-[#301809] text-[#efa83f] px-3 py-1 rounded-full text-xs font-bold">
+                                  <ShieldCheck className="w-3.5 h-3.5" />
+                                  مدير عام
+                                </span>
+                              ) : user.role === 'association' ? (
+                                <span className="inline-flex items-center gap-1.5 bg-[#fae1b7] text-[#301809] border border-[#dbc397] px-3 py-1 rounded-full text-xs font-bold">
+                                  <Building2 className="w-3.5 h-3.5 text-[#b87a29]" />
+                                  ممثل جمعية
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 bg-[#fdfbf7] text-[#723c11] border border-[#dbc397] px-3 py-1 rounded-full text-xs font-bold">
+                                  <Users className="w-3.5 h-3.5 text-[#b87a29]" />
+                                  مشارك / زائر
                                 </span>
                               )}
+                            </td>
+
+                            <td className="p-4 text-center">
+                              <div className="inline-flex items-center gap-1 bg-[#fdfbf7] p-1 rounded-xl border border-[#dbc397]">
+                                <button
+                                  type="button"
+                                  disabled={isCurrentUserUpdating || user.role === 'attendee'}
+                                  onClick={() => handleUpdateUserRole(user.id, 'attendee')}
+                                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                                    user.role === 'attendee'
+                                      ? 'bg-[#b87a29] text-white'
+                                      : 'text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40'
+                                  } disabled:opacity-50`}
+                                >
+                                  زائر
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isCurrentUserUpdating || user.role === 'association'}
+                                  onClick={() => handleUpdateUserRole(user.id, 'association')}
+                                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                                    user.role === 'association'
+                                      ? 'bg-[#723c11] text-[#fae1b7]'
+                                      : 'text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40'
+                                  } disabled:opacity-50`}
+                                >
+                                  جمعية
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isCurrentUserUpdating || user.role === 'super_admin'}
+                                  onClick={() => handleUpdateUserRole(user.id, 'super_admin')}
+                                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                                    user.role === 'super_admin'
+                                      ? 'bg-[#301809] text-[#efa83f]'
+                                      : 'text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40'
+                                  } disabled:opacity-50`}
+                                >
+                                  مدير
+                                </button>
+                              </div>
+                            </td>
+
+                            <td className="p-4 text-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteUser(user.id, user.email)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0 rounded-xl cursor-pointer"
+                                title="حذف المستخدم نهائياً"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+
+          {/* HERITAGE TAB */}
+          <TabsContent
+            value="heritage"
+            className="mt-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            {/* Incoming Association Join & Contact Requests */}
+            {contactRequestsCount > 0 && (
+              <Card className="border border-emerald-300 bg-emerald-50/40 rounded-3xl p-5 shadow-xs space-y-4">
+                <h3 className="text-base md:text-lg font-thmanyah font-bold text-emerald-950 flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-emerald-700" />
+                  <span>طلبات انضمام الجمعيات ورسائل التواصل ({contactRequestsCount})</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {heritageItems
+                    .filter(
+                      (item) => parseHeritageMeta(item.content, item.title).status === 'contact_request'
+                    )
+                    .map((item) => {
+                      const meta = parseHeritageMeta(item.content, item.title);
+                      return (
+                        <div
+                          key={item.id}
+                          className="bg-white rounded-2xl p-4 border border-emerald-200 flex flex-col justify-between gap-3"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-1.5">
+                              <span className="text-xs font-bold bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full">
+                                {meta.category || 'طلب تواصل'}
+                              </span>
+                              <span className="text-[11px] text-slate-400">
+                                {new Date(item.created_at).toLocaleDateString('ar-DZ')}
+                              </span>
                             </div>
-                          </td>
-
-                          {/* Role Badge */}
-                          <td className="p-4">
-                            {user.role === 'super_admin' ? (
-                              <span className="inline-flex items-center gap-1.5 bg-[#301809] text-[#efa83f] border border-[#b87a29] px-3 py-1 rounded-full text-xs font-black shadow-xs">
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                                مدير عام (Super Admin)
-                              </span>
-                            ) : user.role === 'association' ? (
-                              <span className="inline-flex items-center gap-1.5 bg-[#fae1b7] text-[#723c11] border border-[#d4b174] px-3 py-1 rounded-full text-xs font-black shadow-xs">
-                                <Building2 className="w-3.5 h-3.5" />
-                                ممثل جمعية (Association)
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 bg-[#fdfbf7] text-[#723c11] border border-[#dbc397] px-3 py-1 rounded-full text-xs font-black shadow-xs">
-                                <Users className="w-3.5 h-3.5" />
-                                مشارك / زائر (Attendee)
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Quick Role Changer */}
-                          <td className="p-4 text-center">
-                            <div className="inline-flex items-center gap-1 bg-[#fdfbf7] p-1 rounded-xl border border-[#dbc397]">
-                              <button
-                                type="button"
-                                disabled={isCurrentUserUpdating || user.role === 'attendee'}
-                                onClick={() => handleUpdateUserRole(user.id, 'attendee')}
-                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                                  user.role === 'attendee'
-                                    ? 'bg-[#b87a29] text-white shadow-xs'
-                                    : 'text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40'
-                                } disabled:opacity-50`}
-                                title="تحويل لمشارك"
-                              >
-                                زائر
-                              </button>
-                              <button
-                                type="button"
-                                disabled={isCurrentUserUpdating || user.role === 'association'}
-                                onClick={() => handleUpdateUserRole(user.id, 'association')}
-                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                                  user.role === 'association'
-                                    ? 'bg-[#723c11] text-[#fae1b7] shadow-xs'
-                                    : 'text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40'
-                                } disabled:opacity-50`}
-                                title="ترقية لممثل جمعية"
-                              >
-                                جمعية
-                              </button>
-                              <button
-                                type="button"
-                                disabled={isCurrentUserUpdating || user.role === 'super_admin'}
-                                onClick={() => handleUpdateUserRole(user.id, 'super_admin')}
-                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                                  user.role === 'super_admin'
-                                    ? 'bg-[#301809] text-[#efa83f] shadow-xs'
-                                    : 'text-[#723c11] hover:text-[#301809] hover:bg-[#fae1b7]/40'
-                                } disabled:opacity-50`}
-                                title="ترقية لمدير عام"
-                              >
-                                مدير
-                              </button>
+                            <h4 className="font-thmanyah font-bold text-base text-[#301809] mb-1">
+                              {item.title}
+                            </h4>
+                            <p className="text-xs text-[#723c11] whitespace-pre-wrap leading-relaxed">
+                              {meta.cleanContent}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-emerald-100">
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                              {meta.contactPhone && (
+                                <a
+                                  href={`tel:${meta.contactPhone}`}
+                                  className="inline-flex items-center gap-1.5 bg-[#fae1b7]/60 text-[#301809] px-2.5 py-1 rounded-lg font-mono"
+                                  dir="ltr"
+                                >
+                                  <Phone className="w-3.5 h-3.5 text-[#b87a29]" />
+                                  {meta.contactPhone}
+                                </a>
+                              )}
+                              {meta.contactEmail && (
+                                <a
+                                  href={`mailto:${meta.contactEmail}`}
+                                  className="inline-flex items-center gap-1.5 bg-stone-100 text-stone-700 px-2.5 py-1 rounded-lg font-mono"
+                                  dir="ltr"
+                                >
+                                  <Mail className="w-3.5 h-3.5" />
+                                  {meta.contactEmail}
+                                </a>
+                              )}
                             </div>
-                          </td>
-
-                          {/* Delete action */}
-                          <td className="p-4 text-center">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteUser(user.id, user.email)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0 rounded-xl cursor-pointer"
-                              title="حذف المستخدم نهائياً"
+                              onClick={() => handleDeleteItem('heritage_archive', item.id)}
+                              className="text-red-500 hover:bg-red-50 rounded-xl h-8 px-2.5 text-xs font-bold cursor-pointer"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5 ml-1" /> أرشفة / حذف
                             </Button>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
                       );
                     })}
-                  </tbody>
-                </table>
-              </div>
+                </div>
+              </Card>
             )}
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="heritage" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Incoming Association Join & Contact Requests Section */}
-          {heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'contact_request').length > 0 && (
-            <Card className="border-2 border-emerald-300 bg-emerald-50/40 rounded-3xl p-6 shadow-md space-y-4">
-              <h3 className="text-lg font-thmanyah font-bold text-emerald-950 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-emerald-700" />
-                <span>طلبات انضمام الجمعيات ورسائل التواصل الواردة ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'contact_request').length})</span>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {heritageItems
-                  .filter(item => parseHeritageMeta(item.content, item.title).status === 'contact_request')
-                  .map(item => {
-                    const meta = parseHeritageMeta(item.content, item.title);
-                    return (
-                      <div key={item.id} className="bg-white rounded-2xl p-4 border border-emerald-200 shadow-xs flex flex-col justify-between gap-3">
-                        <div>
-                          <div className="flex items-center justify-between gap-2 mb-1.5">
-                            <span className="text-xs font-black bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full">
-                              {meta.category || 'طلب تواصل'}
-                            </span>
-                            <span className="text-[11px] text-slate-400">
-                              {new Date(item.created_at).toLocaleDateString('ar-DZ')}
-                            </span>
+            {/* Pending Community Heritage Suggestions */}
+            {pendingSuggestionsCount > 0 && (
+              <Card className="border border-amber-300 bg-amber-50/50 rounded-3xl p-5 shadow-xs space-y-4">
+                <h3 className="text-base md:text-lg font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#b87a29]" />
+                  <span>معالم تاريخية مقترحة من الزوار ({pendingSuggestionsCount})</span>
+                </h3>
+                <div className="space-y-3">
+                  {heritageItems
+                    .filter((item) => parseHeritageMeta(item.content, item.title).status === 'pending')
+                    .map((item) => {
+                      const meta = parseHeritageMeta(item.content, item.title);
+                      return (
+                        <div
+                          key={item.id}
+                          className="bg-white rounded-2xl p-4 border border-[#dbc397] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                        >
+                          <div className="space-y-1 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="bg-[#301809] text-[#efa83f] text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                                {meta.category}
+                              </span>
+                              {meta.contributor && (
+                                <span className="text-xs font-semibold text-[#723c11]">
+                                  اقتراح من: {meta.contributor}
+                                </span>
+                              )}
+                            </div>
+                            <h4 className="font-thmanyah font-bold text-base text-[#301809]">
+                              {item.title}
+                            </h4>
+                            <p className="text-xs text-[#723c11]/85 leading-relaxed whitespace-pre-wrap">
+                              {meta.cleanContent}
+                            </p>
                           </div>
-                          <h4 className="font-black text-base text-[#301809] mb-1">{item.title}</h4>
-                          <p className="text-xs text-[#723c11] whitespace-pre-wrap leading-relaxed">{meta.cleanContent}</p>
-                        </div>
-                        <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-emerald-100">
-                          <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
-                            {meta.contactPhone && (
-                              <a
-                                href={`tel:${meta.contactPhone}`}
-                                className="bg-[#fae1b7]/60 text-[#301809] px-3 py-1 rounded-xl font-mono"
-                                dir="ltr"
-                              >
-                                📞 {meta.contactPhone}
-                              </a>
-                            )}
-                            {meta.contactEmail && (
-                              <a
-                                href={`mailto:${meta.contactEmail}`}
-                                className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl font-mono"
-                                dir="ltr"
-                              >
-                                ✉️ {meta.contactEmail}
-                              </a>
-                            )}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button
+                              onClick={() => handleApproveHeritageSuggestion(item)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl h-9 px-3.5 cursor-pointer gap-1.5"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span>اعتماد وإظهار</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteItem('heritage_archive', item.id)}
+                              className="text-red-500 hover:bg-red-50 h-9 w-9 rounded-xl cursor-pointer"
+                              title="رفض وحذف"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteItem('heritage_archive', item.id)}
-                            className="text-red-500 hover:bg-red-50 rounded-xl h-8 px-2.5 text-xs font-bold cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 ml-1" /> أرشفة / حذف
-                          </Button>
                         </div>
+                      );
+                    })}
+                </div>
+              </Card>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="shadow-xs border border-[#e3d4b8] rounded-3xl overflow-hidden bg-white">
+                <div className="bg-gradient-to-l from-[#301809] via-[#4a250e] to-[#2b1507] text-white p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] shrink-0">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-thmanyah font-bold text-[#fae1b7]">
+                        إضافة معلم تاريخي جديد
+                      </h3>
+                      <p className="text-[11px] text-[#dbc397] mt-0.5">
+                        يُدرج مباشرة في أرشيف وخريطة التراث
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <CardContent className="p-5">
+                  <form onSubmit={handleCreateHeritage} className="space-y-4 text-right">
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">
+                        اسم المعلم التاريخي *
+                      </Label>
+                      <Input
+                        required
+                        value={newHeritage.title}
+                        onChange={(e) => setNewHeritage({ ...newHeritage, title: e.target.value })}
+                        placeholder="مثال: قصر أنقوصة العتيق / باب عمي"
+                        className="h-11 font-medium border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">تصنيف المعلم</Label>
+                      <select
+                        value={newHeritage.category}
+                        onChange={(e) =>
+                          setNewHeritage({ ...newHeritage, category: e.target.value })
+                        }
+                        className="w-full h-11 rounded-xl border border-[#dbc397] bg-[#fdfbf7] px-3 text-xs font-bold text-[#301809] focus:outline-none focus:border-[#b87a29]"
+                      >
+                        {HERITAGE_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <Label className="font-bold text-[11px] text-[#301809]">
+                          خط العرض (Lat)
+                        </Label>
+                        <Input
+                          type="number"
+                          step="any"
+                          dir="ltr"
+                          value={newHeritage.lat}
+                          onChange={(e) => setNewHeritage({ ...newHeritage, lat: e.target.value })}
+                          placeholder="31.9668"
+                          className="h-10 border border-[#dbc397] bg-[#fdfbf7] rounded-xl text-left font-mono text-xs"
+                        />
                       </div>
-                    );
-                  })}
-              </div>
-            </Card>
-          )}
+                      <div className="space-y-1">
+                        <Label className="font-bold text-[11px] text-[#301809]">
+                          خط الطول (Lng)
+                        </Label>
+                        <Input
+                          type="number"
+                          step="any"
+                          dir="ltr"
+                          value={newHeritage.lng}
+                          onChange={(e) => setNewHeritage({ ...newHeritage, lng: e.target.value })}
+                          placeholder="5.3271"
+                          className="h-10 border border-[#dbc397] bg-[#fdfbf7] rounded-xl text-left font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">
+                        الوصف والسياق التاريخي *
+                      </Label>
+                      <Textarea
+                        required
+                        value={newHeritage.content}
+                        onChange={(e) =>
+                          setNewHeritage({ ...newHeritage, content: e.target.value })
+                        }
+                        placeholder="تفاصيل تاريخية عن المعلم وموقعه..."
+                        rows={4}
+                        className="font-medium border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">
+                        رابط صورة المعلم (اختياري)
+                      </Label>
+                      <Input
+                        value={newHeritage.image_url}
+                        onChange={(e) =>
+                          setNewHeritage({ ...newHeritage, image_url: e.target.value })
+                        }
+                        placeholder="https://..."
+                        dir="ltr"
+                        className="h-11 border border-[#dbc397] bg-[#fdfbf7] rounded-xl text-left font-sans focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-11 text-sm font-thmanyah font-bold text-[#301809] hover:text-white rounded-xl shadow-sm cursor-pointer transition-all"
+                    >
+                      إضافة المعلم إلى الأرشيف
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
 
-          {/* Pending Community Heritage Suggestions Section */}
-          {heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'pending').length > 0 && (
-            <Card className="border-2 border-amber-300 bg-amber-50/50 rounded-3xl p-6 shadow-md space-y-4">
-              <h3 className="text-lg font-thmanyah font-bold text-amber-950 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-600" />
-                <span>معالم تاريخية مقترحة من الزوار لإضافتها إلى الخريطة ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'pending').length})</span>
-              </h3>
-              <div className="space-y-3">
+              <div className="lg:col-span-2 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#e3d4b8]">
+                  <h3 className="text-lg font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+                    <History className="w-5 h-5 text-[#b87a29]" />
+                    <span>
+                      المعالم المعتمدة (
+                      {
+                        heritageItems.filter(
+                          (item) => parseHeritageMeta(item.content, item.title).status === 'approved'
+                        ).length
+                      }
+                      )
+                    </span>
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/map')}
+                    className="h-9 rounded-xl border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/40 text-xs font-bold cursor-pointer gap-1.5"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-[#b87a29]" />
+                    <span>معاينة خريطة التراث</span>
+                  </Button>
+                </div>
+
                 {heritageItems
-                  .filter(item => parseHeritageMeta(item.content, item.title).status === 'pending')
-                  .map(item => {
+                  .filter(
+                    (item) => parseHeritageMeta(item.content, item.title).status === 'approved'
+                  )
+                  .map((item) => {
                     const meta = parseHeritageMeta(item.content, item.title);
                     return (
-                      <div key={item.id} className="bg-white rounded-2xl p-4 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="space-y-1 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="bg-[#301809] text-[#efa83f] text-[11px] font-black px-2.5 py-0.5 rounded-lg">
+                      <Card
+                        key={item.id}
+                        className="p-4 flex gap-4 items-center bg-white shadow-xs hover:shadow-md transition-all border border-[#e3d4b8] rounded-2xl"
+                      >
+                        <div className="w-18 h-18 rounded-xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center overflow-hidden shrink-0 relative">
+                          <img
+                            src={item.image_url}
+                            className="object-cover h-full w-full"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback =
+                                e.currentTarget.parentElement?.querySelector(
+                                  '.admin-heritage-thumb-fallback'
+                                );
+                              if (fallback) fallback.classList.remove('hidden');
+                            }}
+                          />
+                          <div className="admin-heritage-thumb-fallback hidden absolute inset-0 bg-[#fae1b7] flex items-center justify-center">
+                            <History size={22} className="text-[#b87a29]" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <span className="bg-[#fae1b7]/70 text-[#301809] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#dbc397]">
                               {meta.category}
                             </span>
+                            {meta.lat !== undefined && meta.lng !== undefined && (
+                              <span
+                                className="text-[10px] font-mono bg-stone-100 text-stone-700 px-2 py-0.5 rounded-md inline-flex items-center gap-1"
+                                dir="ltr"
+                              >
+                                <MapPin className="w-3 h-3 text-[#b87a29]" />
+                                {meta.lat.toFixed(4)}, {meta.lng.toFixed(4)}
+                              </span>
+                            )}
                             {meta.contributor && (
-                              <span className="text-xs font-bold text-[#723c11]">
-                                اقتراح من: {meta.contributor}
+                              <span className="text-[10px] text-[#723c11]/75 font-semibold">
+                                • {meta.contributor}
                               </span>
                             )}
                           </div>
-                          <h4 className="font-black text-base text-[#301809]">{item.title}</h4>
-                          <p className="text-xs text-[#723c11]/85 leading-relaxed whitespace-pre-wrap">{meta.cleanContent}</p>
+                          <h4 className="font-thmanyah font-bold text-base text-[#301809] truncate">
+                            {item.title}
+                          </h4>
+                          <p className="text-xs text-[#723c11]/80 line-clamp-2 mt-0.5 leading-relaxed">
+                            {meta.cleanContent}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex gap-1 shrink-0">
                           <Button
-                            onClick={() => handleApproveHeritageSuggestion(item)}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl h-9 px-4 cursor-pointer"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setEditingHeritage({
+                                ...item,
+                                cleanContent: meta.cleanContent,
+                                category: meta.category,
+                                contributor: meta.contributor,
+                                lat: meta.lat ?? '',
+                                lng: meta.lng ?? '',
+                              });
+                              setIsHeritageEditOpen(true);
+                            }}
+                            className="text-[#b87a29] hover:bg-[#fae1b7]/40 h-9 w-9 rounded-xl cursor-pointer"
+                            title="تعديل"
                           >
-                            ✅ اعتماد وإظهار على الخريطة
+                            <Edit size={17} />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDeleteItem('heritage_archive', item.id)}
                             className="text-red-500 hover:bg-red-50 h-9 w-9 rounded-xl cursor-pointer"
-                            title="رفض وحذف"
+                            title="حذف"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={17} />
                           </Button>
                         </div>
-                      </div>
+                      </Card>
                     );
                   })}
               </div>
-            </Card>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="shadow-xl border-2 border-[#dbc397] rounded-3xl overflow-hidden bg-white">
-               <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 text-center">
-                 <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] mx-auto mb-2 text-2xl shadow-sm">
-                   🗺️
-                 </div>
-                 <h3 className="text-lg font-black text-[#fae1b7]">إضافة معلم تاريخي جديد للخريطة</h3>
-                 <p className="text-xs text-[#d4b174] mt-1">يظهر تلقائياً كمعلم تفاعلي على خريطة التراث للزوار</p>
-               </div>
-               <CardContent className="p-6">
-                 <form onSubmit={handleCreateHeritage} className="space-y-4 text-right">
-                   <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">اسم المعلم التاريخي *</Label>
-                     <Input required value={newHeritage.title} onChange={e => setNewHeritage({...newHeritage, title: e.target.value})} placeholder="مثال: قصر أنقوصة العتيق / باب عمي" className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">تصنيف المعلم</Label>
-                     <select
-                       value={newHeritage.category}
-                       onChange={e => setNewHeritage({ ...newHeritage, category: e.target.value })}
-                       className="w-full h-11 rounded-xl border-2 border-[#dbc397] bg-white px-3 text-xs font-bold text-[#301809] focus:outline-none focus:border-[#b87a29]"
-                     >
-                       {HERITAGE_CATEGORIES.map(c => (
-                         <option key={c} value={c}>{c}</option>
-                       ))}
-                     </select>
-                   </div>
-                   <div className="grid grid-cols-2 gap-2.5">
-                     <div className="space-y-1">
-                       <Label className="font-bold text-[11px] text-[#301809]">خط العرض (Lat - اختياري)</Label>
-                       <Input
-                         type="number"
-                         step="any"
-                         dir="ltr"
-                         value={newHeritage.lat}
-                         onChange={e => setNewHeritage({ ...newHeritage, lat: e.target.value })}
-                         placeholder="31.9668"
-                         className="h-10 border-2 border-[#dbc397] rounded-xl text-left font-mono text-xs"
-                       />
-                     </div>
-                     <div className="space-y-1">
-                       <Label className="font-bold text-[11px] text-[#301809]">خط الطول (Lng - اختياري)</Label>
-                       <Input
-                         type="number"
-                         step="any"
-                         dir="ltr"
-                         value={newHeritage.lng}
-                         onChange={e => setNewHeritage({ ...newHeritage, lng: e.target.value })}
-                         placeholder="5.3271"
-                         className="h-10 border-2 border-[#dbc397] rounded-xl text-left font-mono text-xs"
-                       />
-                     </div>
-                   </div>
-                   <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">الوصف والسياق التاريخي للمعلم *</Label>
-                     <Textarea required value={newHeritage.content} onChange={e => setNewHeritage({...newHeritage, content: e.target.value})} placeholder="تفاصيل تاريخية عن المعلم وموقعه..." rows={4} className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]" />
-                   </div>
-                   <div className="space-y-1.5">
-                     <Label className="font-bold text-xs text-[#301809]">رابط صورة المعلم (اختياري)</Label>
-                     <Input value={newHeritage.image_url} onChange={e => setNewHeritage({...newHeritage, image_url: e.target.value})} placeholder="https://..." dir="ltr" className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]" />
-                   </div>
-                   <Button type="submit" className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white rounded-xl shadow-md cursor-pointer transition-all">إضافة المعلم إلى الخريطة التفاعلية</Button>
-                 </form>
-               </CardContent>
-            </Card>
-
-            <div className="lg:col-span-2 space-y-4">
-               <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
-                 <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
-                   <History className="text-[#b87a29]" />
-                   <span>المعالم الإضافية المعتمدة على الخريطة ({heritageItems.filter(item => parseHeritageMeta(item.content, item.title).status === 'approved').length})</span>
-                 </h3>
-                 <Button
-                   type="button"
-                   variant="outline"
-                   onClick={() => navigate('/map')}
-                   className="h-9 rounded-xl border-[#dbc397] text-[#301809] text-xs font-bold cursor-pointer"
-                 >
-                   🗺️ معاينة خريطة التراث
-                 </Button>
-               </div>
-               <div className="bg-[#fae1b7]/35 border border-[#dbc397] rounded-2xl p-3.5 text-xs font-bold text-[#723c11]">
-                 📌 ملاحظة: المعالم الأساسية الـ 3 (مسجد لالة عزة الإباضي، القصر العتيق بوارجلان، المدينة الأثرية سدراتة) مثبتة دائماً على الخريطة مع حدودها الجغرافية، وأي معلم تضيفه أو تعتمده هنا يظهر بجانبها فوراً.
-               </div>
-               {heritageItems
-                 .filter(item => parseHeritageMeta(item.content, item.title).status === 'approved')
-                 .map(item => {
-                   const meta = parseHeritageMeta(item.content, item.title);
-                   return (
-                     <Card key={item.id} className="p-4 flex gap-4 items-center bg-white shadow-xs hover:shadow-md transition-all border-2 border-[#dbc397]/60 rounded-3xl">
-                       <div className="w-20 h-20 rounded-2xl bg-[#fae1b7]/40 border border-[#dbc397] flex items-center justify-center overflow-hidden shrink-0 relative shadow-2xs">
-                         <img 
-                           src={item.image_url} 
-                           className="object-cover h-full w-full" 
-                           onError={(e) => {
-                             e.currentTarget.style.display = 'none';
-                             const fallback = e.currentTarget.parentElement?.querySelector('.admin-heritage-thumb-fallback');
-                             if (fallback) fallback.classList.remove('hidden');
-                           }}
-                         />
-                         <div className="admin-heritage-thumb-fallback hidden absolute inset-0 bg-[#fae1b7] flex items-center justify-center">
-                           <History size={24} className="text-[#b87a29]" />
-                         </div>
-                       </div>
-                       <div className="flex-1 min-w-0">
-                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                           <span className="bg-[#fae1b7] text-[#723c11] text-[10px] font-black px-2 py-0.5 rounded-md border border-[#dbc397]">
-                             {meta.category}
-                           </span>
-                           {meta.lat !== undefined && meta.lng !== undefined && (
-                             <span className="text-[10px] font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md" dir="ltr">
-                               📍 {meta.lat.toFixed(4)}, {meta.lng.toFixed(4)}
-                             </span>
-                           )}
-                           {meta.contributor && (
-                             <span className="text-[10px] text-[#723c11]/70 font-bold">
-                               • {meta.contributor}
-                             </span>
-                           )}
-                         </div>
-                         <h4 className="font-bold text-base text-[#301809] truncate">{item.title}</h4>
-                         <p className="text-xs text-[#723c11]/80 line-clamp-2 mt-1 leading-relaxed">{meta.cleanContent}</p>
-                       </div>
-                       <div className="flex gap-1.5 shrink-0">
-                         <Button 
-                           variant="ghost" 
-                           size="icon"
-                           onClick={() => {
-                             setEditingHeritage({
-                               ...item,
-                               cleanContent: meta.cleanContent,
-                               category: meta.category,
-                               contributor: meta.contributor,
-                               lat: meta.lat ?? '',
-                               lng: meta.lng ?? ''
-                             });
-                             setIsHeritageEditOpen(true);
-                           }} 
-                           className="text-[#b87a29] hover:bg-[#fae1b7]/40 h-9 w-9 rounded-xl cursor-pointer"
-                           title="تعديل"
-                         >
-                           <Edit size={18} />
-                         </Button>
-                         <Button 
-                           variant="ghost" 
-                           size="icon"
-                           onClick={() => handleDeleteItem('heritage_archive', item.id)} 
-                           className="text-red-500 hover:bg-red-50 h-9 w-9 rounded-xl cursor-pointer"
-                           title="حذف"
-                         >
-                           <Trash2 size={18} />
-                         </Button>
-                       </div>
-                     </Card>
-                   );
-                 })}
             </div>
-          </div>
 
-          <Dialog open={isHeritageEditOpen} onOpenChange={setIsHeritageEditOpen}>
-            <DialogContent className="sm:max-w-[500px] border-2 border-[#dbc397] rounded-3xl bg-white" dir="rtl">
-              <DialogHeader>
-                <DialogTitle className="text-right text-2xl font-thmanyah font-bold text-[#301809]">تعديل بيانات المعلم على الخريطة</DialogTitle>
-                <DialogDescription className="sr-only">استخدم هذا النموذج لتعديل تفاصيل وإحداثيات المعلم التاريخي.</DialogDescription>
-              </DialogHeader>
-              {editingHeritage && (
-                <form onSubmit={handleUpdateHeritage} className="space-y-4 text-right pt-4">
-                  <div className="space-y-1.5">
-                    <Label className="font-bold text-xs text-[#301809]">اسم المعلم</Label>
-                    <Input 
-                      required 
-                      value={editingHeritage.title} 
-                      onChange={e => setEditingHeritage({...editingHeritage, title: e.target.value})} 
-                      className="h-11 font-bold border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="font-bold text-xs text-[#301809]">تصنيف المعلم</Label>
-                    <select
-                      value={editingHeritage.category || HERITAGE_CATEGORIES[0]}
-                      onChange={e => setEditingHeritage({ ...editingHeritage, category: e.target.value })}
-                      className="w-full h-11 rounded-xl border-2 border-[#dbc397] bg-white px-3 text-xs font-bold text-[#301809]"
+            <Dialog open={isHeritageEditOpen} onOpenChange={setIsHeritageEditOpen}>
+              <DialogContent
+                className="sm:max-w-[500px] border border-[#dbc397] rounded-3xl bg-white"
+                dir="rtl"
+              >
+                <DialogHeader>
+                  <DialogTitle className="text-right text-xl font-thmanyah font-bold text-[#301809]">
+                    تعديل بيانات المعلم
+                  </DialogTitle>
+                  <DialogDescription className="sr-only">
+                    استخدم هذا النموذج لتعديل تفاصيل وإحداثيات المعلم التاريخي.
+                  </DialogDescription>
+                </DialogHeader>
+                {editingHeritage && (
+                  <form onSubmit={handleUpdateHeritage} className="space-y-4 text-right pt-3">
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">اسم المعلم</Label>
+                      <Input
+                        required
+                        value={editingHeritage.title}
+                        onChange={(e) =>
+                          setEditingHeritage({ ...editingHeritage, title: e.target.value })
+                        }
+                        className="h-11 font-bold border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">تصنيف المعلم</Label>
+                      <select
+                        value={editingHeritage.category || HERITAGE_CATEGORIES[0]}
+                        onChange={(e) =>
+                          setEditingHeritage({ ...editingHeritage, category: e.target.value })
+                        }
+                        className="w-full h-11 rounded-xl border border-[#dbc397] bg-[#fdfbf7] px-3 text-xs font-bold text-[#301809]"
+                      >
+                        {HERITAGE_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div className="space-y-1">
+                        <Label className="font-bold text-[11px] text-[#301809]">
+                          خط العرض (Lat)
+                        </Label>
+                        <Input
+                          type="number"
+                          step="any"
+                          dir="ltr"
+                          value={editingHeritage.lat ?? ''}
+                          onChange={(e) =>
+                            setEditingHeritage({ ...editingHeritage, lat: e.target.value })
+                          }
+                          placeholder="31.9668"
+                          className="h-10 border border-[#dbc397] bg-[#fdfbf7] rounded-xl text-left font-mono text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="font-bold text-[11px] text-[#301809]">
+                          خط الطول (Lng)
+                        </Label>
+                        <Input
+                          type="number"
+                          step="any"
+                          dir="ltr"
+                          value={editingHeritage.lng ?? ''}
+                          onChange={(e) =>
+                            setEditingHeritage({ ...editingHeritage, lng: e.target.value })
+                          }
+                          placeholder="5.3271"
+                          className="h-10 border border-[#dbc397] bg-[#fdfbf7] rounded-xl text-left font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">الوصف التاريخي</Label>
+                      <Textarea
+                        required
+                        value={editingHeritage.cleanContent ?? editingHeritage.content}
+                        onChange={(e) =>
+                          setEditingHeritage({
+                            ...editingHeritage,
+                            cleanContent: e.target.value,
+                            content: e.target.value,
+                          })
+                        }
+                        rows={4}
+                        className="font-medium border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">رابط الصورة</Label>
+                      <Input
+                        value={editingHeritage.image_url || ''}
+                        onChange={(e) =>
+                          setEditingHeritage({ ...editingHeritage, image_url: e.target.value })
+                        }
+                        dir="ltr"
+                        className="h-11 font-sans text-left border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-11 text-sm font-thmanyah font-bold text-[#301809] hover:text-white mt-2 shadow-sm rounded-xl cursor-pointer transition-all"
                     >
-                      {HERITAGE_CATEGORIES.map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="space-y-1">
-                      <Label className="font-bold text-[11px] text-[#301809]">خط العرض (Lat)</Label>
-                      <Input
-                        type="number"
-                        step="any"
-                        dir="ltr"
-                        value={editingHeritage.lat ?? ''}
-                        onChange={e => setEditingHeritage({ ...editingHeritage, lat: e.target.value })}
-                        placeholder="31.9668"
-                        className="h-10 border-2 border-[#dbc397] rounded-xl text-left font-mono text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="font-bold text-[11px] text-[#301809]">خط الطول (Lng)</Label>
-                      <Input
-                        type="number"
-                        step="any"
-                        dir="ltr"
-                        value={editingHeritage.lng ?? ''}
-                        onChange={e => setEditingHeritage({ ...editingHeritage, lng: e.target.value })}
-                        placeholder="5.3271"
-                        className="h-10 border-2 border-[#dbc397] rounded-xl text-left font-mono text-xs"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="font-bold text-xs text-[#301809]">الوصف التاريخي</Label>
-                    <Textarea 
-                      required 
-                      value={editingHeritage.cleanContent ?? editingHeritage.content} 
-                      onChange={e => setEditingHeritage({...editingHeritage, cleanContent: e.target.value, content: e.target.value})} 
-                      rows={4} 
-                      className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="font-bold text-xs text-[#301809]">رابط الصورة</Label>
-                    <Input 
-                      value={editingHeritage.image_url || ''} 
-                      onChange={e => setEditingHeritage({...editingHeritage, image_url: e.target.value})} 
-                      dir="ltr" 
-                      className="h-11 font-sans text-left border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
-                    />
-                  </div>
-                  <Button type="submit" className="w-full bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white mt-4 shadow-lg rounded-xl cursor-pointer transition-all">
-                    حفظ التغييرات وتحديث الخريطة
-                  </Button>
-                </form>
-              )}
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
+                      حفظ التغييرات
+                    </Button>
+                  </form>
+                )}
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
 
-        <TabsContent value="history-refs" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <AdminHistoryRefsTab />
-        </TabsContent>
+          {/* HISTORY REFS TAB */}
+          <TabsContent
+            value="history-refs"
+            className="mt-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <AdminHistoryRefsTab />
+          </TabsContent>
 
-        <TabsContent value="ads" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className={`shadow-xl border-2 ${editingAdId ? 'border-[#efa83f] ring-4 ring-[#efa83f]/20' : 'border-[#dbc397]'} rounded-3xl overflow-hidden bg-white transition-all`}>
-               <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6 text-center">
-                 <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] mx-auto mb-2 text-2xl shadow-sm">
-                   {editingAdId ? '✏️' : '📢'}
-                 </div>
-                 <h3 className="text-lg font-black text-[#fae1b7]">
-                   {editingAdId ? 'تعديل بيانات الشريك / الراعي' : 'إضافة إعلان شريك'}
-                 </h3>
-                 <p className="text-xs text-[#d4b174] mt-1">
-                   {editingAdId ? 'قم بتحديث الشعار أو صورة التخصص أو الرابط ثم اضغط حفظ' : 'عرض شعارات ورعاة فعاليات ورقلة'}
-                 </p>
-               </div>
-               <CardContent className="p-6">
-                  <form onSubmit={handleCreateAd} className="space-y-5 text-right">
-                    {/* اسم الشريك */}
+          {/* ADS TAB */}
+          <TabsContent
+            value="ads"
+            className="mt-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card
+                className={`shadow-xs border ${
+                  editingAdId
+                    ? 'border-[#efa83f] ring-2 ring-[#efa83f]/25'
+                    : 'border-[#e3d4b8]'
+                } rounded-3xl overflow-hidden bg-white transition-all`}
+              >
+                <div className="bg-gradient-to-l from-[#301809] via-[#4a250e] to-[#2b1507] text-white p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] shrink-0">
+                      {editingAdId ? <Edit className="w-5 h-5" /> : <Megaphone className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <h3 className="text-base font-thmanyah font-bold text-[#fae1b7]">
+                        {editingAdId ? 'تعديل بيانات الشريك' : 'إضافة شريك أو راعٍ'}
+                      </h3>
+                      <p className="text-[11px] text-[#dbc397] mt-0.5">
+                        {editingAdId
+                          ? 'حدّث الشعار أو صورة التخصص أو الرابط ثم احفظ'
+                          : 'عرض شعارات ورعاة فعاليات ورقلة'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <CardContent className="p-5">
+                  <form onSubmit={handleCreateAd} className="space-y-4 text-right">
                     <div className="space-y-1.5">
-                      <Label className="font-bold text-xs text-[#301809]">اسم الشريك / الراعي *</Label>
-                      <Input 
-                         required 
-                         value={newAd.partner_name} 
-                         onChange={e => setNewAd({...newAd, partner_name: e.target.value})} 
-                         placeholder="مثال: Ignatex، اتصالات الجزائر، موبيليس..." 
-                         className="h-11 font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
+                      <Label className="font-bold text-xs text-[#301809]">
+                        اسم الشريك / الراعي *
+                      </Label>
+                      <Input
+                        required
+                        value={newAd.partner_name}
+                        onChange={(e) => setNewAd({ ...newAd, partner_name: e.target.value })}
+                        placeholder="مثال: Ignatex، اتصالات الجزائر..."
+                        className="h-11 font-medium border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
                       />
                     </div>
 
-                    {/* خانة 1: شعار الراعي (Logo) - خاص بالصفحة الرئيسية */}
-                    <div className="p-4 rounded-2xl bg-[#fdfbf7] border-2 border-[#dbc397]/80 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label className="font-black text-xs text-[#301809] flex items-center gap-1.5">
-                          <span>🏷️ 1. شعار الراعي (Logo)</span>
+                    {/* 1. Logo */}
+                    <div className="p-3.5 rounded-2xl bg-[#fdfbf7] border border-[#dbc397] space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="font-bold text-xs text-[#301809] flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5 text-[#b87a29]" />
+                          <span>1. شعار الراعي (Logo)</span>
                         </Label>
-                        <span className="text-[10px] font-bold text-[#b87a29] bg-[#fae1b7]/80 border border-[#dbc397] px-2 py-0.5 rounded-full">
-                          يظهر في الصفحة الرئيسية
+                        <span className="text-[10px] font-bold text-[#723c11] bg-[#fae1b7]/70 px-2 py-0.5 rounded-full">
+                          للصفحة الرئيسية
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#723c11]/80">
-                        شعار الشريك فقط (PNG بخلفية شفافة أو SVG). إذا تُرك فارغاً سيظهر اسم الراعي نصياً فقط دون أي صورة.
-                      </p>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <Input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={e => setLogoFile(e.target.files?.[0] || null)}
-                            className="bg-white border-dashed border-2 border-[#dbc397] cursor-pointer h-12 pt-2.5 font-bold rounded-xl text-[#723c11] text-xs"
-                          />
-                          {logoFile && (
-                            <Button 
-                              type="button" 
-                              variant="ghost" 
-                              onClick={() => setLogoFile(null)}
-                              className="text-red-500 hover:bg-red-50 rounded-xl shrink-0 h-10 w-10 p-0"
-                              title="حذف ملف الشعار"
-                            >
-                              <Trash2 size={18} />
-                            </Button>
-                          )}
-                        </div>
-
-                        <Input 
-                          value={newAd.logo_url} 
-                          onChange={e => setNewAd({...newAd, logo_url: e.target.value})} 
-                          placeholder="أو ضع رابط الشعار المباشر https://..." 
-                          dir="ltr" 
-                          className="h-10 border border-[#dbc397] rounded-xl text-left font-sans text-xs bg-white focus-visible:border-[#b87a29]"
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                          className="bg-white border-dashed border border-[#dbc397] cursor-pointer h-11 pt-2 font-medium rounded-xl text-[#723c11] text-xs"
                         />
+                        {logoFile && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setLogoFile(null)}
+                            className="text-red-500 hover:bg-red-50 rounded-xl shrink-0 h-10 w-10 p-0"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        )}
                       </div>
-                    </div>
-
-                    {/* خانة 2: صورة الإعلان / التخصص - خاصة ببنر المشارك */}
-                    <div className="p-4 rounded-2xl bg-[#fdfbf7] border-2 border-[#dbc397]/80 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label className="font-black text-xs text-[#301809] flex items-center gap-1.5">
-                          <span>📸 2. صورة الإعلان أو التخصص</span>
-                        </Label>
-                        <span className="text-[10px] font-bold text-[#723c11] bg-[#fae1b7]/80 border border-[#dbc397] px-2 py-0.5 rounded-full">
-                          يظهر في بنر المشارك/الزائر
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#723c11]/80">
-                        صورة فوتوغرافية أو إعلانية عن نشاط وتخصص الراعي (مثل ماكينة خياطة، لافتة، منتج، صورة المحل...).
-                      </p>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <Input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={e => setAdFile(e.target.files?.[0] || null)}
-                            className="bg-white border-dashed border-2 border-[#dbc397] cursor-pointer h-12 pt-2.5 font-bold rounded-xl text-[#723c11] text-xs"
-                          />
-                          {adFile && (
-                            <Button 
-                              type="button" 
-                              variant="ghost" 
-                              onClick={() => setAdFile(null)}
-                              className="text-red-500 hover:bg-red-50 rounded-xl shrink-0 h-10 w-10 p-0"
-                              title="حذف ملف الصورة"
-                            >
-                              <Trash2 size={18} />
-                            </Button>
-                          )}
-                        </div>
-
-                        <Input 
-                          value={newAd.image_url} 
-                          onChange={e => setNewAd({...newAd, image_url: e.target.value})} 
-                          placeholder="أو ضع رابط صورة الإعلان https://..." 
-                          dir="ltr" 
-                          className="h-10 border border-[#dbc397] rounded-xl text-left font-sans text-xs bg-white focus-visible:border-[#b87a29]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* الرابط الموجه للشريك */}
-                    <div className="space-y-1.5">
-                      <Label className="font-bold text-xs text-[#301809]">الرابط الموجه للشريك (URL)</Label>
-                      <Input 
-                         value={newAd.link} 
-                         onChange={e => setNewAd({...newAd, link: e.target.value})} 
-                         placeholder="https://facebook.com/... أو موقع الشريك" 
-                         dir="ltr" 
-                         className="h-11 border-2 border-[#dbc397] rounded-xl text-left font-sans focus-visible:border-[#b87a29]"
+                      <Input
+                        value={newAd.logo_url}
+                        onChange={(e) => setNewAd({ ...newAd, logo_url: e.target.value })}
+                        placeholder="أو رابط الشعار https://..."
+                        dir="ltr"
+                        className="h-10 border border-[#dbc397] rounded-xl text-left font-sans text-xs bg-white"
                       />
                     </div>
 
-                    <div className="flex gap-2 mt-4">
+                    {/* 2. Ad Photo */}
+                    <div className="p-3.5 rounded-2xl bg-[#fdfbf7] border border-[#dbc397] space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="font-bold text-xs text-[#301809] flex items-center gap-1.5">
+                          <ImageIcon className="w-3.5 h-3.5 text-[#b87a29]" />
+                          <span>2. صورة الإعلان أو التخصص</span>
+                        </Label>
+                        <span className="text-[10px] font-bold text-[#723c11] bg-[#fae1b7]/70 px-2 py-0.5 rounded-full">
+                          لبنر المشارك
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setAdFile(e.target.files?.[0] || null)}
+                          className="bg-white border-dashed border border-[#dbc397] cursor-pointer h-11 pt-2 font-medium rounded-xl text-[#723c11] text-xs"
+                        />
+                        {adFile && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setAdFile(null)}
+                            className="text-red-500 hover:bg-red-50 rounded-xl shrink-0 h-10 w-10 p-0"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        )}
+                      </div>
+                      <Input
+                        value={newAd.image_url}
+                        onChange={(e) => setNewAd({ ...newAd, image_url: e.target.value })}
+                        placeholder="أو رابط صورة الإعلان https://..."
+                        dir="ltr"
+                        className="h-10 border border-[#dbc397] rounded-xl text-left font-sans text-xs bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="font-bold text-xs text-[#301809]">
+                        الرابط الموجه للشريك (URL)
+                      </Label>
+                      <Input
+                        value={newAd.link}
+                        onChange={(e) => setNewAd({ ...newAd, link: e.target.value })}
+                        placeholder="https://facebook.com/..."
+                        dir="ltr"
+                        className="h-11 border border-[#dbc397] bg-[#fdfbf7] rounded-xl text-left font-sans"
+                      />
+                    </div>
+
+                    <div className="flex gap-2 pt-1">
                       {editingAdId && (
                         <Button
                           type="button"
                           variant="outline"
                           onClick={handleCancelEditAd}
-                          className="flex-1 h-12 rounded-xl border-2 border-[#dbc397] text-[#723c11] font-bold cursor-pointer"
+                          className="flex-1 h-11 rounded-xl border-[#dbc397] text-[#723c11] font-bold cursor-pointer"
                         >
-                          إلغاء التعديل
+                          إلغاء
                         </Button>
                       )}
-                      <Button 
-                         type="submit" 
-                         disabled={adUploading} 
-                         className="flex-1 bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-12 text-sm font-black text-white shadow-lg rounded-xl cursor-pointer transition-all"
+                      <Button
+                        type="submit"
+                        disabled={adUploading}
+                        className="flex-1 bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] h-11 text-sm font-thmanyah font-bold text-[#301809] hover:text-white shadow-sm rounded-xl cursor-pointer transition-all"
                       >
-                        {adUploading ? "جاري الحفظ..." : editingAdId ? "حفظ تعديلات الشريك" : "نشر الإعلان والشراكة"}
+                        {adUploading
+                          ? 'جاري الحفظ...'
+                          : editingAdId
+                          ? 'حفظ التعديلات'
+                          : 'نشر الإعلان'}
                       </Button>
                     </div>
                   </form>
                 </CardContent>
-             </Card>
+              </Card>
 
-             <div className="lg:col-span-2 space-y-4">
-                <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-3 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
-                  <Megaphone className="text-[#b87a29]" /> الشركاء والرعاة الحاليون ({ads.length})
+              <div className="lg:col-span-2 space-y-4">
+                <h3 className="text-lg font-thmanyah font-bold text-[#301809] flex items-center gap-2 pb-3 border-b border-[#e3d4b8]">
+                  <Megaphone className="w-5 h-5 text-[#b87a29]" />
+                  <span>الشركاء والرعاة الحاليون ({ads.length})</span>
                 </h3>
                 {ads.length === 0 ? (
-                  <div className="text-center text-[#723c11] py-12 bg-white rounded-3xl border-2 border-dashed border-[#dbc397] font-bold">
+                  <div className="text-center text-[#723c11] py-12 bg-white rounded-3xl border border-dashed border-[#dbc397] font-bold text-sm">
                     لا توجد إعلانات شركاء نشطة حالياً.
                   </div>
                 ) : (
-                  ads.map(ad => {
+                  ads.map((ad) => {
                     let adPhoto = ad.image_url || '';
                     let adLogo = '';
                     if (ad.image_url && ad.image_url.includes('||')) {
@@ -1907,55 +2140,73 @@ export default function AdminDashboard() {
                     const isBeingEdited = editingAdId === ad.id;
 
                     return (
-                      <Card key={ad.id} className={`p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-white shadow-sm hover:shadow-md border-2 ${isBeingEdited ? 'border-[#efa83f] bg-[#fae1b7]/15' : 'border-[#dbc397]/60'} rounded-3xl relative overflow-hidden transition-all`}>
-                        {/* Dual Previews */}
+                      <Card
+                        key={ad.id}
+                        className={`p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-white shadow-xs hover:shadow-md border ${
+                          isBeingEdited
+                            ? 'border-[#efa83f] bg-[#fae1b7]/15'
+                            : 'border-[#e3d4b8]'
+                        } rounded-2xl relative overflow-hidden transition-all`}
+                      >
                         <div className="flex items-center gap-2 shrink-0">
-                          {/* Logo Preview */}
-                          <div className="w-20 h-16 rounded-xl bg-[#fdfbf7] border border-[#dbc397] flex flex-col items-center justify-center p-1.5 overflow-hidden relative">
+                          <div className="w-18 h-16 rounded-xl bg-[#fdfbf7] border border-[#dbc397] flex flex-col items-center justify-center p-1.5 overflow-hidden">
                             {adLogo ? (
-                              <img 
-                                src={adLogo} 
-                                alt="الشعار" 
-                                className="object-contain max-h-9 max-w-full" 
+                              <img
+                                src={adLogo}
+                                alt="الشعار"
+                                className="object-contain max-h-9 max-w-full"
                               />
                             ) : (
-                              <span className="text-[10px] text-gray-400 font-bold">بدون شعار</span>
+                              <span className="text-[10px] text-stone-400 font-semibold">
+                                بدون شعار
+                              </span>
                             )}
-                            <span className="text-[8px] font-bold text-[#b87a29] mt-auto">الرئيسية</span>
+                            <span className="text-[8px] font-bold text-[#b87a29] mt-auto">
+                              الرئيسية
+                            </span>
                           </div>
 
-                          {/* Ad Photo Preview */}
-                          <div className="w-24 h-16 rounded-xl bg-[#fdfbf7] border border-[#dbc397] flex flex-col items-center justify-center p-1 overflow-hidden relative">
+                          <div className="w-22 h-16 rounded-xl bg-[#fdfbf7] border border-[#dbc397] flex flex-col items-center justify-center p-1 overflow-hidden">
                             {adPhoto ? (
-                              <img 
-                                src={adPhoto} 
-                                alt="صورة التخصص" 
-                                className="object-cover w-full h-10 rounded-lg" 
+                              <img
+                                src={adPhoto}
+                                alt="صورة التخصص"
+                                className="object-cover w-full h-10 rounded-lg"
                               />
                             ) : (
                               <Megaphone size={16} className="text-[#b87a29]" />
                             )}
-                            <span className="text-[8px] font-bold text-[#723c11] mt-auto">البنر</span>
+                            <span className="text-[8px] font-bold text-[#723c11] mt-auto">
+                              البنر
+                            </span>
                           </div>
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-[#301809] text-base">{ad.partner_name}</h4>
+                          <h4 className="font-thmanyah font-bold text-[#301809] text-base">
+                            {ad.partner_name}
+                          </h4>
                           {ad.link && (
-                            <a href={ad.link} target="_blank" rel="noreferrer" className="text-xs text-[#b87a29] hover:underline flex items-center gap-1 mt-1 truncate" dir="ltr">
+                            <a
+                              href={ad.link}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-[#b87a29] hover:underline flex items-center gap-1 mt-1 truncate"
+                              dir="ltr"
+                            >
                               <LinkIcon size={12} className="inline shrink-0" />
                               {ad.link}
                             </a>
                           )}
                           <div className="flex items-center gap-2 mt-2">
                             {adLogo && (
-                              <span className="text-[10px] font-bold text-[#b87a29] bg-[#fae1b7]/70 border border-[#dbc397] px-2 py-0.5 rounded-full">
-                                ✓ شعار للرئيسية
+                              <span className="text-[10px] font-bold text-[#723c11] bg-[#fae1b7]/70 border border-[#dbc397] px-2 py-0.5 rounded-full">
+                                شعار للرئيسية
                               </span>
                             )}
                             {adPhoto && (
-                              <span className="text-[10px] font-bold text-[#723c11] bg-[#dbc397]/40 border border-[#dbc397] px-2 py-0.5 rounded-full">
-                                ✓ صورة للبنر
+                              <span className="text-[10px] font-bold text-[#723c11] bg-[#fdfbf7] border border-[#dbc397] px-2 py-0.5 rounded-full">
+                                صورة للبنر
                               </span>
                             )}
                           </div>
@@ -1965,201 +2216,230 @@ export default function AdminDashboard() {
                           <Button
                             variant="outline"
                             onClick={() => handleStartEditAd(ad)}
-                            className="text-[#301809] border-[#dbc397] hover:bg-[#fae1b7]/50 px-3 h-10 rounded-xl cursor-pointer text-xs font-bold gap-1"
-                            title="تعديل بيانات الشريك"
+                            className="text-[#301809] border-[#dbc397] hover:bg-[#fae1b7]/50 px-3 h-9 rounded-xl cursor-pointer text-xs font-bold gap-1"
                           >
-                            <Edit size={15} className="text-[#b87a29]" />
+                            <Edit size={14} className="text-[#b87a29]" />
                             <span>تعديل</span>
                           </Button>
-                          <Button variant="ghost" onClick={() => handleDeleteItem('partner_ads', ad.id)} className="text-red-500 hover:bg-red-50 p-2 h-10 w-10 rounded-xl cursor-pointer">
-                            <Trash2 size={18} />
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleDeleteItem('partner_ads', ad.id)}
+                            className="text-red-500 hover:bg-red-50 p-2 h-9 w-9 rounded-xl cursor-pointer"
+                          >
+                            <Trash2 size={16} />
                           </Button>
                         </div>
                       </Card>
                     );
                   })
                 )}
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="broadcast" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            {/* Broadcast Form */}
-            <Card className="lg:col-span-7 shadow-xl border-2 border-[#dbc397] rounded-3xl bg-white overflow-hidden">
-              <div className="bg-gradient-to-br from-[#301809] to-[#723c11] text-white p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] text-2xl shadow-sm shrink-0">
-                    📣
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-[#fae1b7] flex items-center gap-2">
-                      إرسال إشعار عام للمنصة
-                    </h3>
-                    <p className="text-xs text-[#d4b174] font-medium mt-1">
-                      بصفتك مديراً عاماً، سيتم إرسال هذا التنبيه لكافة المستخدمين والزوار فورياً كإشعار هاتف وتطبيق أصيل.
-                    </p>
-                  </div>
-                </div>
               </div>
-              <CardContent className="p-6 md:p-8">
-                <form onSubmit={handleSendBroadcast} className="space-y-5 text-right">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="admin-broadcast-title" className="font-bold text-xs text-[#301809]">عنوان الإشعار</Label>
-                    <Input 
-                      id="admin-broadcast-title"
-                      required
-                      value={broadcastTitle}
-                      onChange={e => setBroadcastTitle(e.target.value)}
-                      placeholder="مثال: انطلاق فعاليات موسم القصور العتيقة..."
-                      className="h-11 font-bold border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
-                    />
-                  </div>
+            </div>
+          </TabsContent>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="admin-broadcast-body" className="font-bold text-xs text-[#301809]">نص الرسالة</Label>
-                    <Textarea 
-                      id="admin-broadcast-body"
-                      required
-                      value={broadcastBody}
-                      onChange={e => setBroadcastBody(e.target.value)}
-                      placeholder="اكتب تفاصيل التنبيه الهام هنا..."
-                      rows={5}
-                      className="font-medium border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="admin-broadcast-url" className="font-bold text-xs text-[#301809]">رابط التوجيه (اختياري)</Label>
-                    <Input 
-                      id="admin-broadcast-url"
-                      value={broadcastUrl}
-                      onChange={e => setBroadcastUrl(e.target.value)}
-                      placeholder="/heritage أو https://..."
-                      dir="ltr"
-                      className="h-11 font-sans text-left border-2 border-[#dbc397] rounded-xl focus-visible:border-[#b87a29]"
-                    />
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    disabled={broadcasting}
-                    className="w-full h-12 text-sm font-black bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white shadow-lg rounded-xl gap-2 mt-4 cursor-pointer transition-all"
-                  >
-                    {broadcasting ? (
-                      <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 ml-1" />
-                        <span>بث التنبيه العام لجميع الهواتف</span>
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Mobile Phone Mockup Preview */}
-            <div className="lg:col-span-5 flex flex-col items-center">
-              <span className="text-sm font-black text-[#723c11] mb-4 flex items-center gap-2 bg-[#fae1b7]/50 border border-[#dbc397] px-4 py-1.5 rounded-full">
-                <Smartphone className="w-4 h-4 text-[#b87a29]" />
-                معاينة الإشعار على هاتف المستخدم
-              </span>
-
-              <div className="w-full max-w-[320px] aspect-[9/18.5] bg-[#1a0c04] rounded-[44px] p-3 shadow-2xl border-4 border-[#301809] relative overflow-hidden ring-4 ring-[#dbc397]/40">
-                <div className="w-32 h-6 bg-[#301809] absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20 flex items-center justify-center">
-                  <div className="w-3 h-3 rounded-full bg-slate-900 border border-white/10" />
-                </div>
-                
-                <div className="w-full h-full bg-gradient-to-b from-[#251206] via-[#301809] to-[#1a0c04] rounded-[34px] p-4 flex flex-col justify-between relative text-right">
-                  <div className="flex justify-between items-center text-[10px] text-[#fae1b7]/60 font-sans pt-1">
-                    <span>12:00</span>
-                    <span>📶 4G 🔋</span>
-                  </div>
-
-                  {/* Simulated Banner */}
-                  <div className="mt-8">
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-2xl border-2 border-[#dbc397] text-slate-800 text-right">
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-[10px] font-black text-[#723c11] flex items-center gap-1.5 bg-[#fae1b7]/60 px-2 py-0.5 rounded-md border border-[#dbc397]">
-                          <Bell className="w-3 h-3 text-[#b87a29] animate-bounce" />
-                          تواصل صحراء
-                        </span>
-                        <span className="text-[9px] text-slate-400 font-bold">الآن</span>
-                      </div>
-                      <h5 className="font-black text-xs text-[#301809] truncate mt-1">
-                        {broadcastTitle ? broadcastTitle : 'عنوان الإشعار يظهر هنا'}
-                      </h5>
-                      <p className="text-[10px] text-[#723c11] mt-1 font-medium leading-relaxed break-words line-clamp-3">
-                        {broadcastBody || 'محتوى ونصوص رسالة الإشعار كما قمت بكتابتها في النموذج ستظهر هنا في شاشة الهاتف...'}
+          {/* BROADCAST TAB */}
+          <TabsContent
+            value="broadcast"
+            className="mt-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Broadcast Form */}
+              <Card className="lg:col-span-7 shadow-xs border border-[#e3d4b8] rounded-3xl bg-white overflow-hidden">
+                <div className="bg-gradient-to-l from-[#301809] via-[#4a250e] to-[#2b1507] text-white p-6">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-2xl bg-[#efa83f]/20 border border-[#efa83f]/40 flex items-center justify-center text-[#efa83f] shrink-0">
+                      <Megaphone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-thmanyah font-bold text-[#fae1b7]">
+                        إرسال إشعار عام للمنصة
+                      </h3>
+                      <p className="text-xs text-[#dbc397] font-medium mt-0.5">
+                        يصل هذا التنبيه فورياً لكافة المستخدمين والزوار المشتركين في الإشعارات.
                       </p>
                     </div>
                   </div>
+                </div>
+                <CardContent className="p-6 md:p-7">
+                  <form onSubmit={handleSendBroadcast} className="space-y-5 text-right">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="admin-broadcast-title"
+                        className="font-bold text-xs text-[#301809]"
+                      >
+                        عنوان الإشعار
+                      </Label>
+                      <Input
+                        id="admin-broadcast-title"
+                        required
+                        value={broadcastTitle}
+                        onChange={(e) => setBroadcastTitle(e.target.value)}
+                        placeholder="مثال: انطلاق فعاليات موسم القصور العتيقة..."
+                        className="h-11 font-bold border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
 
-                  <div className="text-center text-[#fae1b7]/30 text-[10px] font-bold mb-4">
-                    حرك للأعلى لإلغاء القفل 🔒
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="admin-broadcast-body"
+                        className="font-bold text-xs text-[#301809]"
+                      >
+                        نص الرسالة
+                      </Label>
+                      <Textarea
+                        id="admin-broadcast-body"
+                        required
+                        value={broadcastBody}
+                        onChange={(e) => setBroadcastBody(e.target.value)}
+                        placeholder="اكتب تفاصيل التنبيه الهام هنا..."
+                        rows={5}
+                        className="font-medium border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="admin-broadcast-url"
+                        className="font-bold text-xs text-[#301809]"
+                      >
+                        رابط التوجيه (اختياري)
+                      </Label>
+                      <Input
+                        id="admin-broadcast-url"
+                        value={broadcastUrl}
+                        onChange={(e) => setBroadcastUrl(e.target.value)}
+                        placeholder="/heritage أو https://..."
+                        dir="ltr"
+                        className="h-11 font-sans text-left border border-[#dbc397] bg-[#fdfbf7] rounded-xl focus-visible:border-[#b87a29]"
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      disabled={broadcasting}
+                      className="w-full h-12 text-sm font-thmanyah font-bold bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-[#301809] hover:text-white shadow-sm rounded-xl gap-2 mt-2 cursor-pointer transition-all"
+                    >
+                      {broadcasting ? (
+                        <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 ml-1" />
+                          <span>بث التنبيه العام لجميع الهواتف</span>
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Mobile Phone Mockup Preview */}
+              <div className="lg:col-span-5 flex flex-col items-center">
+                <span className="text-xs font-bold text-[#723c11] mb-4 flex items-center gap-2 bg-white border border-[#dbc397] px-4 py-1.5 rounded-full shadow-xs">
+                  <Smartphone className="w-4 h-4 text-[#b87a29]" />
+                  معاينة الإشعار على هاتف المستخدم
+                </span>
+
+                <div className="w-full max-w-[300px] aspect-[9/18] bg-[#1a0c04] rounded-[40px] p-2.5 shadow-xl border-4 border-[#301809] relative overflow-hidden ring-4 ring-[#dbc397]/40">
+                  <div className="w-28 h-5 bg-[#301809] absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20 flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-stone-900 border border-white/10" />
+                  </div>
+
+                  <div className="w-full h-full bg-gradient-to-b from-[#251206] via-[#301809] to-[#1a0c04] rounded-[32px] p-4 flex flex-col justify-between relative text-right">
+                    <div className="flex justify-between items-center text-[10px] text-[#fae1b7]/60 font-sans pt-1">
+                      <span>12:00</span>
+                      <span>4G</span>
+                    </div>
+
+                    <div className="mt-8">
+                      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3.5 shadow-xl border border-[#dbc397] text-slate-800 text-right">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-[10px] font-bold text-[#723c11] flex items-center gap-1 bg-[#fae1b7]/60 px-2 py-0.5 rounded-md border border-[#dbc397]">
+                            <Bell className="w-3 h-3 text-[#b87a29]" />
+                            تواصل صحراء
+                          </span>
+                          <span className="text-[9px] text-slate-400 font-semibold">الآن</span>
+                        </div>
+                        <h5 className="font-bold text-xs text-[#301809] truncate mt-1">
+                          {broadcastTitle || 'عنوان الإشعار يظهر هنا'}
+                        </h5>
+                        <p className="text-[10px] text-[#723c11] mt-1 font-medium leading-relaxed break-words line-clamp-3">
+                          {broadcastBody ||
+                            'محتوى رسالة الإشعار كما تكتبه في النموذج سيظهر هنا في شاشة الهاتف...'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-center text-[#fae1b7]/35 text-[10px] font-medium mb-3">
+                      حرك للأعلى لإلغاء القفل
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notification History */}
+              <div className="col-span-1 lg:col-span-12 mt-4">
+                <h3 className="text-lg font-thmanyah font-bold text-[#301809] flex items-center gap-2 mb-4 pb-2 border-b border-[#e3d4b8]">
+                  <History className="w-5 h-5 text-[#b87a29]" />
+                  <span>أرشيف الإشعارات المرسلة</span>
+                </h3>
+                <div className="bg-white border border-[#e3d4b8] rounded-3xl p-4.5 shadow-xs">
+                  <div className="flex flex-col gap-3 max-h-[340px] overflow-y-auto pr-1 custom-scrollbar">
+                    {notificationHistory.length === 0 ? (
+                      <div className="text-center py-8 text-[#723c11] font-bold text-sm">
+                        لا توجد إشعارات سابقة.
+                      </div>
+                    ) : (
+                      notificationHistory.map((notif) => (
+                        <div
+                          key={notif.id}
+                          className="bg-[#fdfbf7] border border-[#e3d4b8] rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#b87a29] transition-colors"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-bold text-[#301809] text-sm truncate">
+                                {notif.title}
+                              </h4>
+                              <span
+                                className="text-[10px] text-[#723c11] bg-[#fae1b7]/60 border border-[#dbc397] px-2.5 py-0.5 rounded-full shrink-0 font-bold"
+                                dir="ltr"
+                              >
+                                {new Date(notif.created_at).toLocaleDateString('ar-DZ')}
+                              </span>
+                            </div>
+                            <p className="text-xs text-[#723c11]/80 truncate">{notif.body}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                            <Button
+                              variant="outline"
+                              className="flex-1 sm:flex-none border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 hover:text-[#301809] rounded-xl text-xs font-bold h-9 px-3 cursor-pointer"
+                              onClick={() => {
+                                setBroadcastTitle(notif.title);
+                                setBroadcastBody(notif.body);
+                                setBroadcastUrl(notif.url || '');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                            >
+                              <History className="w-3.5 h-3.5 ml-1 text-[#b87a29]" />
+                              إعادة استخدام
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              className="text-red-500 hover:bg-red-50 hover:text-red-700 h-9 w-9 p-0 rounded-xl shrink-0 cursor-pointer"
+                              onClick={() => handleDeleteItem('notifications_history', notif.id)}
+                              title="حذف الإشعار"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Notification History */}
-            <div className="col-span-1 lg:col-span-12 mt-8">
-               <h3 className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-3 mb-4 pb-2 border-b-2 border-[#dbc397]/40">
-                 <History className="text-[#b87a29]" /> أرشيف الإشعارات المرسلة
-               </h3>
-               <div className="bg-white border-2 border-[#dbc397]/60 rounded-3xl p-5 shadow-sm">
-                 <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                   {notificationHistory.length === 0 ? (
-                     <div className="text-center py-8 text-[#723c11] font-bold">
-                       لا توجد إشعارات سابقة.
-                     </div>
-                   ) : (
-                     notificationHistory.map(notif => (
-                       <div key={notif.id} className="bg-[#fdfbf7] border border-[#dbc397] shadow-xs rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#b87a29] transition-colors">
-                         <div className="flex-1 min-w-0">
-                           <div className="flex items-center gap-2 mb-1">
-                             <h4 className="font-bold text-[#301809] text-sm truncate">{notif.title}</h4>
-                             <span className="text-[10px] text-[#723c11] bg-[#fae1b7]/60 border border-[#dbc397] px-2.5 py-0.5 rounded-full shrink-0 font-bold" dir="ltr">
-                               {new Date(notif.created_at).toLocaleDateString('ar-DZ')}
-                             </span>
-                           </div>
-                           <p className="text-xs text-[#723c11]/80 truncate">{notif.body}</p>
-                         </div>
-                         <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-                           <Button 
-                             variant="outline" 
-                             className="flex-1 sm:flex-none border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/40 hover:text-[#301809] rounded-xl text-xs font-bold h-9 px-3 cursor-pointer"
-                             onClick={() => {
-                               setBroadcastTitle(notif.title);
-                               setBroadcastBody(notif.body);
-                               setBroadcastUrl(notif.url || '');
-                               window.scrollTo({ top: 0, behavior: 'smooth' });
-                             }}
-                           >
-                             <History className="w-3 h-3 ml-1 text-[#b87a29]" />
-                             إعادة استخدام
-                           </Button>
-                           <Button 
-                             variant="ghost" 
-                             className="text-red-500 hover:bg-red-50 hover:text-red-700 h-9 w-9 p-0 rounded-xl shrink-0 cursor-pointer"
-                             onClick={() => handleDeleteItem('notifications_history', notif.id)}
-                             title="حذف الإشعار"
-                           >
-                             <Trash2 size={16} />
-                           </Button>
-                         </div>
-                       </div>
-                     ))
-                   )}
-                 </div>
-               </div>
-            </div>
-
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
