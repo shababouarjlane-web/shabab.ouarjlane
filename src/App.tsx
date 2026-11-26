@@ -6,6 +6,8 @@ import { supabase, type Profile } from './lib/supabase';
 import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
 import PWAInstallBanner from './components/PWAInstallBanner';
+import { InterestsOnboardingModal } from './components/InterestsOnboardingModal';
+import { hasSeenOnboarding } from './lib/userInterests';
 import { useNotifications } from './hooks/useNotifications';
 
 // Lazy loading for heavy pages to optimize initial bundle size & mobile load time
@@ -89,9 +91,28 @@ export default function App() {
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
+  const [showInterestsModal, setShowInterestsModal] = useState(false);
 
   // Initialize notifications globally
   useNotifications();
+
+  // الاستماع لطلب فتح نافذة الاهتمامات من أي صفحة (مثل دليل الفعاليات)
+  useEffect(() => {
+    const openHandler = () => setShowInterestsModal(true);
+    window.addEventListener('sahara-open-interests-modal', openHandler);
+    return () => window.removeEventListener('sahara-open-interests-modal', openHandler);
+  }, []);
+
+  // إظهار نافذة اختيار الاهتمامات تلقائياً عند أول تسجيل دخول (إيميل أو دخول تجريبي سريع)
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (userId && !loading && !hasSeenOnboarding(userId)) {
+      const timer = setTimeout(() => {
+        setShowInterestsModal(true);
+      }, 450);
+      return () => clearTimeout(timer);
+    }
+  }, [session?.user?.id, loading]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +189,14 @@ export default function App() {
       <Router>
         <AppRoutes session={session} profile={profile} loading={loading} />
       </Router>
+
+      {/* نافذة اختيار الاهتمامات عند أول تسجيل دخول */}
+      <InterestsOnboardingModal
+        isOpen={showInterestsModal}
+        userId={session?.user?.id || null}
+        userName={(profile as any)?.name || session?.user?.user_metadata?.full_name || null}
+        onClose={() => setShowInterestsModal(false)}
+      />
 
       {/* Password Recovery Modal */}
       {showPasswordReset && (
