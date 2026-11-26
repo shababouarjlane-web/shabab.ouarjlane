@@ -55,29 +55,80 @@ export function packAssociationMeta(bio: string, meta: Omit<AssociationMeta, 'bi
   return `${cleanBio}||META||${JSON.stringify(meta)}`;
 }
 
+export interface AssociationLocalOverride extends AssociationMeta {
+  name?: string;
+  updatedAt?: number;
+}
+
+const ASSOC_OVERRIDE_PREFIX = 'sahara_assoc_override_v1_';
+
+export function saveAssociationLocalOverride(
+  assocId: string,
+  data: AssociationLocalOverride
+): void {
+  if (!assocId || typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(
+      `${ASSOC_OVERRIDE_PREFIX}${assocId}`,
+      JSON.stringify({ ...data, updatedAt: Date.now() })
+    );
+  } catch {
+    // ignore quota errors
+  }
+}
+
+export function getAssociationLocalOverride(
+  assocId?: string | null
+): AssociationLocalOverride | null {
+  if (!assocId || typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(`${ASSOC_OVERRIDE_PREFIX}${assocId}`);
+    if (!raw) return null;
+    return JSON.parse(raw) as AssociationLocalOverride;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Parses associations.description into clean bio + optional metadata (logo_url, phone, website, location)
+ * Optionally merges a local override if Supabase RLS prevented persisting the update.
  */
-export function parseAssociationMeta(description?: string | null): AssociationMeta {
-  if (!description) {
-    return { bio: '' };
-  }
-  if (description.includes('||META||')) {
-    const [bioPart, metaPart] = description.split('||META||');
-    try {
-      const parsed = JSON.parse(metaPart);
-      return {
-        bio: (bioPart || '').trim(),
-        logo_url: parsed.logo_url || '',
-        phone: parsed.phone || '',
-        website: parsed.website || '',
-        location: parsed.location || ''
-      };
-    } catch {
-      return { bio: (bioPart || '').trim() };
+export function parseAssociationMeta(
+  description?: string | null,
+  assocId?: string | null
+): AssociationMeta {
+  let base: AssociationMeta = { bio: '' };
+  if (description) {
+    if (description.includes('||META||')) {
+      const [bioPart, metaPart] = description.split('||META||');
+      try {
+        const parsed = JSON.parse(metaPart);
+        base = {
+          bio: (bioPart || '').trim(),
+          logo_url: parsed.logo_url || '',
+          phone: parsed.phone || '',
+          website: parsed.website || '',
+          location: parsed.location || ''
+        };
+      } catch {
+        base = { bio: (bioPart || '').trim() };
+      }
+    } else {
+      base = { bio: description.trim() };
     }
   }
-  return { bio: description.trim() };
+
+  const override = getAssociationLocalOverride(assocId);
+  if (!override) return base;
+
+  return {
+    bio: base.bio || override.bio || '',
+    logo_url: base.logo_url || override.logo_url || '',
+    phone: base.phone || override.phone || '',
+    website: base.website || override.website || '',
+    location: base.location || override.location || '',
+  };
 }
 
 /**

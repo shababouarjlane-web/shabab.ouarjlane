@@ -22,7 +22,11 @@ import {
   X
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { parseAssociationMeta, parseGalleryAndReviews } from '../lib/helpers';
+import {
+  parseAssociationMeta,
+  parseGalleryAndReviews,
+  getAssociationLocalOverride,
+} from '../lib/helpers';
 
 export default function AssociationProfile() {
   const { id } = useParams<{ id: string }>();
@@ -82,7 +86,9 @@ export default function AssociationProfile() {
 
   if (!association) return null;
 
-  const meta = parseAssociationMeta(association.description);
+  const localOverride = getAssociationLocalOverride(association.id);
+  const displayName = localOverride?.name || association.name;
+  const meta = parseAssociationMeta(association.description, association.id);
   const todayStr = new Date().toISOString().split('T')[0];
 
   const upcomingEvents = events.filter(e => e.status === 'active' && e.date >= todayStr);
@@ -260,7 +266,7 @@ export default function AssociationProfile() {
               </div>
 
               <h1 className="text-3xl md:text-5xl font-thmanyah font-bold text-white">
-                {association.name}
+                {displayName}
               </h1>
 
               <p className="text-sm md:text-base text-[#fae1b7]/90 max-w-3xl leading-relaxed font-normal">

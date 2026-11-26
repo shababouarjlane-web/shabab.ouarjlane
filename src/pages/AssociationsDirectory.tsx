@@ -293,7 +293,7 @@ export default function AssociationsDirectory() {
         ) : (
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredAssociations.map((assoc) => {
-              const meta = parseAssociationMeta(assoc.description);
+              const meta = parseAssociationMeta(assoc.description, assoc.id);
               const stats = eventsByAssoc[assoc.id] || { total: 0, upcoming: 0 };
               const isFollowing = followedIds.includes(assoc.id);
 

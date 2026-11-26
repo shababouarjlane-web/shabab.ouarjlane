@@ -52,6 +52,8 @@ import {
   parseAssociationMeta,
   packAssociationMeta,
   parseGalleryAndReviews,
+  saveAssociationLocalOverride,
+  getAssociationLocalOverride,
 } from '../../lib/helpers';
 import {
   DropdownMenu,
@@ -220,8 +222,9 @@ export default function AssociationDashboard() {
 
       if (assoc) {
         setAssocId(assoc.id);
-        setAssocName(assoc.name);
-        const parsed = parseAssociationMeta(assoc.description);
+        const override = getAssociationLocalOverride(assoc.id);
+        setAssocName(override?.name || assoc.name);
+        const parsed = parseAssociationMeta(assoc.description, assoc.id);
         setAssocBio(parsed.bio || '');
         setAssocLogo(parsed.logo_url || '');
         setAssocPhone(parsed.phone || '');
@@ -241,6 +244,57 @@ export default function AssociationDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const persistAssociationProfile = async (
+    targetId: string,
+    payload: {
+      name: string;
+      bio: string;
+      logo_url?: string;
+      phone?: string;
+      website?: string;
+      location?: string;
+    }
+  ): Promise<{ dbUpdated: boolean }> => {
+    const packedDescription = packAssociationMeta(payload.bio, {
+      logo_url: payload.logo_url || undefined,
+      phone: payload.phone || undefined,
+      website: payload.website || undefined,
+      location: payload.location || undefined,
+    });
+
+    // Always save local override immediately so profile & directory reflect changes instantly
+    saveAssociationLocalOverride(targetId, {
+      name: payload.name,
+      bio: payload.bio,
+      logo_url: payload.logo_url || '',
+      phone: payload.phone || '',
+      website: payload.website || '',
+      location: payload.location || '',
+    });
+
+    const { data, error } = await supabase
+      .from('associations')
+      .update({
+        name: payload.name,
+        description: packedDescription,
+      })
+      .eq('id', targetId)
+      .select('id, description');
+
+    if (error) {
+      console.warn('Supabase association update error:', error);
+      return { dbUpdated: false };
+    }
+
+    const dbUpdated = Array.isArray(data) && data.length > 0;
+    if (!dbUpdated) {
+      console.warn(
+        'Supabase associations.update affected 0 rows (check RLS UPDATE policy on public.associations). Saved locally as fallback.'
+      );
+    }
+    return { dbUpdated };
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -278,6 +332,8 @@ export default function AssociationDashboard() {
         .toString(36)
         .slice(2)}.${ext}`;
 
+      let resolvedLogoUrl = '';
+
       // 2) Upload to the actual Supabase Storage bucket ('events')
       const { error } = await supabase.storage.from('events').upload(filePath, fileToUpload, {
         cacheControl: '3600',
@@ -288,32 +344,53 @@ export default function AssociationDashboard() {
       if (!error) {
         const { data: pub } = supabase.storage.from('events').getPublicUrl(filePath);
         if (pub?.publicUrl) {
-          setAssocLogo(pub.publicUrl);
-          toast.success('تم رفع شعار الجمعية بنجاح! اضغط على "حفظ وتحديث الملف" لتثبيته.');
-          return;
+          // Verify public URL is actually reachable before trusting it
+          try {
+            const check = await fetch(pub.publicUrl, { method: 'HEAD' });
+            if (check.ok) {
+              resolvedLogoUrl = pub.publicUrl;
+            }
+          } catch {
+            // Fall through to inline compressed Data URL
+          }
         }
       }
 
-      // 3) Graceful fallback if storage RLS blocks direct upload: store compact compressed Data URL
-      console.warn('Supabase storage upload failed, using compressed inline logo fallback:', error);
-      const compactBlob = await imageCompression(file, {
-        maxSizeMB: 0.12,
-        maxWidthOrHeight: 360,
-        useWebWorker: true,
-      });
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ''));
-        reader.onerror = () => reject(new Error('تعذر قراءة ملف الصورة'));
-        reader.readAsDataURL(compactBlob);
-      });
+      // 3) Graceful fallback if storage RLS blocks upload or bucket isn't public
+      if (!resolvedLogoUrl) {
+        console.warn('Using compressed inline logo fallback:', error);
+        const compactBlob = await imageCompression(file, {
+          maxSizeMB: 0.12,
+          maxWidthOrHeight: 360,
+          useWebWorker: true,
+        });
+        resolvedLogoUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = () => reject(new Error('تعذر قراءة ملف الصورة'));
+          reader.readAsDataURL(compactBlob);
+        });
+      }
 
-      if (dataUrl) {
-        setAssocLogo(dataUrl);
-        toast.success('تم تجهيز شعار الجمعية بنجاح! اضغط على "حفظ وتحديث الملف" لتثبيته.');
-      } else {
+      if (!resolvedLogoUrl) {
         throw error || new Error('تعذر معالجة الصورة');
       }
+
+      setAssocLogo(resolvedLogoUrl);
+
+      // Auto-persist immediately so opening the public profile shows the new logo right away
+      if (assocId) {
+        await persistAssociationProfile(assocId, {
+          name: assocName.trim() || 'الجمعية',
+          bio: assocBio,
+          logo_url: resolvedLogoUrl,
+          phone: assocPhone.trim() || undefined,
+          website: assocWebsite.trim() || undefined,
+          location: assocLocation.trim() || undefined,
+        });
+      }
+
+      toast.success('تم رفع وحفظ شعار الجمعية بنجاح!');
     } catch (err: any) {
       console.error(err);
       toast.error(
@@ -330,21 +407,15 @@ export default function AssociationDashboard() {
     if (!assocId) return;
     setSavingProfile(true);
     try {
-      const packedDescription = packAssociationMeta(assocBio, {
+      await persistAssociationProfile(assocId, {
+        name: assocName.trim(),
+        bio: assocBio,
         logo_url: assocLogo.trim() || undefined,
         phone: assocPhone.trim() || undefined,
         website: assocWebsite.trim() || undefined,
         location: assocLocation.trim() || undefined,
       });
-      const { error } = await supabase
-        .from('associations')
-        .update({
-          name: assocName.trim(),
-          description: packedDescription,
-        })
-        .eq('id', assocId);
-      if (error) throw error;
-      toast.success('تم تحديث الملف التعريفي للجمعية بنجاح!');
+      toast.success('تم تحديث الملف التعريفي وشعار الجمعية بنجاح!');
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'فشل حفظ بيانات الجمعية');
