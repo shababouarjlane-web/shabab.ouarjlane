@@ -74,7 +74,7 @@ export default function EventsExplorer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedAssociation, setSelectedAssociation] = useState('all');
-  const [dateFilter, setDateFilter] = useState<'all' | 'upcoming' | 'today' | 'week' | 'month' | 'past'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'upcoming' | 'today' | 'week' | 'month' | 'past'>('upcoming');
   const [sortBy, setSortBy] = useState<'date_asc' | 'date_desc' | 'title'>('date_asc');
 
   useEffect(() => {
@@ -199,7 +199,7 @@ export default function EventsExplorer() {
     setSearchQuery('');
     setSelectedCategory('all');
     setSelectedAssociation('all');
-    setDateFilter('all');
+    setDateFilter('upcoming');
     setSortBy('date_asc');
   };
 
@@ -207,7 +207,7 @@ export default function EventsExplorer() {
     Boolean(searchQuery) ||
     selectedCategory !== 'all' ||
     selectedAssociation !== 'all' ||
-    dateFilter !== 'all';
+    dateFilter !== 'upcoming';
 
   return (
     <div
@@ -304,11 +304,11 @@ export default function EventsExplorer() {
                   onChange={(e) => setDateFilter(e.target.value as any)}
                   className="bg-transparent text-xs font-thmanyah font-bold text-[#301809] focus:outline-none cursor-pointer"
                 >
-                  <option value="all">كل التواريخ</option>
                   <option value="upcoming">الفعاليات القادمة</option>
                   <option value="today">اليوم</option>
                   <option value="week">هذا الأسبوع</option>
                   <option value="month">هذا الشهر</option>
+                  <option value="all">كل التواريخ</option>
                   <option value="past">أرشيف سابق</option>
                 </select>
               </div>
