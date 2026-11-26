@@ -1483,71 +1483,71 @@ export default function AdminDashboard() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/association-profile/${assoc.id}`);
-                            }}
-                            className="h-8 px-2.5 rounded-xl border-[#dbc397] text-[#301809] hover:bg-[#fae1b7]/50 text-xs font-bold cursor-pointer gap-1"
-                            title="عرض الصفحة العامة"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5 text-[#b87a29]" />
-                            <span className="hidden md:inline">الصفحة</span>
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenEditAssociation(assoc);
-                            }}
-                            className="h-8 px-2.5 rounded-xl border-[#dbc397] text-[#723c11] hover:bg-[#fae1b7]/50 text-xs font-bold cursor-pointer gap-1"
-                            title="تعديل بيانات الجمعية"
-                          >
-                            <Edit className="w-3.5 h-3.5 text-[#b87a29]" />
-                            <span className="hidden md:inline">تعديل</span>
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleAssociationActive(assoc);
-                            }}
-                            className={`h-8 px-2.5 rounded-xl text-xs font-bold cursor-pointer gap-1 ${
-                              assoc.is_active === false
-                                ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
-                                : 'border-amber-300 text-amber-800 hover:bg-amber-50'
-                            }`}
-                            title={assoc.is_active === false ? 'تفعيل الجمعية' : 'تعليق الجمعية مؤقتاً'}
-                          >
-                            <Power className="w-3.5 h-3.5" />
-                            <span className="hidden lg:inline">
-                              {assoc.is_active === false ? 'تفعيل' : 'تعليق'}
-                            </span>
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteAssociation(assoc);
-                            }}
-                            className="h-8 w-8 p-0 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
-                            title="حذف الجمعية"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
+                        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
                           <span className="bg-[#fae1b7]/60 text-[#723c11] border border-[#dbc397] px-2.5 py-1 rounded-full text-xs font-bold">
                             {assoc.events?.filter((e: any) => e !== null).length || 0} فعالية
                           </span>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-9 w-9 rounded-xl border border-[#dbc397] bg-[#fdfbf7] hover:bg-[#fae1b7]/50 text-[#723c11] cursor-pointer"
+                                title="إدارة الجمعية"
+                              >
+                                <Settings className="w-4 h-4 text-[#b87a29]" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              sideOffset={6}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-52 bg-white/95 backdrop-blur-md rounded-2xl border border-[#dbc397] p-1.5 shadow-xl font-sans text-right"
+                            >
+                              <DropdownMenuLabel className="px-3 py-1.5 text-right text-[11px] font-bold text-[#723c11]/80 truncate">
+                                إدارة «{assoc.name}»
+                              </DropdownMenuLabel>
+                              <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
+                              <DropdownMenuItem
+                                onClick={() => navigate(`/association-profile/${assoc.id}`)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#301809] hover:bg-[#fae1b7]/40 cursor-pointer"
+                              >
+                                <ExternalLink className="w-4 h-4 text-[#b87a29]" />
+                                <span>عرض صفحة الجمعية</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleOpenEditAssociation(assoc)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
+                              >
+                                <Edit className="w-4 h-4 text-[#b87a29]" />
+                                <span>تعديل البيانات</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleToggleAssociationActive(assoc)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer ${
+                                  assoc.is_active === false
+                                    ? 'text-emerald-700 hover:bg-emerald-50'
+                                    : 'text-amber-800 hover:bg-amber-50'
+                                }`}
+                              >
+                                <Power className="w-4 h-4" />
+                                <span>
+                                  {assoc.is_active === false ? 'تفعيل الجمعية' : 'تعليق مؤقت'}
+                                </span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteAssociation(assoc)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                                <span>حذف الجمعية نهائياً</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
                           {expandedAssocId === assoc.id ? (
                             <ChevronUp className="h-4 w-4 text-[#b87a29]" />
                           ) : (
@@ -1840,47 +1840,69 @@ export default function AdminDashboard() {
                                   {ev.status === 'archived' ? 'مؤرشفة' : 'نشطة'}
                                 </span>
                               </td>
-                              <td className="p-4">
-                                <div className="flex items-center justify-center gap-1">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleToggleFeaturedEvent(ev)}
-                                    className={`h-8 w-8 rounded-xl cursor-pointer ${
-                                      isFeatured
-                                        ? 'bg-[#301809] text-[#efa83f] hover:bg-[#4a250e]'
-                                        : 'text-[#b87a29] hover:bg-[#fae1b7]/40'
-                                    }`}
-                                    title={isFeatured ? 'إلغاء التثبيت' : 'تثبيت كفعالية مميزة'}
+                              <td className="p-4 text-center">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-9 w-9 rounded-xl border border-[#dbc397] bg-[#fdfbf7] hover:bg-[#fae1b7]/50 text-[#723c11] cursor-pointer"
+                                      title="إجراءات الفعالية"
+                                    >
+                                      <Settings className="w-4 h-4 text-[#b87a29]" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    sideOffset={6}
+                                    className="w-52 bg-white/95 backdrop-blur-md rounded-2xl border border-[#dbc397] p-1.5 shadow-xl font-sans text-right"
                                   >
-                                    <Star className={`w-4 h-4 ${isFeatured ? 'fill-[#efa83f]' : ''}`} />
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleAdminToggleEventStatus(ev)}
-                                    className="h-8 w-8 rounded-xl text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
-                                    title={ev.status === 'archived' ? 'استعادة الفعالية' : 'أرشفة الفعالية'}
-                                  >
-                                    {ev.status === 'archived' ? (
-                                      <ArchiveRestore className="w-4 h-4" />
-                                    ) : (
-                                      <Archive className="w-4 h-4" />
-                                    )}
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleAdminDeleteEvent(ev)}
-                                    className="h-8 w-8 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-50 cursor-pointer"
-                                    title="حذف الفعالية"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
+                                    <DropdownMenuItem
+                                      onClick={() => navigate(`/event/${ev.id}`)}
+                                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#301809] hover:bg-[#fae1b7]/40 cursor-pointer"
+                                    >
+                                      <ExternalLink className="w-4 h-4 text-[#b87a29]" />
+                                      <span>فتح صفحة الفعالية</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleToggleFeaturedEvent(ev)}
+                                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
+                                    >
+                                      <Star
+                                        className={`w-4 h-4 text-[#b87a29] ${
+                                          isFeatured ? 'fill-[#efa83f]' : ''
+                                        }`}
+                                      />
+                                      <span>
+                                        {isFeatured ? 'إلغاء التثبيت كمميزة' : 'تثبيت كفعالية مميزة'}
+                                      </span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleAdminToggleEventStatus(ev)}
+                                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#723c11] hover:bg-[#fae1b7]/40 cursor-pointer"
+                                    >
+                                      {ev.status === 'archived' ? (
+                                        <ArchiveRestore className="w-4 h-4 text-[#b87a29]" />
+                                      ) : (
+                                        <Archive className="w-4 h-4 text-[#b87a29]" />
+                                      )}
+                                      <span>
+                                        {ev.status === 'archived'
+                                          ? 'استعادة للنشاط'
+                                          : 'أرشفة الفعالية'}
+                                      </span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-[#dbc397]/50 my-1" />
+                                    <DropdownMenuItem
+                                      onClick={() => handleAdminDeleteEvent(ev)}
+                                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 cursor-pointer"
+                                    >
+                                      <Trash2 className="w-4 h-4 text-red-500" />
+                                      <span>حذف الفعالية</span>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </td>
                             </tr>
                           );
