@@ -103,19 +103,31 @@ export default function App() {
     return () => window.removeEventListener('sahara-open-interests-modal', openHandler);
   }, []);
 
-  // إظهار نافذة اختيار الاهتمامات تلقائياً عند أول تسجيل دخول ومزامنة التفضيلات من Supabase
+  // إظهار نافذة اختيار الاهتمامات تلقائياً عند أول تسجيل دخول للمشاركين/الزوار فقط (لا تظهر للمدير أو الجمعيات)
   useEffect(() => {
     const user = session?.user;
-    if (user && !loading) {
-      hydratePreferencesFromUser(user);
-      if (!hasSeenOnboarding(user.id)) {
-        const timer = setTimeout(() => {
-          setShowInterestsModal(true);
-        }, 450);
-        return () => clearTimeout(timer);
-      }
+    if (!user || loading) return;
+
+    hydratePreferencesFromUser(user);
+
+    const role = profile?.role;
+    const isAdminOrAssociation = role === 'super_admin' || role === 'association';
+    const currentPath = window.location.pathname;
+    const isRestrictedRoute =
+      currentPath.startsWith('/admin') || currentPath.startsWith('/association');
+
+    if (isAdminOrAssociation || isRestrictedRoute || role !== 'attendee') {
+      setShowInterestsModal(false);
+      return;
     }
-  }, [session?.user, loading]);
+
+    if (!hasSeenOnboarding(user.id)) {
+      const timer = setTimeout(() => {
+        setShowInterestsModal(true);
+      }, 450);
+      return () => clearTimeout(timer);
+    }
+  }, [session?.user, profile?.role, loading]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
