@@ -1,28 +1,49 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { parseAssociationMeta, packHeritageMeta } from '@/lib/helpers';
 import {
-  Building2, Search, MapPin, Phone, Globe, Calendar,
-  CheckCircle2, Sparkles, ExternalLink, PlusCircle, Send
+  getFollowedAssociations,
+  toggleFollowAssociation,
+} from '@/lib/userInterests';
+import {
+  Building2,
+  Search,
+  MapPin,
+  Calendar,
+  CheckCircle2,
+  PlusCircle,
+  Send,
+  Bell,
+  BellRing,
+  ArrowLeft,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import UnifiedHeader from '@/components/UnifiedHeader';
 
 export default function AssociationsDirectory() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [associations, setAssociations] = useState<any[]>([]);
-  const [eventsByAssoc, setEventsByAssoc] = useState<Record<string, { total: number; upcoming: number }>>({});
+  const [eventsByAssoc, setEventsByAssoc] = useState<
+    Record<string, { total: number; upcoming: number }>
+  >({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterTab, setFilterTab] = useState<'all' | 'following' | 'upcoming'>('all');
+  const [followedIds, setFollowedIds] = useState<string[]>(() => getFollowedAssociations());
 
-  // Join Request Modal State
+  // نافذة طلب انضمام جمعية جديدة
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinName, setJoinName] = useState('');
   const [joinManager, setJoinManager] = useState('');
@@ -32,6 +53,9 @@ export default function AssociationsDirectory() {
   const [submittingJoin, setSubmittingJoin] = useState(false);
 
   useEffect(() => {
+    const syncFollows = () => setFollowedIds(getFollowedAssociations());
+    window.addEventListener('sahara-follows-updated', syncFollows);
+
     const fetchDirectory = async () => {
       setLoading(true);
       try {
@@ -44,7 +68,7 @@ export default function AssociationsDirectory() {
           supabase
             .from('events')
             .select('id, association_id, date, status')
-            .eq('status', 'active')
+            .eq('status', 'active'),
         ]);
 
         setAssociations(assocData || []);
@@ -70,7 +94,19 @@ export default function AssociationsDirectory() {
     };
 
     fetchDirectory();
+    return () => window.removeEventListener('sahara-follows-updated', syncFollows);
   }, []);
+
+  const handleToggleFollow = (e: React.MouseEvent, assocId: string, assocName: string) => {
+    e.stopPropagation();
+    const nowFollowing = toggleFollowAssociation(assocId);
+    setFollowedIds(getFollowedAssociations());
+    toast.success(
+      nowFollowing
+        ? `تمت متابعة «${assocName}» — ستصلك تنبيهات فعالياتها القادمة`
+        : `تم إلغاء متابعة «${assocName}»`
+    );
+  };
 
   const handleSubmitJoinRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,21 +121,20 @@ export default function AssociationsDirectory() {
           status: 'contact_request',
           contactPhone: joinPhone.trim(),
           contactEmail: joinEmail.trim(),
-          requestType: 'association_join'
+          requestType: 'association_join',
         }
       );
 
-      const { error } = await supabase.from('heritage_archive').insert([{
-        title: `[طلب انضمام جمعية] ${joinName.trim()}`,
-        content: packed
-      }]);
+      const { error } = await supabase.from('heritage_archive').insert([
+        {
+          title: `[طلب انضمام جمعية] ${joinName.trim()}`,
+          content: packed,
+        },
+      ]);
 
       if (error) throw error;
 
-      toast({
-        title: 'تم إرسال طلب الانضمام بنجاح! 🎉',
-        description: 'سيقوم فريق إدارة منصة تواصل صحراء بمراجعة طلبكم والتواصل معكم قريباً.'
-      });
+      toast.success('تم إرسال طلب الانضمام بنجاح! سيتواصل معكم فريق تواصل صحراء قريباً.');
       setJoinOpen(false);
       setJoinName('');
       setJoinManager('');
@@ -107,213 +142,258 @@ export default function AssociationsDirectory() {
       setJoinEmail('');
       setJoinDesc('');
     } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: 'تعذر إرسال الطلب',
-        description: err.message
-      });
+      toast.error('تعذر إرسال الطلب: ' + (err.message || 'حاول لاحقاً'));
     } finally {
       setSubmittingJoin(false);
     }
   };
 
-  const filteredAssociations = associations.filter(assoc => {
-    if (!searchQuery.trim()) return true;
-    const meta = parseAssociationMeta(assoc.description);
-    const q = searchQuery.toLowerCase();
-    return (
-      (assoc.name || '').toLowerCase().includes(q) ||
-      (meta.bio || '').toLowerCase().includes(q) ||
-      (meta.location || '').toLowerCase().includes(q)
-    );
-  });
+  const filteredAssociations = useMemo(() => {
+    return associations.filter((assoc) => {
+      if (filterTab === 'following' && !followedIds.includes(assoc.id)) return false;
+      if (filterTab === 'upcoming' && !(eventsByAssoc[assoc.id]?.upcoming > 0)) return false;
+
+      if (!searchQuery.trim()) return true;
+      const meta = parseAssociationMeta(assoc.description);
+      const q = searchQuery.toLowerCase();
+      return (
+        (assoc.name || '').toLowerCase().includes(q) ||
+        (meta.bio || '').toLowerCase().includes(q) ||
+        (meta.location || '').toLowerCase().includes(q)
+      );
+    });
+  }, [associations, filterTab, followedIds, eventsByAssoc, searchQuery]);
 
   const totalEventsCount = Object.values(eventsByAssoc).reduce((sum, c) => sum + c.total, 0);
 
   return (
-    <div className="min-h-screen bg-[#fdfbf7] font-sans text-[#301809]" dir="rtl">
-      {/* Unified Top Navbar */}
-      <UnifiedHeader
-        rightSlot={
-          <Button
-            onClick={() => setJoinOpen(true)}
-            className="bg-gradient-to-r from-[#b87a29] to-[#efa83f] hover:from-[#723c11] hover:to-[#b87a29] text-white font-black rounded-xl h-10 px-3.5 text-xs gap-1.5 shadow-sm cursor-pointer whitespace-nowrap"
-          >
-            <PlusCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>طلب انضمام جمعية</span>
-          </Button>
-        }
-      />
+    <div
+      className="min-h-screen bg-[#fdfbf7] bg-[radial-gradient(ellipse_at_top,_rgba(239,168,63,0.12),_transparent_55%)] text-[#301809] flex flex-col"
+      dir="rtl"
+    >
+      <UnifiedHeader />
 
-      {/* Hero Section */}
-      <header className="relative bg-gradient-to-br from-[#301809] via-[#4a2610] to-[#723c11] text-white py-14 px-4 overflow-hidden border-b-4 border-[#b87a29]">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#efa83f]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="max-w-5xl mx-auto text-center relative z-10 space-y-5">
-          <span className="bg-[#efa83f]/20 text-[#fae1b7] border border-[#efa83f]/40 px-4 py-1.5 text-xs font-extrabold rounded-full inline-flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#efa83f]" /> الفاعلون في الميدان الثقافي والاجتماعي
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-7 sm:py-10 space-y-6">
+        {/* ── 1. الرأس المدمج بهوية تواصل صحراء ── */}
+        <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-l from-[#301809] via-[#4a250e] to-[#2b1507] p-6 sm:p-8 shadow-[0_18px_48px_rgba(48,24,9,0.2)] ring-1 ring-[#efa83f]/30 space-y-5">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(239,168,63,0.2),_transparent_60%)]" />
+
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <h1 className="text-2xl sm:text-3xl font-thmanyah font-bold text-white">
+                دليل{' '}
+                <span className="bg-gradient-to-l from-[#fae1b7] to-[#efa83f] bg-clip-text text-transparent">
+                  الجمعيات
+                </span>
+              </h1>
+              <p className="text-xs sm:text-sm text-[#fae1b7]/80 max-w-xl">
+                تابع الجمعيات والنوادي الثقافية والتراثية المعتمدة في وارجلان لتصلك أحدث برامجها وفعالياتها.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <span className="px-3 py-2 rounded-xl bg-white/10 text-[#fae1b7] text-xs font-thmanyah font-bold">
+                {associations.length} جمعية • {totalEventsCount} فعالية
+              </span>
+              <button
+                type="button"
+                onClick={() => setJoinOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#a56b20] hover:to-[#f5b44c] text-[#301809] text-xs font-thmanyah font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>انضمام جمعية</span>
+              </button>
+            </div>
+          </div>
+
+          {/* شريط البحث داخل الرأس */}
+          <div className="relative z-10 bg-[#fdfbf7] rounded-2xl p-1.5 flex items-center gap-2 shadow-[0_12px_30px_rgba(0,0,0,0.25)] ring-1 ring-[#efa83f]/40 focus-within:ring-2 focus-within:ring-[#efa83f] transition-all">
+            <Search className="w-5 h-5 text-[#b87a29] mr-3 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="ابحث عن اسم الجمعية، تخصصها، أو المنطقة..."
+              className="flex-1 h-10 bg-transparent text-sm sm:text-base text-[#301809] placeholder:text-[#723c11]/55 focus:outline-none min-w-0"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="w-8 h-8 rounded-full hover:bg-[#fae1b7]/60 text-[#723c11] flex items-center justify-center shrink-0 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </section>
+
+        {/* ── 2. شريط التصفية البسيط ── */}
+        <section className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: 'all', label: `الكل (${associations.length})` },
+              { id: 'following', label: `أتابعها (${followedIds.length})` },
+              { id: 'upcoming', label: 'لديها فعاليات قادمة' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setFilterTab(tab.id as any)}
+                className={`px-3.5 py-2 rounded-full text-xs font-thmanyah font-bold transition-all cursor-pointer ${
+                  filterTab === tab.id
+                    ? 'bg-[#301809] text-[#fae1b7] shadow-sm'
+                    : 'bg-white hover:bg-[#fae1b7]/55 text-[#301809] border border-[#dbc397]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <span className="text-xs text-[#723c11]">
+            <strong className="text-[#301809]">{filteredAssociations.length}</strong> جمعية
           </span>
-          <h1 className="text-3xl md:text-5xl font-black text-[#fae1b7] leading-tight">
-            دليل الجمعيات والنوادي المعتمدة بورقلة
-          </h1>
-          <p className="text-[#fae1b7]/80 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-            تعرّف على الجمعيات الثقافية، العلمية، التراثية، والشبابية الناشطة عبر منصة تواصل صحراء، وتابع أحدث برامجها وفعالياتها الميدانية.
-          </p>
+        </section>
 
-          {/* Quick Stats */}
-          <div className="flex flex-wrap justify-center gap-4 pt-2">
-            <div className="bg-white/10 backdrop-blur-sm border border-[#fae1b7]/20 rounded-2xl px-6 py-3 text-center">
-              <p className="text-2xl font-black text-[#efa83f]">{associations.length}</p>
-              <p className="text-xs font-bold text-[#fae1b7]/80">جمعية معتمدة</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm border border-[#fae1b7]/20 rounded-2xl px-6 py-3 text-center">
-              <p className="text-2xl font-black text-emerald-400">{totalEventsCount}</p>
-              <p className="text-xs font-bold text-[#fae1b7]/80">فعالية ونشاط مسجل</p>
-            </div>
-          </div>
-
-          {/* Search Input */}
-          <div className="max-w-xl mx-auto pt-4">
-            <div className="relative">
-              <Search className="w-5 h-5 text-[#b87a29] absolute right-4 top-3.5" />
-              <Input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="ابحث عن اسم الجمعية، تخصصها، أو البلدية..."
-                className="pr-12 pl-4 h-12 rounded-2xl bg-white text-[#301809] border-2 border-[#efa83f]/50 font-bold shadow-xl focus-visible:ring-[#efa83f]"
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Grid */}
-      <main className="max-w-6xl mx-auto px-4 py-12">
+        {/* ── 3. شبكة الجمعيات النظيفة مع زر المتابعة ── */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map(n => (
-              <div key={n} className="h-72 bg-white rounded-3xl border border-[#dbc397]/50 animate-pulse p-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="h-60 bg-white rounded-[24px] border border-[#e3d4b8] animate-pulse p-6"
+              />
             ))}
           </div>
         ) : filteredAssociations.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-[#dbc397] p-8 max-w-xl mx-auto">
-            <Building2 className="w-14 h-14 text-[#b87a29]/40 mx-auto mb-3" />
-            <h3 className="text-xl font-black text-[#301809] mb-2">لا توجد جمعيات مطابقة لبحثك</h3>
-            <p className="text-sm text-[#723c11]/70 mb-6">جرب البحث بكلمات أخرى أو استعرض القائمة الكاملة.</p>
-            {searchQuery && (
-              <Button onClick={() => setSearchQuery('')} className="bg-[#723c11] text-[#fae1b7] rounded-xl font-bold">
-                عرض كل الجمعيات
-              </Button>
-            )}
+          <div className="bg-white rounded-[28px] p-12 text-center border border-[#dbc397] space-y-3">
+            <Building2 className="w-12 h-12 text-[#b87a29]/50 mx-auto" />
+            <h3 className="text-lg font-thmanyah font-bold text-[#301809]">
+              {filterTab === 'following'
+                ? 'لم تتابع أي جمعية بعد'
+                : 'لا توجد جمعيات مطابقة لبحثك'}
+            </h3>
+            <p className="text-xs text-[#723c11]/80 max-w-md mx-auto">
+              {filterTab === 'following'
+                ? 'اضغط على زر «متابعة» في أي جمعية لتصلك تنبيهات فعالياتها الجديدة.'
+                : 'جرّب كلمات بحث أخرى أو استعرض جميع الجمعيات المعتمدة.'}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setFilterTab('all');
+              }}
+              className="px-5 py-2.5 rounded-xl bg-[#301809] hover:bg-[#4a250e] text-[#fae1b7] text-xs font-thmanyah font-bold cursor-pointer transition-colors"
+            >
+              عرض كل الجمعيات
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAssociations.map(assoc => {
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredAssociations.map((assoc) => {
               const meta = parseAssociationMeta(assoc.description);
               const stats = eventsByAssoc[assoc.id] || { total: 0, upcoming: 0 };
+              const isFollowing = followedIds.includes(assoc.id);
 
               return (
-                <Card
+                <article
                   key={assoc.id}
                   onClick={() => navigate(`/association-profile/${assoc.id}`)}
-                  className="group cursor-pointer rounded-3xl border-2 border-[#dbc397]/60 hover:border-[#b87a29] bg-white shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                  className="group bg-white rounded-[24px] border border-[#e3d4b8] hover:border-[#b87a29] shadow-[0_6px_24px_rgba(48,24,9,0.05)] hover:shadow-[0_14px_36px_rgba(48,24,9,0.12)] p-5 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4"
                 >
-                  <div>
-                    {/* Top Decorative Banner */}
-                    <div className="h-20 bg-gradient-to-l from-[#301809] via-[#723c11] to-[#b87a29] relative">
-                      <span className="absolute top-3 left-3 bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> معتمدة
-                      </span>
+                  <div className="space-y-3.5">
+                    {/* شعار الجمعية + زر المتابعة */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-14 h-14 rounded-2xl bg-[#fdfbf7] border border-[#e5d8c0] flex items-center justify-center overflow-hidden shrink-0">
+                          {meta.logo_url ? (
+                            <img
+                              src={meta.logo_url}
+                              alt={assoc.name}
+                              className="w-full h-full object-contain p-1.5"
+                            />
+                          ) : (
+                            <Building2 className="w-7 h-7 text-[#b87a29]" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-thmanyah font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>معتمدة</span>
+                          </span>
+                          <h3 className="text-base font-thmanyah font-bold text-[#301809] group-hover:text-[#b87a29] transition-colors line-clamp-1 mt-1">
+                            {assoc.name}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleFollow(e, assoc.id, assoc.name)}
+                        className={`px-3 py-1.5 rounded-full text-[11px] font-thmanyah font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+                          isFollowing
+                            ? 'bg-[#301809] text-[#fae1b7] shadow-xs'
+                            : 'bg-[#fae1b7]/55 hover:bg-[#fae1b7] text-[#301809] border border-[#dbc397]'
+                        }`}
+                        title={isFollowing ? 'إلغاء المتابعة' : 'متابعة الجمعية'}
+                      >
+                        {isFollowing ? (
+                          <>
+                            <BellRing className="w-3.5 h-3.5 text-[#efa83f]" />
+                            <span>متابَع</span>
+                          </>
+                        ) : (
+                          <>
+                            <Bell className="w-3.5 h-3.5 text-[#b87a29]" />
+                            <span>متابعة</span>
+                          </>
+                        )}
+                      </button>
                     </div>
 
-                    <CardContent className="p-6 pt-0 relative">
-                      {/* Avatar / Logo */}
-                      <div className="-mt-10 mb-4 flex items-end justify-between">
-                        <div className="w-20 h-20 rounded-2xl bg-[#fdfbf7] border-4 border-white shadow-md flex items-center justify-center overflow-hidden shrink-0">
-                          {meta.logo_url ? (
-                            <img src={meta.logo_url} alt={assoc.name} className="w-full h-full object-contain p-1.5" />
-                          ) : (
-                            <Building2 className="w-9 h-9 text-[#b87a29]" />
-                          )}
-                        </div>
+                    <p className="text-xs text-[#723c11]/85 line-clamp-2 leading-relaxed min-h-[2.5rem]">
+                      {meta.bio || 'جمعية فاعلة في التنشيط الثقافي والتراثي والعمل التطوعي بوارجلان.'}
+                    </p>
 
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-[#fae1b7]/50 text-[#723c11] border border-[#dbc397]">
-                            <Calendar className="w-3 h-3 inline ml-1 text-[#b87a29]" />
-                            {stats.total} فعالية
-                          </span>
-                          {stats.upcoming > 0 && (
-                            <span className="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              {stats.upcoming} قادمة
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <h3 className="text-xl font-black text-[#301809] group-hover:text-[#b87a29] transition-colors line-clamp-1 mb-2">
-                        {assoc.name}
-                      </h3>
-
-                      <p className="text-sm text-[#723c11]/80 line-clamp-3 leading-relaxed min-h-[3.75rem]">
-                        {meta.bio || 'جمعية فاعلة في التنشيط الثقافي والتراثي والعمل التطوعي بولاية ورقلة.'}
-                      </p>
-
-                      {/* Contact & Location pills */}
-                      <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-[#fae1b7]/60 text-xs font-bold text-[#723c11]">
-                        <span className="inline-flex items-center gap-1 bg-[#fdfbf7] px-2.5 py-1 rounded-lg border border-[#dbc397]/60">
-                          <MapPin className="w-3.5 h-3.5 text-[#b87a29]" />
-                          {meta.location || 'ورقلة'}
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#723c11]">
+                      <span className="inline-flex items-center gap-1 bg-[#fdfbf7] px-2.5 py-1 rounded-full border border-[#e5d8c0]">
+                        <MapPin className="w-3 h-3 text-[#b87a29]" />
+                        <span>{meta.location || 'ورقلة'}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1 bg-[#fdfbf7] px-2.5 py-1 rounded-full border border-[#e5d8c0]">
+                        <Calendar className="w-3 h-3 text-[#b87a29]" />
+                        <span>{stats.total} فعالية</span>
+                      </span>
+                      {stats.upcoming > 0 && (
+                        <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-full font-bold">
+                          {stats.upcoming} قادمة
                         </span>
-                        {meta.phone && (
-                          <span className="inline-flex items-center gap-1 bg-[#fdfbf7] px-2.5 py-1 rounded-lg border border-[#dbc397]/60" dir="ltr">
-                            <Phone className="w-3.5 h-3.5 text-[#b87a29]" />
-                            {meta.phone}
-                          </span>
-                        )}
-                        {meta.website && (
-                          <span className="inline-flex items-center gap-1 bg-[#fdfbf7] px-2.5 py-1 rounded-lg border border-[#dbc397]/60 text-[#b87a29]">
-                            <Globe className="w-3.5 h-3.5" /> موقع إلكتروني
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="px-6 pb-5">
-                    <Button className="w-full bg-[#fdfbf7] hover:bg-[#723c11] text-[#723c11] hover:text-[#fae1b7] border border-[#dbc397] font-extrabold rounded-xl gap-2 transition-colors">
-                      استعراض ملف الجمعية والفعاليات <ExternalLink className="w-4 h-4" />
-                    </Button>
+                  <div className="pt-3 border-t border-[#f2e8d5] flex items-center justify-between text-xs font-thmanyah font-bold text-[#301809] group-hover:text-[#b87a29] transition-colors">
+                    <span>ملف الجمعية والفعاليات</span>
+                    <ArrowLeft className="w-3.5 h-3.5 text-[#b87a29] group-hover:-translate-x-0.5 transition-transform" />
                   </div>
-                </Card>
+                </article>
               );
             })}
-          </div>
+          </section>
         )}
-
-        {/* Bottom CTA Banner for New Associations */}
-        <div className="mt-16 bg-gradient-to-r from-[#301809] via-[#592e0d] to-[#723c11] rounded-3xl p-8 md:p-10 text-white shadow-xl border-2 border-[#b87a29]/40 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center md:text-right">
-            <h3 className="text-2xl font-black text-[#fae1b7]">هل تمثل جمعية أو نادياً ثقافياً في ورقلة؟</h3>
-            <p className="text-sm md:text-base text-[#fae1b7]/80 max-w-xl">
-              انضم إلى شبكة الجمعيات المعتمدة في منصة تواصل صحراء لنشر فعالياتكم، إدارة التذاكر والحجوزات بـ QR Code، وتوثيق أنشطتكم مجاناً.
-            </p>
-          </div>
-          <Button
-            onClick={() => setJoinOpen(true)}
-            className="bg-[#efa83f] hover:bg-[#b87a29] text-[#301809] hover:text-white font-black px-8 py-6 rounded-2xl text-base shadow-lg shrink-0 gap-2"
-          >
-            <PlusCircle className="w-5 h-5" /> قدّم طلب انضمام جمعيتك الآن
-          </Button>
-        </div>
       </main>
 
-      {/* Association Join Request Modal */}
+      {/* نافذة طلب انضمام جمعية جديدة */}
       <Dialog open={joinOpen} onOpenChange={setJoinOpen}>
-        <DialogContent className="sm:max-w-[500px] font-sans rounded-3xl border-2 border-[#dbc397]" dir="rtl">
+        <DialogContent className="sm:max-w-[500px] font-sans rounded-3xl border border-[#dbc397]" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black text-[#301809] flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-[#b87a29]" /> طلب اعتماد وانضمام جمعية جديدة
+            <DialogTitle className="text-xl font-thmanyah font-bold text-[#301809] flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-[#b87a29]" />
+              <span>طلب اعتماد وانضمام جمعية جديدة</span>
             </DialogTitle>
-            <DialogDescription className="text-xs font-bold text-[#723c11]/80">
+            <DialogDescription className="text-xs text-[#723c11]/80">
               أدخل بيانات جمعيتكم أو ناديكم ليقوم مشرفو المنصة بمراجعتها وتفعيل حساب الجمعية.
             </DialogDescription>
           </DialogHeader>
@@ -324,7 +404,7 @@ export default function AssociationsDirectory() {
               <Input
                 required
                 value={joinName}
-                onChange={e => setJoinName(e.target.value)}
+                onChange={(e) => setJoinName(e.target.value)}
                 placeholder="مثال: جمعية الأصالة للتراث السياحي بورقلة"
                 className="rounded-xl border-[#dbc397]"
               />
@@ -332,21 +412,21 @@ export default function AssociationsDirectory() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-[#301809] mb-1 block">اسم رئيس الجمعية / المسؤول *</label>
+                <label className="text-xs font-bold text-[#301809] mb-1 block">اسم المسؤول *</label>
                 <Input
                   required
                   value={joinManager}
-                  onChange={e => setJoinManager(e.target.value)}
+                  onChange={(e) => setJoinManager(e.target.value)}
                   placeholder="الاسم الكامل"
                   className="rounded-xl border-[#dbc397]"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#301809] mb-1 block">رقم الهاتف للتواصل *</label>
+                <label className="text-xs font-bold text-[#301809] mb-1 block">رقم الهاتف *</label>
                 <Input
                   required
                   value={joinPhone}
-                  onChange={e => setJoinPhone(e.target.value)}
+                  onChange={(e) => setJoinPhone(e.target.value)}
                   placeholder="06XXXXXXXX"
                   dir="ltr"
                   className="rounded-xl border-[#dbc397] text-right"
@@ -355,11 +435,11 @@ export default function AssociationsDirectory() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#301809] mb-1 block">البريد الإلكتروني للجمعية (اختياري)</label>
+              <label className="text-xs font-bold text-[#301809] mb-1 block">البريد الإلكتروني (اختياري)</label>
               <Input
                 type="email"
                 value={joinEmail}
-                onChange={e => setJoinEmail(e.target.value)}
+                onChange={(e) => setJoinEmail(e.target.value)}
                 placeholder="association@example.com"
                 dir="ltr"
                 className="rounded-xl border-[#dbc397] text-right"
@@ -367,12 +447,12 @@ export default function AssociationsDirectory() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#301809] mb-1 block">نبذة عن تخصص الجمعية وأنشطتها *</label>
+              <label className="text-xs font-bold text-[#301809] mb-1 block">نبذة عن نشاط الجمعية *</label>
               <Textarea
                 required
                 value={joinDesc}
-                onChange={e => setJoinDesc(e.target.value)}
-                placeholder="اذكر مجال عمل الجمعية، مقرها البلدي، وأبرز الفعاليات التي تنظمها..."
+                onChange={(e) => setJoinDesc(e.target.value)}
+                placeholder="اذكر مجال عمل الجمعية، مقرها، وأبرز الفعاليات التي تنظمها..."
                 className="rounded-xl border-[#dbc397] min-h-[90px]"
               />
             </div>
@@ -380,10 +460,10 @@ export default function AssociationsDirectory() {
             <Button
               type="submit"
               disabled={submittingJoin}
-              className="w-full bg-[#723c11] hover:bg-[#301809] text-[#fae1b7] font-black h-12 rounded-xl gap-2"
+              className="w-full bg-gradient-to-l from-[#b87a29] to-[#efa83f] hover:from-[#a56b20] hover:to-[#f5b44c] text-[#301809] font-thmanyah font-bold h-11 rounded-xl gap-2 cursor-pointer"
             >
               <Send className="w-4 h-4" />
-              {submittingJoin ? 'جاري إرسال الطلب...' : 'إرسال طلب الانضمام للإدارة'}
+              <span>{submittingJoin ? 'جاري إرسال الطلب...' : 'إرسال طلب الانضمام'}</span>
             </Button>
           </form>
         </DialogContent>

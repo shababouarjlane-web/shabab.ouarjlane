@@ -1,3 +1,5 @@
+import { supabase } from '@/lib/supabase';
+
 export interface InterestOption {
   id: string;
   label: string;
@@ -48,6 +50,7 @@ export const CATEGORY_ARABIC_LABELS: Record<string, string> = {
 };
 
 const INTERESTS_KEY = 'sahara_user_interests_v1';
+const FOLLOWS_KEY = 'sahara_followed_associations_v1';
 const SEEN_PREFIX = 'sahara_onboarding_seen_v1_';
 
 export function getSavedInterests(): string[] {
@@ -61,6 +64,40 @@ export function getSavedInterests(): string[] {
   }
 }
 
+export function getFollowedAssociations(): string[] {
+  try {
+    const raw = localStorage.getItem(FOLLOWS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/** استرجاع التفضيلات المحفوظة في Supabase user_metadata عند تسجيل الدخول */
+export function hydratePreferencesFromUser(user: any) {
+  if (!user) return;
+  const meta = user.user_metadata || {};
+  try {
+    if (Array.isArray(meta.interests)) {
+      localStorage.setItem(INTERESTS_KEY, JSON.stringify(meta.interests));
+      window.dispatchEvent(new CustomEvent('sahara-interests-updated', { detail: meta.interests }));
+    }
+    if (Array.isArray(meta.followed_associations)) {
+      localStorage.setItem(FOLLOWS_KEY, JSON.stringify(meta.followed_associations));
+      window.dispatchEvent(
+        new CustomEvent('sahara-follows-updated', { detail: meta.followed_associations })
+      );
+    }
+    if (meta.onboarding_seen && user.id) {
+      localStorage.setItem(`${SEEN_PREFIX}${user.id}`, '1');
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function saveUserInterests(interests: string[], userId?: string | null) {
   try {
     localStorage.setItem(INTERESTS_KEY, JSON.stringify(interests));
@@ -71,6 +108,40 @@ export function saveUserInterests(interests: string[], userId?: string | null) {
   } catch {
     // ignore storage errors
   }
+
+  // مزامنة خلفية صامتة مع حساب المستخدم على Supabase
+  supabase.auth
+    .updateUser({
+      data: {
+        interests,
+        onboarding_seen: true,
+      },
+    })
+    .catch(() => {});
+}
+
+export function toggleFollowAssociation(assocId: string): boolean {
+  const current = getFollowedAssociations();
+  const exists = current.includes(assocId);
+  const next = exists ? current.filter((id) => id !== assocId) : [...current, assocId];
+
+  try {
+    localStorage.setItem(FOLLOWS_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('sahara-follows-updated', { detail: next }));
+  } catch {
+    // ignore
+  }
+
+  // مزامنة خلفية صامتة مع حساب المستخدم على Supabase
+  supabase.auth
+    .updateUser({
+      data: {
+        followed_associations: next,
+      },
+    })
+    .catch(() => {});
+
+  return !exists;
 }
 
 export function hasSeenOnboarding(userId?: string | null): boolean {
@@ -89,4 +160,11 @@ export function markOnboardingSeen(userId?: string | null) {
   } catch {
     // ignore
   }
+  supabase.auth
+    .updateUser({
+      data: {
+        onboarding_seen: true,
+      },
+    })
+    .catch(() => {});
 }

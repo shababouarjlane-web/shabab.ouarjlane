@@ -7,7 +7,7 @@ import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
 import PWAInstallBanner from './components/PWAInstallBanner';
 import { InterestsOnboardingModal } from './components/InterestsOnboardingModal';
-import { hasSeenOnboarding } from './lib/userInterests';
+import { hasSeenOnboarding, hydratePreferencesFromUser } from './lib/userInterests';
 import { useNotifications } from './hooks/useNotifications';
 
 // Lazy loading for heavy pages to optimize initial bundle size & mobile load time
@@ -103,16 +103,19 @@ export default function App() {
     return () => window.removeEventListener('sahara-open-interests-modal', openHandler);
   }, []);
 
-  // إظهار نافذة اختيار الاهتمامات تلقائياً عند أول تسجيل دخول (إيميل أو دخول تجريبي سريع)
+  // إظهار نافذة اختيار الاهتمامات تلقائياً عند أول تسجيل دخول ومزامنة التفضيلات من Supabase
   useEffect(() => {
-    const userId = session?.user?.id;
-    if (userId && !loading && !hasSeenOnboarding(userId)) {
-      const timer = setTimeout(() => {
-        setShowInterestsModal(true);
-      }, 450);
-      return () => clearTimeout(timer);
+    const user = session?.user;
+    if (user && !loading) {
+      hydratePreferencesFromUser(user);
+      if (!hasSeenOnboarding(user.id)) {
+        const timer = setTimeout(() => {
+          setShowInterestsModal(true);
+        }, 450);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [session?.user?.id, loading]);
+  }, [session?.user, loading]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
